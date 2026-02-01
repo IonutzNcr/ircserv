@@ -6,7 +6,7 @@ class Client //-> class for client
 	private:
 		int Fd; //-> client file descriptor
 		std::string IPadd; //-> client ip address
-		std::string Nickname; //-> client nickname 
+
 	public:
 		Client();
 		int GetFd(); 

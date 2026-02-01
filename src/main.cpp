@@ -1,4 +1,4 @@
-#include "server.hpp"
+#include "../includes/Server.hpp"
 
 int main(int argc, char **argv)
 {
@@ -9,9 +9,8 @@ int main(int argc, char **argv)
 
 	Server ser;
 	std::cout << "---- SERVER ----" << std::endl;
-	Authenticator *auth;
+	
 	try{
-		auth = new Authenticator(std::string(argv[2]));
 		signal(SIGINT, Server::SignalHandler); //-> catch the signal (ctrl + c)
 		signal(SIGQUIT, Server::SignalHandler); //-> catch the signal (ctrl + \)
 		ser.ServerInit(std::atoi(argv[1])); //-> initialize the server
@@ -21,5 +20,5 @@ int main(int argc, char **argv)
 		std::cerr << e.what() << std::endl;
 	}
 	std::cout << "The Server Closed!" << std::endl;
-	delete auth;	
+	
 }

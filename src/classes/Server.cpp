@@ -1,4 +1,4 @@
-#include "server.hpp"
+#include "../../includes/Server.hpp"
 
 
 
@@ -133,8 +133,9 @@ void Server::ReceiveNewData(int fd)
 	}
 
 	else{ //-> print the received data
-		buff[bytes] = '\0'; 
-		std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;
+		buff[bytes] = '\0';
+		parse.getCommand(std::string(buff), fd);
+		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		
 	}
