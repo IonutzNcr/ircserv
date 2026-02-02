@@ -12,7 +12,8 @@ FILES=	Authenticator.cpp \
 		UserManager.cpp \
 		ChannelManager.cpp \
 		Parser.cpp \
-		Data.cpp
+		Data.cpp \
+		Dispatch.cpp
 
 
 SRC= $(foreach file,$(FILES),$(DIR)$(file))
@@ -28,7 +29,8 @@ HEADERS = Authenticator.hpp \
 		ChannelManager.hpp \
 		Channel.hpp \
 		Parser.hpp \
-		Data.hpp
+		Data.hpp \
+		Dispatch.cpp
 INCLUDES = $(foreach header,$(HEADERS),$(HDIR)$(header))
 
 all: $(NAME)

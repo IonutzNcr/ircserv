@@ -1,6 +1,6 @@
 #include "../../includes/Server.hpp"
 #include "../../includes/Command.hpp"
-
+#include "../../includes/Dispatch.hpp"
 
 
 Server::Server(){SerSocketFd = -1;}
@@ -142,7 +142,8 @@ void Server::ReceiveNewData(int fd)
 		cmd = parse.get(fd);
 		while (!cmd.getCmd().empty())
 		{
-			std::cout << "test cmd : " << cmd.getCmd() << std::endl;
+			/* std::cout << "test cmd : " << cmd.getCmd() << std::endl; */
+			dispatch.dispatch(cmd, fd);
 			cmd = parse.get(fd);
 		}
 		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;

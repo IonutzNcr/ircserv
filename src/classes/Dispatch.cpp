@@ -18,10 +18,10 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_cap(cmd);
     if (cmd.getCmd() == "PASS")
         ft_pass(cmd, fd);
-    if (cmd.getCmd() == "NICK")
+    /* if (cmd.getCmd() == "NICK")
         ft_nick(cmd, fd);
     if (cmd.getCmd() == "JOIN")
-        ft_join(cmd, fd);
+        ft_join(cmd, fd); */
 }
 
 void Dispatch::ft_cap(Command cmd)
