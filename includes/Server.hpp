@@ -15,6 +15,7 @@
 
 #include "Client.hpp"
 #include "Parser.hpp"
+#include "Dispatch.hpp"
 
 #define RED "\e[1;31m" //-> for red color
 #define WHI "\e[0;37m" //-> for white color
@@ -29,6 +30,7 @@ private:
 	int SerSocketFd; //-> server socket file descriptor
 	static bool Signal;
 	Parser parse;
+	Dispatch dispatch;
 	std::vector<Client> clients;
 	std::vector<struct pollfd> fds; 
 public:
