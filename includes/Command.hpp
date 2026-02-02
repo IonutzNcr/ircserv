@@ -5,16 +5,23 @@ class Command
 {
     public:
         Command();
-        Command(std::string cmd,  std::string to, std::string from);
+        Command(std::string prefix, std::string command, std::string trailing);
         std::string getCmd() const;
-        std::vector<std::string>getArgs() const;
-        std::string getDestination() const;
-        std::string getSource() const;
-        bool addArgs(std::string arg);
+        std::string getPrefix() const;
+        std::string getTrailing() const;
+        std::string getArgs() const;
+
+
+        void setCmd(std::string cmd);
+        void setPrefix(std::string prefix);
+        void setTrailing(std::string trailing);
+        void setArgs(std::string arguments);
+
+
     private:
+        std::string _prefix;
         std::string _cmd;
-        std::vector<std::string> _args;
-        std::string _to;
-        std::string _from;
+        std::string _args;
+        std::string _trailing;
         //maybe there are others stuff to be concerned i dont know yet
 };

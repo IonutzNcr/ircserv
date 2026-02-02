@@ -1,4 +1,5 @@
 #include "../../includes/Server.hpp"
+#include "../../includes/Command.hpp"
 
 
 
@@ -87,6 +88,7 @@ void Server::ServerInit(int port)
 					ReceiveNewData(fds[i].fd); //-> receive new data from a registered client
 			}
 		}
+		std::cout << "loop server\n";
 	}
 	CloseFds(); //-> close the file descriptors when the server stops
 }
@@ -134,7 +136,15 @@ void Server::ReceiveNewData(int fd)
 
 	else{ //-> print the received data
 		buff[bytes] = '\0';
-		parse.getCommand(std::string(buff), fd);
+		Command cmd;
+		parse.fill(buff, fd);
+		buff[0] = '\0';
+		cmd = parse.get(fd);
+		while (!cmd.getCmd().empty())
+		{
+			std::cout << "test cmd : " << cmd.getCmd() << std::endl;
+			cmd = parse.get(fd);
+		}
 		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		
