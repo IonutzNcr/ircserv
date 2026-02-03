@@ -47,7 +47,7 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         return false;
     }
     std::string line = cmd.getLine();
-    std::string pass = line.substr(4);
+    std::string pass = line.substr(3);
     pass.erase(0, pass.find_first_not_of(" \t"));
     if (!pass.empty() && pass[0] == ':')
         pass.erase(0, 1);

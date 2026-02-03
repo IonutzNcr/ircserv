@@ -107,11 +107,11 @@ void Server::AcceptNewClient()
 	NewPoll.fd = incofd; //-> add the client socket to the pollfd
 	NewPoll.events = POLLIN; //-> set the event to POLLIN for reading data
 	NewPoll.revents = 0; //-> set the revents to 0
-	Client cli(incofd);
-	cli.SetIpAdd(inet_ntoa((cliadd.sin_addr))); //-> convert the ip address to string and set it
-	clients.push_back(&cli); //-> add the client to the vector of clients
+	Client *cli = new Client(incofd);
+	cli->SetIpAdd(inet_ntoa((cliadd.sin_addr))); //-> convert the ip address to string and set it
+	clients.push_back(cli); //-> add the client to the vector of clients
 	fds.push_back(NewPoll); //-> add the client socket to the pollfd
-	send(incofd, "Welcome to the server!\n", 23, 0); //-> send a welcome message to the client
+	//send(incofd, "Welcome to the server!\n", 23, 0); //-> send a welcome message to the client
 	std::cout << GRE << "Client <" << incofd << "> Connected" << WHI << std::endl;
 }
 
