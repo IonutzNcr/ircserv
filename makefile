@@ -8,7 +8,8 @@ FILES=	Client.cpp \
 		Command.cpp \
 		Server.cpp \
 		Parser.cpp \
-		Data.cpp 
+		Data.cpp \
+		Dispatch.cpp
 
 
 SRC= $(foreach file,$(FILES),$(DIR)$(file))
@@ -19,7 +20,8 @@ HEADERS = Client.hpp \
 		Command.hpp \
 		Server.hpp \
 		Parser.hpp \
-		Data.hpp
+		Data.hpp \
+		Dispatch.hpp
 INCLUDES = $(foreach header,$(HEADERS),$(HDIR)$(header))
 
 all: $(NAME)

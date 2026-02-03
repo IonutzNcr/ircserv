@@ -1,3 +1,4 @@
+#pragma once
 
 #include <vector> //-> for vector
 #include <sys/socket.h> //-> for socket()

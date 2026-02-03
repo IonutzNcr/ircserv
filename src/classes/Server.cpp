@@ -17,7 +17,7 @@ void Server::ClearClients(int fd){ //-> clear the clients
 			{fds.erase(fds.begin() + i); break;}
 	}
 	for(size_t i = 0; i < clients.size(); i++){ //-> remove the client from the vector of clients
-		if (clients[i].GetFd() == fd)
+		if (clients[i]->GetFd() == fd)
 			{clients.erase(clients.begin() + i); break;}
 	}
 
@@ -25,8 +25,8 @@ void Server::ClearClients(int fd){ //-> clear the clients
 
 void Server::CloseFds(){
 	for(size_t i = 0; i < clients.size(); i++){ //-> close all the clients
-		std::cout << RED << "Client <" << clients[i].GetFd() << "> Disconnected" << WHI << std::endl;
-		close(clients[i].GetFd());
+		std::cout << RED << "Client <" << clients[i]->GetFd() << "> Disconnected" << WHI << std::endl;
+		close(clients[i]->GetFd());
 	}
 	if (SerSocketFd != -1){ //-> close the server socket
 		std::cout << RED << "Server <" << SerSocketFd << "> Disconnected" << WHI << std::endl;

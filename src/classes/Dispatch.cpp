@@ -13,6 +13,11 @@ Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients):_password(pa
 
 }
 
+Dispatch::~Dispatch()
+{
+
+}
+
 void Dispatch::dispatch(Command cmd, int fd)
 {
     if (cmd.getCmd() == "CAP")
@@ -28,6 +33,7 @@ void Dispatch::dispatch(Command cmd, int fd)
 bool Dispatch::ft_cap(Command cmd)
 {
     (void)cmd;
+    return true;
 }
 
 bool Dispatch::ft_pass(Command cmd, int fd)
@@ -129,7 +135,10 @@ bool Dispatch::ft_user(Command cmd, int fd)
     send(fd, ret.c_str(), ret.length(), 0);
     return true; 
 }
-        bool ft_join(Command cmd, int fd);
+bool Dispatch::ft_join(Command cmd, int fd)
+{
+    return true;
+}
 
 
 Client *Dispatch::getClientFd(int fd_client)
@@ -138,7 +147,7 @@ Client *Dispatch::getClientFd(int fd_client)
             if (_clients[i]->GetFd() == fd_client)
                 return (_clients[i]);
         }
-        return (NULL);
+    return (NULL);
 }
 
 void    Dispatch::tryRegister(Client* client)

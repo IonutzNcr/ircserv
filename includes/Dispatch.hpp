@@ -1,7 +1,10 @@
+#pragma once
+
 #include <vector>
 #include "Client.hpp"
-/* #include "Channel.hpp" */
 
+/* #include "Channel.hpp" */
+class Command;
 
 class Dispatch
 {
