@@ -9,8 +9,6 @@ FILES=	Authenticator.cpp \
 		Command.cpp \
 		Server.cpp \
 		User.cpp \
-		UserManager.cpp \
-		ChannelManager.cpp \
 		Parser.cpp \
 		Data.cpp
 
@@ -24,8 +22,6 @@ HEADERS = Authenticator.hpp \
 		Command.hpp \
 		Server.hpp \
 		User.hpp \
-		UserManager.hpp \
-		ChannelManager.hpp \
 		Channel.hpp \
 		Parser.hpp \
 		Data.hpp
