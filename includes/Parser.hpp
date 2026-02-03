@@ -17,6 +17,7 @@ class Parser
         std::string extractcmd(int fd);
         void fill(std::string buff, int fd);
         Command get(int fd);
+        std::string getCmdtwo(int fd);
 
         int findRN(std::string rawInput)
         {

@@ -11,7 +11,6 @@
 #include <bits/stdc++.h>
 #include <stdexcept>
 #include <string>
-#include "Authenticator.hpp"
 
 #include "Client.hpp"
 #include "Parser.hpp"
@@ -29,14 +28,17 @@ private:
 	int Port; //-> server port
 	int SerSocketFd; //-> server socket file descriptor
 	static bool Signal;
+	std::string _password;
 	Parser parse;
-	Dispatch dispatch;
-	std::vector<Client> clients;
+	/* Dispatch dispatch; */
+	std::vector<Client *> clients;
 	std::vector<struct pollfd> fds; 
 public:
-	Server();
-
-	void ServerInit(int port);
+	Server(int port, std::string password):Port(port), _password(password) {
+		/* dispatch = dispatch() */
+		SerSocketFd = -1;}
+	~Server() {return ;};
+	void ServerInit();
 	void SerSocket(); //-> server socket creation
 	void AcceptNewClient(); //-> accept new client
 	void ReceiveNewData(int fd); //-> receive new data from a registered client

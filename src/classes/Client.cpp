@@ -1,7 +1,8 @@
 #include "../../includes/Client.hpp"
 
-Client::Client(){};
-int Client::GetFd(){return Fd;}
-void Client::SetFd(int fd){Fd = fd;}
-void Client::setIpAdd(std::string ipadd){IPadd = ipadd;}
+
+Client::Client(int fd) : _fd(fd), _nickname(""), _username(""), _authentificated(false), _registered(false)
+{
+    return ;
+}
 

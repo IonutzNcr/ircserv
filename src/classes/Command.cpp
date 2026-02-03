@@ -44,3 +44,13 @@ std::string Command::getTrailing() const
 {
     return _trailing;
 }
+
+std::string Command::getLine()
+{
+    return _line;
+}
+
+void Command::setLine(std::string line)
+{
+    _line = line;
+}

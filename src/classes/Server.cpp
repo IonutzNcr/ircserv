@@ -2,9 +2,6 @@
 #include "../../includes/Command.hpp"
 
 
-
-Server::Server(){SerSocketFd = -1;}
-
 bool Server::Signal = false; //-> initialize the static boolean
 
 void Server::SignalHandler(int signum)
@@ -65,9 +62,8 @@ void Server::SerSocket()
 	fds.push_back(NewPoll); //-> add the server socket to the pollfd
 }
 
-void Server::ServerInit(int port)
+void Server::ServerInit()
 {
-	this->Port = port;
 	SerSocket(); //-> create the server socket
 
 	std::cout << GRE << "Server <" << SerSocketFd << "> Connected" << WHI << std::endl;
@@ -97,7 +93,6 @@ void Server::ServerInit(int port)
 
 void Server::AcceptNewClient()
 {
-	Client cli; //-> create a new client
 	struct sockaddr_in cliadd;
 	struct pollfd NewPoll;
 	socklen_t len = sizeof(cliadd);
@@ -112,10 +107,9 @@ void Server::AcceptNewClient()
 	NewPoll.fd = incofd; //-> add the client socket to the pollfd
 	NewPoll.events = POLLIN; //-> set the event to POLLIN for reading data
 	NewPoll.revents = 0; //-> set the revents to 0
-
-	cli.SetFd(incofd); //-> set the client file descriptor
-	cli.setIpAdd(inet_ntoa((cliadd.sin_addr))); //-> convert the ip address to string and set it
-	clients.push_back(cli); //-> add the client to the vector of clients
+	Client cli(incofd);
+	cli.SetIpAdd(inet_ntoa((cliadd.sin_addr))); //-> convert the ip address to string and set it
+	clients.push_back(&cli); //-> add the client to the vector of clients
 	fds.push_back(NewPoll); //-> add the client socket to the pollfd
 	send(incofd, "Welcome to the server!\n", 23, 0); //-> send a welcome message to the client
 	std::cout << GRE << "Client <" << incofd << "> Connected" << WHI << std::endl;
@@ -127,7 +121,7 @@ void Server::ReceiveNewData(int fd)
 	memset(buff, 0, sizeof(buff)); //-> clear the buffer
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
-
+	Dispatch dispatch(_password, clients);
 	if(bytes <= 0){ //-> check if the client disconnected
 		std::cout << RED << "Client <" << fd << "> Disconnected" << WHI << std::endl;
 		ClearClients(fd); //-> clear the client
@@ -139,10 +133,12 @@ void Server::ReceiveNewData(int fd)
 		Command cmd;
 		parse.fill(buff, fd);
 		buff[0] = '\0';
+		cmd.setLine(parse.getCmdtwo(fd));
 		cmd = parse.get(fd);
 		while (!cmd.getCmd().empty())
 		{
-			std::cout << "test cmd : " << cmd.getCmd() << std::endl;
+			dispatch.dispatch(cmd, fd);
+			cmd.setLine(parse.getCmdtwo(fd));
 			cmd = parse.get(fd);
 		}
 		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;

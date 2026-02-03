@@ -4,25 +4,20 @@ NAME=	ircserv2
 DIR=	./src/classes/
 DIRO=	./obj/classes/
 
-FILES=	Authenticator.cpp \
-		Client.cpp \
+FILES=	Client.cpp \
 		Command.cpp \
 		Server.cpp \
-		User.cpp \
 		Parser.cpp \
-		Data.cpp
+		Data.cpp 
 
 
 SRC= $(foreach file,$(FILES),$(DIR)$(file))
 
 OBJ = $(foreach file,$(FILES),$(DIRO)$(file:.cpp=.o))
 HDIR = ./includes/
-HEADERS = Authenticator.hpp \
-		Client.hpp \
+HEADERS = Client.hpp \
 		Command.hpp \
 		Server.hpp \
-		User.hpp \
-		Channel.hpp \
 		Parser.hpp \
 		Data.hpp
 INCLUDES = $(foreach header,$(HEADERS),$(HDIR)$(header))

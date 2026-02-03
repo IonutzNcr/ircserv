@@ -102,6 +102,7 @@ std::string Parser::extractcmd(int fd)
     if (index == std::string::npos)
         return std::string("");
     std::string cmdline = data.data.substr(0, index);
+    
     std::cout << "in extract cmd : " << data.data << std::endl;
     std::string newData = data.data.substr(index + 2);
     //some print to see if is working ...
@@ -112,6 +113,18 @@ std::string Parser::extractcmd(int fd)
     
     return (cmdline);
     
+}
+
+std::string Parser::getCmdtwo(int fd)
+{
+    Data &data = getData(fd);
+    std::size_t index = data.data.find("\r\n");
+    /* std::cout << "in extract characters " << ((data.data)[0] == '\n') << std::endl;
+    std::cout << "in extract: " << data.data << std::endl; */
+    if (index == std::string::npos)
+        return std::string("");
+    std::string cmdline = data.data.substr(0, index);
+    return (cmdline);
 }
 
 Command Parser::get(int fd)

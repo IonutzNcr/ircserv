@@ -8,7 +8,6 @@ class User;
 class Channel
 {
     public:
-        Channel();
         Channel(std::string topic, std::string name, unsigned long long id);
         ~Channel();
         std::string getTopic() const;
@@ -16,8 +15,8 @@ class Channel
         unsigned long long getId() const;
         std::vector<User *>* getUsers() const;
     private:
-        std::string topic;
-        std::string name;
-        unsigned long long id;
+        std::string _topic;
+        std::string _name;
+        unsigned long long _id;
         std::vector <User *> *users; 
 };

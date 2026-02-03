@@ -10,8 +10,9 @@ class Command
         std::string getPrefix() const;
         std::string getTrailing() const;
         std::string getArgs() const;
+        std::string getLine();
 
-
+        void setLine(std::string line);
         void setCmd(std::string cmd);
         void setPrefix(std::string prefix);
         void setTrailing(std::string trailing);
@@ -23,5 +24,6 @@ class Command
         std::string _cmd;
         std::string _args;
         std::string _trailing;
+        std::string _line;
         //maybe there are others stuff to be concerned i dont know yet
 };

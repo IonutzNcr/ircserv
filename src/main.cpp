@@ -1,5 +1,6 @@
 #include "../includes/Server.hpp"
 
+
 int main(int argc, char **argv)
 {
 	if (argc != 3){
@@ -7,13 +8,13 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	Server ser;
+	Server ser(std::atoi(argv[1]), argv[2]);
 	std::cout << "---- SERVER ----" << std::endl;
 	
 	try{
 		signal(SIGINT, Server::SignalHandler); //-> catch the signal (ctrl + c)
 		signal(SIGQUIT, Server::SignalHandler); //-> catch the signal (ctrl + \)
-		ser.ServerInit(std::atoi(argv[1])); //-> initialize the server
+		ser.ServerInit(); //-> initialize the server
 	}
 	catch(const std::exception& e){
 		ser.CloseFds(); //-> close the file descriptors
