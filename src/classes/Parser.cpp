@@ -124,6 +124,7 @@ std::string Parser::getCmdtwo(int fd)
     if (index == std::string::npos)
         return std::string("");
     std::string cmdline = data.data.substr(0, index);
+    std::cout << "in getCmdtwo cmd : " << data.data << std::endl;
     return (cmdline);
 }
 

@@ -38,7 +38,9 @@ bool Dispatch::ft_cap(Command cmd)
 
 bool Dispatch::ft_pass(Command cmd, int fd)
 {
+   
     Client* client = getClientFd(fd);
+   
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
@@ -46,12 +48,17 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         send(fd, txt.c_str(), txt.length(), 0);
         return false;
     }
+  
     std::string line = cmd.getLine();
-    std::string pass = line.substr(3);
+    
+    std::string pass = line.substr(4);
+   
     pass.erase(0, pass.find_first_not_of(" \t"));
     if (!pass.empty() && pass[0] == ':')
         pass.erase(0, 1);
+    
     pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
+   
     if (pass.empty()) { 
         std::string msg = ":server 461 PASS :Not enough parameters\r\n";
         send(fd, msg.c_str(), msg.length(), 0);
@@ -62,8 +69,10 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         send(fd, txt.c_str(), txt.length(), 0);
         return false;
     }
+   
     client->setAuthenticated(true);
     tryRegister(client);
+   
     return true; 
 }
  
@@ -105,7 +114,7 @@ bool Dispatch::ft_nick(Command cmd, int fd)
 }
 bool Dispatch::ft_user(Command cmd, int fd)
 {
-        Client* client = getClientFd(fd);
+    Client* client = getClientFd(fd);
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
@@ -156,6 +165,8 @@ void    Dispatch::tryRegister(Client* client)
         return ;
     if (client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
         client->setRegistered(true);
-        //sendWelcome(client);  // fonction a buid et a renomer pour notifier que le client c'est bien enregistrer
+    //sendWelcome(client);  // fonction a buid et a renomer pour notifier que le client c'est bien enregistrer
+        std::string msg = ":server 001 " + client->GetNick() + " :Welcome to the IRC server!\r\n";
+        send(client->GetFd(), msg.c_str(), msg.length(), 0);
     }
 }

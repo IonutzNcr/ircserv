@@ -1,5 +1,6 @@
 #include "../../includes/Server.hpp"
 #include "../../includes/Command.hpp"
+#include <errno.h>
 
 
 bool Server::Signal = false; //-> initialize the static boolean
@@ -122,24 +123,40 @@ void Server::ReceiveNewData(int fd)
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
 	Dispatch dispatch(_password, clients);
-	if(bytes <= 0){ //-> check if the client disconnected
-		std::cout << RED << "Client <" << fd << "> Disconnected" << WHI << std::endl;
-		ClearClients(fd); //-> clear the client
-		close(fd); //-> close the client socket
-	}
+	
+	if (bytes == 0) {
+    // peer performed orderly shutdown
+    std::cout << RED << "Client <" << fd << "> Disconnected (peer closed)" << WHI << std::endl;
+    ClearClients(fd);
+    close(fd);
+    return;
+	} else if (bytes < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			// no data available now, not an error
+			return;
+		}
+		// real error
+		perror("recv");
+		ClearClients(fd);
+		close(fd);
+    return;
+}
 
 	else{ //-> print the received data
 		buff[bytes] = '\0';
 		Command cmd;
 		parse.fill(buff, fd);
 		buff[0] = '\0';
-		cmd.setLine(parse.getCmdtwo(fd));
+		std::cout << "In receive new data, about to get command " << parse.getCmdtwo(fd) << std::endl;
+		std::string line = parse.getCmdtwo(fd);
 		cmd = parse.get(fd);
+		cmd.setLine(line);
 		while (!cmd.getCmd().empty())
 		{
 			dispatch.dispatch(cmd, fd);
-			cmd.setLine(parse.getCmdtwo(fd));
+			line = parse.getCmdtwo(fd);
 			cmd = parse.get(fd);
+			cmd.setLine(line);
 		}
 		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
