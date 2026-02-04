@@ -26,8 +26,10 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_pass(cmd, fd);
     if (cmd.getCmd() == "NICK")
         ft_nick(cmd, fd);
+    if (cmd.getCmd() == "USER")
+        ft_user(cmd, fd);
     if (cmd.getCmd() == "JOIN")
-        ft_join(cmd, fd);
+        ft_join(cmd, fd); 
 }
 
 bool Dispatch::ft_cap(Command cmd)
@@ -102,6 +104,8 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     }
     std::string oldNick = client->GetNick();
     client->SetNick(nick);
+    // std::string mssg = "ft_Nick set a true " + nick + "\r\n";
+    // send(fd, mssg.c_str(), mssg.size(), 0);
     tryRegister(client);
 
     std::string ret;    //  affichage et envoie
@@ -113,10 +117,14 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     return true; 
 }
 bool Dispatch::ft_user(Command cmd, int fd)
-{
+{   
+    std::string mssg2 = "ft_User set a true \r\n";
+    send(fd, mssg2.c_str(), mssg2.size(), 0);
     Client* client = getClientFd(fd);
     if (!client)
         return false;
+    // std::string mssg2 = "ft_User set a true \r\n";
+    // send(fd, mssg2.c_str(), mssg2.size(), 0);
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
         std::string txt = ":server 462 :You may not reregister\r\n";
         send(fd, txt.c_str(), txt.length(), 0);
@@ -135,6 +143,8 @@ bool Dispatch::ft_user(Command cmd, int fd)
     }
     std::string oldUser = client->GetUser();
     client->SetUser(user);
+    // std::string mssg = "ft_User set a true " + user + "\r\n";
+    // send(fd, mssg.c_str(), mssg.size(), 0);
     tryRegister(client);
     std::string ret;    //  affichage et envoie
     if (!oldUser.empty())
@@ -168,5 +178,8 @@ void    Dispatch::tryRegister(Client* client)
     //sendWelcome(client);  // fonction a buid et a renomer pour notifier que le client c'est bien enregistrer
         std::string msg = ":server 001 " + client->GetNick() + " :Welcome to the IRC server!\r\n";
         send(client->GetFd(), msg.c_str(), msg.length(), 0);
+    }
+    if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
+        
     }
 }
