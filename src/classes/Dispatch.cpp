@@ -166,6 +166,10 @@ bool Dispatch::ft_user(Command cmd, int fd)
     send(fd, ret.c_str(), ret.length(), 0);
     return true; 
 }
+
+
+//TODO::RPL_TOPIC
+//TODO::RPL_NAMREPLY
 bool Dispatch::ft_join(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
@@ -220,6 +224,11 @@ bool Dispatch::ft_join(Command cmd, int fd)
             send(fd, msg.c_str(), msg.length(), 0);
             msg = "I created the channel " + chanName + "\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
+            //RPL_NOTOPIC
+            msg = "331 " + newChan->getName() + " :No topic is set" + "\r\n";
+            send(fd, msg.c_str(), msg.size(), 0);
+            //RPL_NAMRPLY
+            
         }else
         {
             for (size_t j = 0; j < _channels.size(); j++)
@@ -230,7 +239,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
                     send(fd, msg.c_str(), msg.length(), 0);
                     if (_channels[j]->isUserInChannel(client))
                     {
-                         msg = "User is already in the channel " + chanName + "\r\n";
+                        msg = "User is already in the channel " + chanName + "\r\n";
                         send(fd, msg.c_str(), msg.length(), 0);
                         continue; // a voir que faire si deja dans le channel et mauvais key
                     }
@@ -246,6 +255,17 @@ bool Dispatch::ft_join(Command cmd, int fd)
                     msg = "User " + client->GetNick() + " joined the channel " + chanName + "\r\n";
                     send(fd, msg.c_str(), msg.length(), 0);
                     _channels[j]->addUser(client);
+                    if(_channels[j]->getTopic().empty())
+                    {
+                        msg = "331 " + _channels[j]->getName() + " :No topic is set" + "\r\n";
+                        send(fd, msg.c_str(), msg.size(), 0);
+                    } else
+                    {
+                        msg = "332 " + _channels[j]->getName() + " :" + _channels[j]->getTopic() + "\r\n"; 
+                        send(fd, msg.c_str(), msg.size(), 0);
+                    }
+                    
+                   
                 }
             }
         }        
