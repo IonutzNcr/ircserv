@@ -2,6 +2,8 @@
 #include "../../includes/Dispatch.hpp"
 #include "../../includes/Command.hpp"
 #include "../../includes/Client.hpp"
+#include "../../includes/split.hpp"
+#include "../../includes/Channel.hpp"
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -21,7 +23,7 @@ Dispatch::~Dispatch()
 void Dispatch::dispatch(Command cmd, int fd)
 {
     if (cmd.getCmd() == "CAP")
-        ft_cap(cmd);
+        ft_cap(cmd, fd);
     if (cmd.getCmd() == "PASS")
         ft_pass(cmd, fd);
     if (cmd.getCmd() == "NICK")
@@ -29,12 +31,26 @@ void Dispatch::dispatch(Command cmd, int fd)
     if (cmd.getCmd() == "USER")
         ft_user(cmd, fd);
     if (cmd.getCmd() == "JOIN")
-        ft_join(cmd, fd); 
+        ft_join(cmd, fd);
+    /* if (cmd.getCmd() == "PING")
+        ft_ping(cmd, fd);  */
 }
 
-bool Dispatch::ft_cap(Command cmd)
+bool Dispatch::ft_cap(Command cmd, int fd)
 {
-    (void)cmd;
+    std::string line = cmd.getLine();
+    // respond minimally so clients finish capability negotiation
+    if (line.find("LS") != std::string::npos) {
+        std::string msg = "CAP * LS :\r\n";
+        send(fd, msg.c_str(), msg.length(), 0);
+    }
+    else if (line.find("REQ") != std::string::npos) {
+        std::string msg = "CAP * NAK :\r\n";
+        send(fd, msg.c_str(), msg.length(), 0);
+    }
+    else if (line.find("END") != std::string::npos) {
+        // nothing needed, client ends negotiation
+    }
     return true;
 }
 
@@ -118,13 +134,9 @@ bool Dispatch::ft_nick(Command cmd, int fd)
 }
 bool Dispatch::ft_user(Command cmd, int fd)
 {   
-    std::string mssg2 = "ft_User set a true \r\n";
-    send(fd, mssg2.c_str(), mssg2.size(), 0);
     Client* client = getClientFd(fd);
     if (!client)
         return false;
-    // std::string mssg2 = "ft_User set a true \r\n";
-    // send(fd, mssg2.c_str(), mssg2.size(), 0);
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
         std::string txt = ":server 462 :You may not reregister\r\n";
         send(fd, txt.c_str(), txt.length(), 0);
@@ -156,6 +168,88 @@ bool Dispatch::ft_user(Command cmd, int fd)
 }
 bool Dispatch::ft_join(Command cmd, int fd)
 {
+    Client* client = getClientFd(fd);
+    if (!client)
+        return false;
+     if (!client->isRegistered()) // si le client n'es pas register just return false
+        return false;
+    std::string line = cmd.getLine();
+    std::string channelName = line.substr(5); // on stock la string apres le JOIN
+    std::vector<std::string> chanXkeys = split(channelName, ' ');
+    if (chanXkeys.empty())
+    {
+        std::string msg = ":server 461 JOIN :Not enough parameters\r\n";
+        send(fd, msg.c_str(), msg.length(), 0);
+        return false;
+    }
+    std::string chanNames = chanXkeys[0];
+    bool isKey = false;
+    if (chanXkeys.size() > 1)
+        isKey = true;
+    std::string key;
+    if (isKey)
+        key = chanXkeys[1];
+    std::vector<std::string> chanNamesSplit = split(chanNames, ',');
+    std::vector<std::string>keysSplit;
+    if (isKey)
+        keysSplit = split(key, ',');
+    for (size_t i = 0; i < chanNamesSplit.size(); i++)
+    {
+        std::string chanName = chanNamesSplit[i];
+        std::string chanKey;
+        if (isKey && i < keysSplit.size())
+            chanKey = keysSplit[i];
+        else
+            chanKey = "";
+        //creation channel si n'existe pas et ajout user au channel
+        Channel *newChan = new Channel("", chanName, i, chanKey); // to fix the id is not really unique
+        if (!isChannelExist(chanName)) // TODO:: big problem why ?
+        {
+            //print les channels existants
+            std::cout << "Existing channels: ";
+            for (size_t j = 0; j < _channels.size(); j++)
+            {
+                std::cout << _channels[j]->getName() << " ";
+            }
+            std::cout << std::endl;
+            
+            _channels.push_back(newChan);
+            newChan->addUser(client);
+            newChan->addOperator(client);
+            std::string msg = ":server JOIN " + chanName + "\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            msg = "I created the channel " + chanName + "\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+        }else
+        {
+            for (size_t j = 0; j < _channels.size(); j++)
+            {
+                if (_channels[j]->getName() == chanName)
+                {
+                  std::string  msg = "I found the channel " + chanName + "\r\n";
+                    send(fd, msg.c_str(), msg.length(), 0);
+                    if (_channels[j]->isUserInChannel(client))
+                    {
+                         msg = "User is already in the channel " + chanName + "\r\n";
+                        send(fd, msg.c_str(), msg.length(), 0);
+                        continue; // a voir que faire si deja dans le channel et mauvais key
+                    }
+                    if (_channels[j]->getKey() != chanKey)
+                    {
+                        std::string errMsg = ":server 475 " + client->GetNick() + " " + chanName + " :Cannot join channel (+k)\r\n";
+                        send(fd, errMsg.c_str(), errMsg.length(), 0);
+                        continue;
+                    }
+
+                    msg = ":server JOIN " + chanName + "\r\n";
+                    send(fd, msg.c_str(), msg.length(), 0);
+                    msg = "User " + client->GetNick() + " joined the channel " + chanName + "\r\n";
+                    send(fd, msg.c_str(), msg.length(), 0);
+                    _channels[j]->addUser(client);
+                }
+            }
+        }        
+    }
     return true;
 }
 
@@ -183,3 +277,33 @@ void    Dispatch::tryRegister(Client* client)
         
     }
 }
+
+bool Dispatch::isChannelExist(std::string chanName)
+{
+    for (size_t i = 0; i < _channels.size(); i++)
+    {
+        if (_channels[i]->getName() == chanName)
+            return true;
+    }
+    return false;
+}
+
+/* bool Dispatch::ft_ping(Command cmd, int fd)
+{
+    std::string line = cmd.getLine();
+    std::string token;
+    if (line.size() > 5)
+        token = line.substr(5);  // après "PING "
+    else
+        token = "server";
+    
+    // Trim whitespace
+    size_t start = token.find_first_not_of(" \t\r\n");
+    size_t end = token.find_last_not_of(" \t\r\n");
+    if (start != std::string::npos && end != std::string::npos)
+        token = token.substr(start, end - start + 1);
+    
+    std::string reply = ":server PONG server :" + token + "\r\n";
+    send(fd, reply.c_str(), reply.length(), 0);
+    return true;
+} */

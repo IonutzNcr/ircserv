@@ -69,7 +69,7 @@ void Server::ServerInit()
 
 	std::cout << GRE << "Server <" << SerSocketFd << "> Connected" << WHI << std::endl;
 	std::cout << "Waiting to accept a connection...\n";
-
+	Dispatch dispatch(_password, clients);
     while (Server::Signal == false) //-> run the server until the signal is received
 	{
 		if((poll(&fds[0],fds.size(),-1) == -1) && Server::Signal == false) //-> wait for an event
@@ -82,7 +82,7 @@ void Server::ServerInit()
 				if (fds[i].fd == SerSocketFd)
 					AcceptNewClient(); //-> accept new client
 				else
-					ReceiveNewData(fds[i].fd); //-> receive new data from a registered client
+					ReceiveNewData(fds[i].fd, dispatch); //-> receive new data from a registered client
 			}
 		}
 		std::cout << "loop server\n";
@@ -116,13 +116,12 @@ void Server::AcceptNewClient()
 	std::cout << GRE << "Client <" << incofd << "> Connected" << WHI << std::endl;
 }
 
-void Server::ReceiveNewData(int fd)
+void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 {
 	char buff[1024]; //-> buffer for the received data
 	memset(buff, 0, sizeof(buff)); //-> clear the buffer
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
-	Dispatch dispatch(_password, clients);
 	
 	if (bytes == 0) {
     // peer performed orderly shutdown
@@ -153,6 +152,7 @@ void Server::ReceiveNewData(int fd)
 		cmd.setLine(line);
 		while (!cmd.getCmd().empty())
 		{
+			std::cout << "Dispatching command: " << cmd.getLine() << std::endl;
 			dispatch.dispatch(cmd, fd);
 			line = parse.getCmdtwo(fd);
 			cmd = parse.get(fd);

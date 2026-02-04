@@ -1,22 +1,36 @@
+#pragma once
 
 #include <string>
 #include <vector>
 
+class Client;  // Forward declaration
 
-class User;
 
 class Channel
 {
     public:
-        Channel(std::string topic, std::string name, unsigned long long id);
+        Channel(std::string topic, std::string name, std::size_t id, std::string key);
         ~Channel();
         std::string getTopic() const;
         std::string getName() const;
-        unsigned long long getId() const;
-        std::vector<User *>* getUsers() const;
+        std::size_t getId() const;
+        std::string getKey() const;
+
+        void setTopic(std::string topic);
+
+        std::vector<Client *> getUsers() const;
+        bool addUser(Client* user);
+        bool addOperator(Client* user);
+        bool isOperator(Client* user) const;
+        bool isUserInChannel(Client* user) const;
+        
+       
     private:
         std::string _topic;
         std::string _name;
-        unsigned long long _id;
-        std::vector <User *> *users; 
+        std::size_t _id;
+        std::string _key;
+        std::vector <Client *> users;
+        std::vector <Client *> operators;
+       /*  std::vector <User *> invited; */
 };

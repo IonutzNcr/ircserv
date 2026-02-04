@@ -42,7 +42,7 @@ public:
 	void ServerInit();
 	void SerSocket(); //-> server socket creation
 	void AcceptNewClient(); //-> accept new client
-	void ReceiveNewData(int fd); //-> receive new data from a registered client
+	void ReceiveNewData(int fd, Dispatch &dispatch); //-> receive new data from a registered client
 
 	static void SignalHandler(int signum); //-> signal handler
  

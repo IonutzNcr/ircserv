@@ -1,6 +1,8 @@
 
 NAME=	ircserv2
 
+DIR_UTILS=	./src/utils/
+DIRO_UTILS=	./obj/utils/
 DIR=	./src/classes/
 DIRO=	./obj/classes/
 
@@ -9,19 +11,27 @@ FILES=	Client.cpp \
 		Server.cpp \
 		Parser.cpp \
 		Data.cpp \
-		Dispatch.cpp
+		Dispatch.cpp\
+		Channel.cpp
+
+FILES_UTILS=	split.cpp
 
 
-SRC= $(foreach file,$(FILES),$(DIR)$(file))
+SRC= $(foreach file,$(FILES),$(DIR)$(file)) $(foreach file,$(FILES_UTILS),$(DIR_UTILS)$(file))
 
-OBJ = $(foreach file,$(FILES),$(DIRO)$(file:.cpp=.o))
+OBJ = $(foreach file,$(FILES),$(DIRO)$(file:.cpp=.o)) $(foreach file,$(FILES_UTILS),$(DIRO_UTILS)$(file:.cpp=.o))
 HDIR = ./includes/
 HEADERS = Client.hpp \
 		Command.hpp \
 		Server.hpp \
 		Parser.hpp \
 		Data.hpp \
-		Dispatch.hpp
+		Dispatch.hpp \
+		Channel.hpp \
+		split.hpp
+
+
+
 INCLUDES = $(foreach header,$(HEADERS),$(HDIR)$(header))
 
 all: $(NAME)
@@ -34,10 +44,13 @@ $(DIRO)%.o: $(DIR)%.cpp $(INCLUDES)
 	if [ ! -d "./obj/classes" ]; then mkdir -p ./obj/classes; fi
 	g++ -c $< -o $@
 	
+$(DIRO_UTILS)%.o: $(DIR_UTILS)%.cpp $(INCLUDES)
+	if [ ! -d "./obj/utils" ]; then mkdir -p ./obj/utils; fi
+	g++ -c $< -o $@
+
 ./obj/main.o: ./src/main.cpp $(INCLUDES)
 	if [ ! -d "./obj" ]; then mkdir -p ./obj; fi
 	g++ -c $< -o $@
-
 
 
 fclean:
