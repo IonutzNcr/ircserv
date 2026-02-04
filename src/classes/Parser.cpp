@@ -12,34 +12,42 @@ Command Parser::getCommand(std::string cmdline)
     Command cmd;
     try
     {
-        std::size_t index = cmdline.find(":");
+        std::size_t index = 0;
         std::size_t end;
-        if (index == std::string::npos)
-        {
-            cmd.setPrefix("");
-            index = 0;
-            end = 0;
-        }
-        else
+        
+        // Check for prefix (starts with ':' at the BEGINNING of the line)
+        if (!cmdline.empty() && cmdline[0] == ':')
         {
             end = cmdline.find(" ");
-            cmd.setPrefix(cmdline.substr(index, end));
-            cmdline = cmdline.substr(end);
-        }
-        index = end;
-        end = cmdline.find(" ");
-        std::cout << "je passe par la \n";
-        if (end == std::string::npos)
-        {
-            cmd.setCmd("");
-            throw std::runtime_error("No command found");
+            if (end == std::string::npos) {
+                cmd.setCmd("");
+                throw std::runtime_error("No command found after prefix");
+            }
+            cmd.setPrefix(cmdline.substr(0, end));
+            cmdline = cmdline.substr(end + 1); // skip the space
         }
         else
         {
-            cmd.setCmd(cmdline.substr(index, end));
-            cmdline = cmdline.substr(end);
+            cmd.setPrefix("");
         }
-        index = end;
+        
+        // Extract command
+        end = cmdline.find(" ");
+        if (end == std::string::npos)
+        {
+            // Command with no arguments (e.g., "QUIT")
+            cmd.setCmd(cmdline);
+            cmd.setArgs("");
+            cmd.setTrailing("");
+            return (cmd);
+        }
+        else
+        {
+            cmd.setCmd(cmdline.substr(0, end));
+            cmdline = cmdline.substr(end + 1); // skip the space
+        }
+        
+        // Extract args and trailing
         end = cmdline.find(":");
         if (end == std::string::npos)
         {
@@ -49,10 +57,12 @@ Command Parser::getCommand(std::string cmdline)
         }
         else
         {
-            cmd.setArgs(cmdline.substr(index, end));
-            cmdline = cmdline.substr(end);
+            if (end > 0)
+                cmd.setArgs(cmdline.substr(0, end - 1)); // exclude the space before ':'
+            else
+                cmd.setArgs("");
+            cmd.setTrailing(cmdline.substr(end + 1)); // skip the ':'
         }
-        cmd.setTrailing(cmdline);
 
     }
     catch(const std::exception& e)

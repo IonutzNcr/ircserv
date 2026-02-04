@@ -1,0 +1,54 @@
+---- SERVER ----
+[1;32mServer <3> Connected[0;37m
+Waiting to accept a connection...
+[1;32mClient <4> Connected[0;37m
+loop server
+In receive new data, about to get command in getCmdtwo cmd : CAP LS
+PASS pipi
+NICK MDR
+USER inicoara inicoara localhost :Ionut Nicoara
+
+CAP LS
+in getCmdtwo cmd : CAP LS
+PASS pipi
+NICK MDR
+USER inicoara inicoara localhost :Ionut Nicoara
+
+in extract cmd : CAP LS
+PASS pipi
+NICK MDR
+USER inicoara inicoara localhost :Ionut Nicoara
+
+je passe par la 
+in getCmdtwo cmd : PASS pipi
+NICK MDR
+USER inicoara inicoara localhost :Ionut Nicoara
+
+in extract cmd : PASS pipi
+NICK MDR
+USER inicoara inicoara localhost :Ionut Nicoara
+
+je passe par la 
+in getCmdtwo cmd : NICK MDR
+USER inicoara inicoara localhost :Ionut Nicoara
+
+in extract cmd : NICK MDR
+USER inicoara inicoara localhost :Ionut Nicoara
+
+je passe par la 
+in getCmdtwo cmd : USER inicoara inicoara localhost :Ionut Nicoara
+
+in extract cmd : USER inicoara inicoara localhost :Ionut Nicoara
+
+je passe par la 
+loop server
+In receive new data, about to get command in getCmdtwo cmd : CAP END
+
+CAP END
+in getCmdtwo cmd : CAP END
+
+in extract cmd : CAP END
+
+je passe par la 
+je passe par la 
+No command found

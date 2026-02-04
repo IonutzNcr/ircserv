@@ -18,17 +18,24 @@ void Server::ClearClients(int fd){ //-> clear the clients
 			{fds.erase(fds.begin() + i); break;}
 	}
 	for(size_t i = 0; i < clients.size(); i++){ //-> remove the client from the vector of clients
-		if (clients[i]->GetFd() == fd)
-			{clients.erase(clients.begin() + i); break;}
+		if (clients[i] && clients[i]->GetFd() == fd) {
+			delete clients[i];
+			clients.erase(clients.begin() + i);
+			break;
+		}
 	}
 
 }
 
 void Server::CloseFds(){
 	for(size_t i = 0; i < clients.size(); i++){ //-> close all the clients
-		std::cout << RED << "Client <" << clients[i]->GetFd() << "> Disconnected" << WHI << std::endl;
-		close(clients[i]->GetFd());
+		if (clients[i]) {
+			std::cout << RED << "Client <" << clients[i]->GetFd() << "> Disconnected" << WHI << std::endl;
+			close(clients[i]->GetFd());
+			delete clients[i];
+		}
 	}
+	clients.clear();
 	if (SerSocketFd != -1){ //-> close the server socket
 		std::cout << RED << "Server <" << SerSocketFd << "> Disconnected" << WHI << std::endl;
 		close(SerSocketFd);
@@ -77,8 +84,15 @@ void Server::ServerInit()
 
 		for (size_t i = 0; i < fds.size(); i++) //-> check all file descriptors
 		{
-			if (fds[i].revents & POLLIN)//-> check if there is data to read
-			{
+			short revents = fds[i].revents;
+			if (revents & (POLLHUP | POLLERR)) {
+				int fd = fds[i].fd;
+				std::cout << RED << "Poll hangup/error on fd " << fd << WHI << std::endl;
+				ClearClients(fd);
+				close(fd);
+				continue;
+			}
+			if (revents & POLLIN) { //-> check if there is data to read
 				if (fds[i].fd == SerSocketFd)
 					AcceptNewClient(); //-> accept new client
 				else
@@ -133,6 +147,7 @@ void Server::ReceiveNewData(int fd)
 	} else if (bytes < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			// no data available now, not an error
+			std::cout << "No data available to read for client " << fd << " (EAGAIN/EWOULDBLOCK)" << std::endl;
 			return;
 		}
 		// real error

@@ -17,7 +17,7 @@ class Dispatch
         ~Dispatch();
         void dispatch(Command cmd, int fd);
 
-        bool ft_cap(Command cmd);
+        bool ft_cap(Command cmd, int fd);
         bool ft_pass(Command cmd, int fd);
         bool ft_nick(Command cmd, int fd);
         bool ft_user(Command cmd, int fd);

@@ -14,6 +14,8 @@ int main(int argc, char **argv)
 	try{
 		signal(SIGINT, Server::SignalHandler); //-> catch the signal (ctrl + c)
 		signal(SIGQUIT, Server::SignalHandler); //-> catch the signal (ctrl + \)
+		signal(SIGHUP, SIG_IGN); // ignore SIGHUP so external HUP doesn't kill the server
+		signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE to avoid termination on broken pipe
 		ser.ServerInit(); //-> initialize the server
 	}
 	catch(const std::exception& e){
