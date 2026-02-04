@@ -32,5 +32,5 @@ class Channel
         std::string _key;
         std::vector <Client *> users;
         std::vector <Client *> operators;
-       /*  std::vector <User *> invited; */
+       /*  std::vector <Client *> invited; */
 };

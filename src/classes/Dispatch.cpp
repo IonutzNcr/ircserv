@@ -265,15 +265,15 @@ bool Dispatch::ft_join(Command cmd, int fd)
                         msg = "332 " + _channels[j]->getName() + " :" + _channels[j]->getTopic() + "\r\n"; 
                         send(fd, msg.c_str(), msg.size(), 0);
                     }
-                    //TODO::faire le RPL_NAMRPLY
+                    //TODO::a specifier les operateurs avec @ dans la liste
                     msg = "353 " + newChan->getName() + " :";
-                    for (std::size_t i = 0; i < _channels.size();i++)
+                    std::vector<Client *> channelUsers = _channels[j]->getUsers();
+                    for (std::size_t i = 0; i < channelUsers.size();i++)
                     {
-                        msg += _channels[i]->
+                        msg +=channelUsers[i]->GetNick();
                     }
-                    + client->GetNick() + "\r\n";
+                    msg += "\r\n";
                     send(fd, msg.c_str(), msg.size(), 0);
-                   
                 }
             }
         }        

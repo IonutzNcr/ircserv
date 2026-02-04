@@ -160,6 +160,5 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 		}
 		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
-		
 	}
 }
