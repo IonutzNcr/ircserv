@@ -228,7 +228,8 @@ bool Dispatch::ft_join(Command cmd, int fd)
             msg = "331 " + newChan->getName() + " :No topic is set" + "\r\n";
             send(fd, msg.c_str(), msg.size(), 0);
             //RPL_NAMRPLY
-            
+            msg = "353 " + newChan->getName() + " :" + client->GetNick() + "\r\n";
+            send(fd, msg.c_str(), msg.size(), 0);
         }else
         {
             for (size_t j = 0; j < _channels.size(); j++)
@@ -264,7 +265,14 @@ bool Dispatch::ft_join(Command cmd, int fd)
                         msg = "332 " + _channels[j]->getName() + " :" + _channels[j]->getTopic() + "\r\n"; 
                         send(fd, msg.c_str(), msg.size(), 0);
                     }
-                    
+                    //TODO::faire le RPL_NAMRPLY
+                    msg = "353 " + newChan->getName() + " :";
+                    for (std::size_t i = 0; i < _channels.size();i++)
+                    {
+                        msg += _channels[i]->
+                    }
+                    + client->GetNick() + "\r\n";
+                    send(fd, msg.c_str(), msg.size(), 0);
                    
                 }
             }
