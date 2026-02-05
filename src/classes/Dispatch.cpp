@@ -230,18 +230,20 @@ bool Dispatch::ft_join(Command cmd, int fd)
             //RPL_NAMRPLY
             msg = "353 " + newChan->getName() + " :" + client->GetNick() + "\r\n";
             send(fd, msg.c_str(), msg.size(), 0);
+            //RPL_ENDOFNAMES
+            msg = "366 " + client->GetNick() + " " + newChan->getName() + " :End of /NAMES list\r\n";
+            send(fd, msg.c_str(), msg.size(), 0);
         }else
         {
             for (size_t j = 0; j < _channels.size(); j++)
             {
                 if (_channels[j]->getName() == chanName)
                 {
-                  std::string  msg = "I found the channel " + chanName + "\r\n";
-                    send(fd, msg.c_str(), msg.length(), 0);
+                    std::string  msg;
                     if (_channels[j]->isUserInChannel(client))
                     {
-                        msg = "User is already in the channel " + chanName + "\r\n";
-                        send(fd, msg.c_str(), msg.length(), 0);
+                       /*  msg = "User is already in the channel " + chanName + "\r\n";
+                        send(fd, msg.c_str(), msg.length(), 0); */
                         continue; // a voir que faire si deja dans le channel et mauvais key
                     }
                     if (_channels[j]->getKey() != chanKey)
@@ -251,8 +253,8 @@ bool Dispatch::ft_join(Command cmd, int fd)
                         continue;
                     }
 
-                    msg = ":server JOIN " + chanName + "\r\n";
-                    send(fd, msg.c_str(), msg.length(), 0);
+                   /*  msg = ":server JOIN " + chanName + "\r\n";
+                    send(fd, msg.c_str(), msg.length(), 0); */
                     msg = "User " + client->GetNick() + " joined the channel " + chanName + "\r\n";
                     send(fd, msg.c_str(), msg.length(), 0);
                     _channels[j]->addUser(client);
@@ -270,9 +272,15 @@ bool Dispatch::ft_join(Command cmd, int fd)
                     std::vector<Client *> channelUsers = _channels[j]->getUsers();
                     for (std::size_t i = 0; i < channelUsers.size();i++)
                     {
-                        msg +=channelUsers[i]->GetNick();
+                        if (i  == channelUsers.size() - 1)
+                            msg +=channelUsers[i]->GetNick();
+                        else 
+                            msg +=channelUsers[i]->GetNick() + " ";
                     }
                     msg += "\r\n";
+                    send(fd, msg.c_str(), msg.size(), 0);
+                    //RPL_ENDOFNAMES
+                    msg = "366 " + client->GetNick() + " " + _channels[j]->getName() + " :End of /NAMES list\r\n";
                     send(fd, msg.c_str(), msg.size(), 0);
                 }
             }
