@@ -220,18 +220,16 @@ bool Dispatch::ft_join(Command cmd, int fd)
             _channels.push_back(newChan);
             newChan->addUser(client);
             newChan->addOperator(client);
-            std::string msg = ":server JOIN " + chanName + "\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            msg = "I created the channel " + chanName + "\r\n";
+            std::string msg = ":" + client->GetNick() + " JOIN " + chanName + "\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
             //RPL_NOTOPIC
-            msg = "331 " + newChan->getName() + " :No topic is set" + "\r\n";
+            msg = ":server 331 " + client->GetNick() + " " + newChan->getName() + " :No topic is set\r\n";
             send(fd, msg.c_str(), msg.size(), 0);
-            //RPL_NAMRPLY
-            msg = "353 " + newChan->getName() + " :" + client->GetNick() + "\r\n";
+            //RPL_NAMREPLY
+            msg = ":server 353 " + client->GetNick() + " = " + newChan->getName() + " :@" + client->GetNick() + "\r\n";
             send(fd, msg.c_str(), msg.size(), 0);
             //RPL_ENDOFNAMES
-            msg = "366 " + client->GetNick() + " " + newChan->getName() + " :End of /NAMES list\r\n";
+            msg = ":server 366 " + client->GetNick() + " " + newChan->getName() + " :End of /NAMES list\r\n";
             send(fd, msg.c_str(), msg.size(), 0);
         }else
         {
@@ -253,34 +251,40 @@ bool Dispatch::ft_join(Command cmd, int fd)
                         continue;
                     }
 
-                   /*  msg = ":server JOIN " + chanName + "\r\n";
-                    send(fd, msg.c_str(), msg.length(), 0); */
-                    msg = "User " + client->GetNick() + " joined the channel " + chanName + "\r\n";
-                    send(fd, msg.c_str(), msg.length(), 0);
+                    // Broadcast JOIN to all existing members
+                    std::string joinMsg = ":" + client->GetNick() + " JOIN " + chanName + "\r\n";
+                    std::vector<Client *> existingUsers = _channels[j]->getUsers();
+                    for (std::size_t k = 0; k < existingUsers.size(); k++)
+                    {
+                        send(existingUsers[k]->GetFd(), joinMsg.c_str(), joinMsg.length(), 0);
+                    }
+                    // Also send JOIN confirmation to the joining client
+                    send(fd, joinMsg.c_str(), joinMsg.length(), 0);
                     _channels[j]->addUser(client);
                     if(_channels[j]->getTopic().empty())
                     {
-                        msg = "331 " + _channels[j]->getName() + " :No topic is set" + "\r\n";
+                        msg = ":server 331 " + client->GetNick() + " " + _channels[j]->getName() + " :No topic is set\r\n";
                         send(fd, msg.c_str(), msg.size(), 0);
                     } else
                     {
-                        msg = "332 " + _channels[j]->getName() + " :" + _channels[j]->getTopic() + "\r\n"; 
+                        msg = ":server 332 " + client->GetNick() + " " + _channels[j]->getName() + " :" + _channels[j]->getTopic() + "\r\n"; 
                         send(fd, msg.c_str(), msg.size(), 0);
                     }
-                    //TODO::a specifier les operateurs avec @ dans la liste
-                    msg = "353 " + newChan->getName() + " :";
+                    //RPL_NAMREPLY - list all users with @ prefix for operators
+                    msg = ":server 353 " + client->GetNick() + " = " + _channels[j]->getName() + " :";
                     std::vector<Client *> channelUsers = _channels[j]->getUsers();
-                    for (std::size_t i = 0; i < channelUsers.size();i++)
+                    for (std::size_t k = 0; k < channelUsers.size(); k++)
                     {
-                        if (i  == channelUsers.size() - 1)
-                            msg +=channelUsers[i]->GetNick();
-                        else 
-                            msg +=channelUsers[i]->GetNick() + " ";
+                        if (_channels[j]->isOperator(channelUsers[k]))
+                            msg += "@";
+                        msg += channelUsers[k]->GetNick();
+                        if (k < channelUsers.size() - 1)
+                            msg += " ";
                     }
                     msg += "\r\n";
                     send(fd, msg.c_str(), msg.size(), 0);
                     //RPL_ENDOFNAMES
-                    msg = "366 " + client->GetNick() + " " + _channels[j]->getName() + " :End of /NAMES list\r\n";
+                    msg = ":server 366 " + client->GetNick() + " " + _channels[j]->getName() + " :End of /NAMES list\r\n";
                     send(fd, msg.c_str(), msg.size(), 0);
                 }
             }
