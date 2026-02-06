@@ -70,3 +70,28 @@ bool Channel::addOperator(Client* user)
     operators.push_back(user);
     return true;
 }
+
+void Channel::setTopic(std::string topic)
+{
+    _topic = topic;
+}
+
+void Channel::setProtectTopic(bool protect)
+{
+    _protectTopic = protect;
+}
+
+bool Channel::isTopicProtected() const
+{
+    return _protectTopic;
+}
+
+void Channel::setInviteOnly(bool inviteOnly)
+{
+    _inviteOnly = inviteOnly;
+}
+
+bool Channel::isInviteOnly() const
+{
+    return _inviteOnly;
+}

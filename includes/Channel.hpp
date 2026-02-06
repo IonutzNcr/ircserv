@@ -23,6 +23,10 @@ class Channel
         bool addOperator(Client* user);
         bool isOperator(Client* user) const;
         bool isUserInChannel(Client* user) const;
+        void setProtectTopic(bool protect);
+        bool isTopicProtected() const;
+        void setInviteOnly(bool inviteOnly);
+        bool isInviteOnly() const;
         
        
     private:
@@ -32,5 +36,7 @@ class Channel
         std::string _key;
         std::vector <Client *> users;
         std::vector <Client *> operators;
+        bool _protectTopic;
+        bool _inviteOnly;
        /*  std::vector <Client *> invited; */
 };

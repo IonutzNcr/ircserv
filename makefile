@@ -56,6 +56,8 @@ $(DIRO_UTILS)%.o: $(DIR_UTILS)%.cpp $(INCLUDES)
 fclean:
 	rm -rf ./obj/classes/*.o ./obj/main.o ircserv2
 
-.PHONY: all fclean
+re: fclean all
+
+.PHONY: all fclean re
 
 .PHONY: all

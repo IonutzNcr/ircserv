@@ -32,6 +32,8 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_user(cmd, fd);
     if (cmd.getCmd() == "JOIN")
         ft_join(cmd, fd);
+    if (cmd.getCmd() == "MODE")
+        ft_mode(cmd, fd);
     /* if (cmd.getCmd() == "PING")
         ft_ping(cmd, fd);  */
 }
@@ -347,3 +349,88 @@ bool Dispatch::isChannelExist(std::string chanName)
     send(fd, reply.c_str(), reply.length(), 0);
     return true;
 } */
+
+bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string msg, Client* client)
+{
+    for (size_t i = 1; i < modeChanges.size(); i++) 
+    {
+        char mode = modeChanges[i];
+        if (mode == 't') {
+            if (modeChanges[0] == '+')
+            {
+                channel->setProtectTopic(true);
+            }
+            else
+            {
+                channel->setProtectTopic(false);
+            }
+        } else if (mode == 'i') {
+            if (modeChanges[0] == '+')
+            {
+                channel->setInviteOnly(true);
+            }
+            else
+            {
+                channel->setInviteOnly(false);
+            }
+        }
+        else {
+            std::string msg = ":server 501 " + client->GetNick() + " :Unknown MODE flag\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Dispatch::ft_mode(Command cmd, int fd)
+{
+    Client* client = getClientFd(fd);
+    if (!client)
+        return false;
+    std::string line = cmd.getLine();
+    std::vector<std::string> tokens = split(line, ' ');
+    if (tokens.size() < 3) {
+        std::string msg = ":server 461 MODE :Not enough parameters\r\n";
+        send(fd, msg.c_str(), msg.length(), 0);
+        return false;
+    }
+    std::string target = tokens[1];
+    std::string modeChanges = tokens[2];
+    
+    // For simplicity, we will only handle channel modes and ignore user modes for now
+    if (target[0] == '#') {
+        Channel* channel = nullptr;
+        for (size_t i = 0; i < _channels.size(); i++) {
+            if (_channels[i]->getName() == target) {
+                channel = _channels[i];
+                break;
+            }
+        }
+        if (!channel) {
+            std::string msg = ":server 403 " + client->GetNick() + " " + target + " :No such channel\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+        if (!channel->isOperator(client)) {
+            std::string msg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+        // Handle mode changes (for simplicity, we will only handle +t and -t for topic protection)
+        if (modeChanges[0] != '+' && modeChanges[0] != '-') {
+            std::string msg = ":server 501 " + client->GetNick() + " :Unknown MODE flag\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+        if (setMode(channel, modeChanges, fd, target, line, client) == false) 
+            return false;
+    }
+    else {
+        std::string msg = ":server 501 " + client->GetNick() + " :Unknown MODE type\r\n";
+        send(fd, msg.c_str(), msg.length(), 0);
+        return false;
+    }
+
+    return true;
+}
