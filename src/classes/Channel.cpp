@@ -70,3 +70,8 @@ bool Channel::addOperator(Client* user)
     operators.push_back(user);
     return true;
 }
+
+std::vector<Client *> &Channel::getUserRefs()
+{
+    return users;
+}

@@ -23,6 +23,7 @@ class Channel
         bool addOperator(Client* user);
         bool isOperator(Client* user) const;
         bool isUserInChannel(Client* user) const;
+        std::vector<Client *> &getUserRefs();
         
        
     private:

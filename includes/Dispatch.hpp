@@ -22,6 +22,7 @@ class Dispatch
         bool ft_nick(Command cmd, int fd);
         bool ft_user(Command cmd, int fd);
         bool ft_join(Command cmd, int fd);
+        bool ft_kick(Command cmd, int fd);
      /*    bool ft_ping(Command cmd, int fd); */
         
 
