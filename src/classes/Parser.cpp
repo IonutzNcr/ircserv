@@ -23,7 +23,7 @@ Command Parser::getCommand(std::string cmdline)
                 cmd.setCmd("");
                 throw std::runtime_error("No command found after prefix");
             }
-            cmd.setPrefix(cmdline.substr(0, end));
+            cmd.setPrefix(cmdline.substr(1, end));
             cmdline = cmdline.substr(end + 1);  // ✅ Skip l'espace
         }
         else

@@ -22,6 +22,16 @@ Dispatch::~Dispatch()
 
 void Dispatch::dispatch(Command cmd, int fd)
 {
+    //print cmd for debug
+    std::cout << "----------------------------------------------------" << std::endl;
+                
+    std::cout << "Received command: " << cmd.getLine() << std::endl
+                << "Parsed command: " << cmd.getCmd() << std::endl
+                << "Arguments: " << cmd.getArgs() << std::endl
+                << "Trailing: " << cmd.getTrailing() << std::endl
+                << "Prefix: " << cmd.getPrefix() << std::endl;
+    std::cout << "----------------------------------------------------" << std::endl;
+    /* ----------------------------------------------------------- */
     if (cmd.getCmd() == "CAP")
         ft_cap(cmd, fd);
     if (cmd.getCmd() == "PASS")
