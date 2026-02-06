@@ -95,3 +95,49 @@ bool Channel::isInviteOnly() const
 {
     return _inviteOnly;
 }
+
+void Channel::setKey(std::string key)
+{
+    _key = key;
+}
+
+bool Channel::checkKey(std::string key) const
+{
+    return _key == key;
+}
+
+void Channel::setMaxUsers(int maxUsers)
+{
+    _maxUsers = maxUsers;
+}
+
+bool Channel::removeUser(Client* user)
+{
+    for (size_t i = 0; i < users.size(); i++)
+    {
+        if (users[i] == user)
+        {
+            users.erase(users.begin() + i);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Channel::removeOperator(Client* user)
+{
+    for (size_t i = 0; i < operators.size(); i++)
+    {
+        if (operators[i] == user)
+        {
+            operators.erase(operators.begin() + i);
+            return true;
+        }
+    }
+    return false;
+}
+
+int Channel::getMaxUsers() const
+{
+    return _maxUsers;
+}

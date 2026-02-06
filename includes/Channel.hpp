@@ -27,6 +27,12 @@ class Channel
         bool isTopicProtected() const;
         void setInviteOnly(bool inviteOnly);
         bool isInviteOnly() const;
+        void setKey(std::string key);
+        bool checkKey(std::string key) const;
+        bool removeUser(Client* user);
+        void setMaxUsers(int maxUsers);
+        bool removeOperator(Client* user);
+        int getMaxUsers() const;
         
        
     private:
@@ -38,5 +44,6 @@ class Channel
         std::vector <Client *> operators;
         bool _protectTopic;
         bool _inviteOnly;
+        int _maxUsers;
        /*  std::vector <Client *> invited; */
 };
