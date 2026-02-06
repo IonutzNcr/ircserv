@@ -33,6 +33,8 @@ class Channel
         void setMaxUsers(int maxUsers);
         bool removeOperator(Client* user);
         int getMaxUsers() const;
+        bool addInvited(Client* user);
+        bool isInvited(Client* user) const;
         
        
     private:
@@ -45,5 +47,5 @@ class Channel
         bool _protectTopic;
         bool _inviteOnly;
         int _maxUsers;
-       /*  std::vector <Client *> invited; */
+        std::vector <Client *> invited;
 };

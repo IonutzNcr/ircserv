@@ -22,9 +22,11 @@ class Dispatch
         bool ft_nick(Command cmd, int fd);
         bool ft_user(Command cmd, int fd);
         bool ft_join(Command cmd, int fd);
+
         bool ft_mode(Command cmd, int fd);
         bool setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string msg, Client* client, std::vector<std::string> tokens);
      /*    bool ft_ping(Command cmd, int fd); */
+        bool ft_invite(Command cmd, int fd);
         
 
         bool isChannelExist(std::string chanName);

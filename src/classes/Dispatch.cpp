@@ -34,6 +34,8 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_join(cmd, fd);
     if (cmd.getCmd() == "MODE")
         ft_mode(cmd, fd);
+    if (cmd.getCmd() == "INVITE")
+        ft_invite(cmd, fd);
     /* if (cmd.getCmd() == "PING")
         ft_ping(cmd, fd);  */
 }
@@ -489,6 +491,62 @@ bool Dispatch::ft_mode(Command cmd, int fd)
         send(fd, msg.c_str(), msg.length(), 0);
         return false;
     }
+    return true;
+}
 
+bool Dispatch::ft_invite(Command cmd, int fd)
+{
+    Client* client = getClientFd(fd);
+    if (!client)
+        return false;
+    std::string line = cmd.getLine();
+    std::vector<std::string> tokens = split(line, ' ');
+    if (tokens.size() < 3) {
+        std::string msg = ":server 461 INVITE :Not enough parameters\r\n";
+        send(fd, msg.c_str(), msg.length(), 0);
+        return false;
+    }
+    std::string targetNick = tokens[1];
+    std::string channelName = tokens[2];
+    
+    Client* targetClient = nullptr;
+    for (size_t i = 0; i < _clients.size(); i++) {
+        if (_clients[i]->GetNick() == targetNick) {
+            targetClient = _clients[i];
+            break;
+        }
+    }
+    if (!targetClient) {
+        std::string errMsg = ":server 401 " + client->GetNick() + " " + targetNick + " :No such nick\r\n";
+        send(fd, errMsg.c_str(), errMsg.length(), 0);
+        return false;
+    }
+    
+    Channel* channel = nullptr;
+    for (size_t i = 0; i < _channels.size(); i++) {
+        if (_channels[i]->getName() == channelName) {
+            channel = _channels[i];
+            break;
+        }
+    }
+    if (!channel) {
+        std::string errMsg = ":server 403 " + client->GetNick() + " " + channelName + " :No such channel\r\n";
+        send(fd, errMsg.c_str(), errMsg.length(), 0);
+        return false;
+    }
+    
+    if (!channel->isUserInChannel(client)) {
+        channel->addUser(client);
+        std::string joinMsg = ":" + client->GetNick() + " JOIN " + channelName + "\r\n";
+        send(fd, joinMsg.c_str(), joinMsg.length(), 0);
+        return true;
+    }
+    else {
+        std::string errMsg = ":server 443 " + client->GetNick() + " " + targetNick + " " + channelName + " :is already on channel\r\n";
+        send(fd, errMsg.c_str(), errMsg.length(), 0);
+        return false;
+    }
+    std::string inviteMsg = ":" + client->GetNick() + " INVITE " + targetClient->GetNick() + " :" + channel->getName() + "\r\n";
+    send(targetClient->GetFd(), inviteMsg.c_str(), inviteMsg.length(), 0);
     return true;
 }
