@@ -141,3 +141,21 @@ int Channel::getMaxUsers() const
 {
     return _maxUsers;
 }
+
+bool Channel::isInvited(Client* user) const
+{
+    for (size_t i = 0; i < invited.size(); i++)
+    {
+        if (invited[i] == user)
+            return true;
+    }
+    return false;
+}
+
+bool Channel::addInvited(Client* user)
+{
+    if (isInvited(user))
+        return false;
+    invited.push_back(user);
+    return true;
+}
