@@ -36,6 +36,8 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_mode(cmd, fd);
     if (cmd.getCmd() == "INVITE")
         ft_invite(cmd, fd);
+    if (cmd.getCmd() == "TOPIC")
+        ft_topic(cmd, fd);
     /* if (cmd.getCmd() == "PING")
         ft_ping(cmd, fd);  */
 }
@@ -481,7 +483,6 @@ bool Dispatch::ft_mode(Command cmd, int fd)
             send(fd, msg.c_str(), msg.length(), 0);
             return false;
         }
-        // Handle mode changes (for simplicity, we will only handle +t and -t for topic protection)
        
         if (setMode(channel, modeChanges, fd, target, line, client, tokens) == false) 
             return false;
@@ -537,23 +538,33 @@ bool Dispatch::ft_invite(Command cmd, int fd)
         return false;
     }
 
+    if (!channel->isUserInChannel(client))
+    {
+        std::string errMsg = ":server 442 " + channelName + " :You're not on that channel\r\n";
+        send(fd, errMsg.c_str(), errMsg.length(), 0);
+        return false;
+    }
+
     if (!channel->isOperator(client)) {
         std::string errMsg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
         send(fd, errMsg.c_str(), errMsg.length(), 0);
         return false;
     }
 
-    if (!channel->isInviteOnly()) {
-        std::string errMsg = ":server 473 " + client->GetNick() + " " + channel->getName() + " :channel is not invite-only\r\n";
+    if (channel->isUserInChannel(targetClient)) {
+        std::string errMsg = ":server 443 " + client->GetNick() + " " + channel->getName() + " :is already on channel\r\n";
         send(fd, errMsg.c_str(), errMsg.length(), 0);
         return false;
     }
     
     if (!channel->isInvited(targetClient)) {
         channel->addInvited(targetClient);
-        std::string inviteMsg = ":" + client->GetNick() + " INVITE " + targetClient->GetNick() + " :" + channel->getName() + "\r\n";
+        std::string inviteMsg = ":server 301 " + client->GetNick() + " :" + client->GetNick() + " INVITE " + targetClient->GetNick() + " IN " + channel->getName() + "\r\n";
         send(targetClient->GetFd(), inviteMsg.c_str(), inviteMsg.length(), 0);
     }
+
+    std::string succesInviteMsg = ":server 341 " + channel->getName() + " " + client->GetNick() + "\r\n";
+    send(client->GetFd(), succesInviteMsg.c_str(), succesInviteMsg.length(), 0);
     return true;
 }
 
@@ -562,14 +573,14 @@ bool Dispatch::ft_topic(Command cmd, int fd)
     Client* client = getClientFd(fd);
     if (!client)
         return false;
-    std::string line = cmd.getLine();
-    std::vector<std::string> tokens = split(line, ' ');
-    if (tokens.size() < 2) {
-        std::string msg = ":server 461 TOPIC :Not enough parameters\r\n";
+
+    std::string channelName = cmd.getArgs();
+    if (channelName.empty())
+    {
+        std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
         send(fd, msg.c_str(), msg.length(), 0);
         return false;
     }
-    std::string channelName = tokens[1];
     
     Channel* channel = nullptr;
     for (size_t i = 0; i < _channels.size(); i++) {
@@ -592,51 +603,35 @@ bool Dispatch::ft_topic(Command cmd, int fd)
         return false;
     }
 
-
-    if (tokens.size() == 2) { // just query the topic
-        if (channel->getTopic() == "") {
-            std::string msg = ":server 331 " + client->GetNick() + " " + channel->getName() + " :No topic is set\r\n";
+    if (cmd.getTrailing().empty())
+    {
+        if (channel->getTopic().empty())
+        {
+            std::string msg = ":server 331 " + client->GetNick() + " " + channelName + " :No topic is set\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
-        } else {
-            std::string msg = ":server 332 " + client->GetNick() + " " + channel->getName() + " :" + channel->getTopic() + "\r\n";
+        }
+        else
+        {
+            std::string msg = ":server 332 " + client->GetNick() + " " + channelName + " :" + channel->getTopic() + "\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
         }
         return true;
     }
 
-    // setting a new topic
     if (channel->isTopicProtected() && !channel->isOperator(client)) {
         std::string errMsg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
         send(fd, errMsg.c_str(), errMsg.length(), 0);
         return false;
     }
 
-    if (line.find(':') == std::string::npos) {
-        std::string errMsg = ":server 461 TOPIC :Not enough parameters\r\n";
-        send(fd, errMsg.c_str(), errMsg.length(), 0);
-        return false;
-    }
-    else if (line.find(':') < line.find(channelName) + channelName.length()) {
-        std::string errMsg = ":server 461 TOPIC :Not enough parameters\r\n";
-        send(fd, errMsg.c_str(), errMsg.length(), 0);
-        return false;
-    }
-    
-    size_t pos = line.find(" :");
-    if (pos == std::string::npos)
-        return false;
-    std::string newTopic = line.substr(pos + 2);
+    std::string newTopic = cmd.getTrailing();
     channel->setTopic(newTopic);
-    if (newTopic.empty())
-    {
-        channel->setTopic("balbala");
-    }
-    std::string errMsg = ":server 332 TOPIC :set TOPIC " + newTopic + "\r\n";
-    send(fd, errMsg.c_str(), errMsg.length(), 0);
-    std::string topicMsg = ":" + client->GetNick() + " TOPIC " + channel->getName() + " :" + newTopic + "\r\n";
-    std::vector<Client *> channelUsers = channel->getUsers();
-    for (std::size_t k = 0; k < channelUsers.size(); k++) {
-        send(channelUsers[k]->GetFd(), topicMsg.c_str(), topicMsg.length(), 0);
-    }
+
+    std::string topicMsg = ":" + client->GetNick() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
+
+    std::vector<Client*> users = channel->getUsers();
+    for (size_t i = 0; i < users.size(); i++)
+        send(users[i]->GetFd(), topicMsg.c_str(), topicMsg.length(), 0);
+
     return true;
 }
