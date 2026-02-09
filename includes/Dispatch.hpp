@@ -8,6 +8,7 @@ class Command;
 
 class Dispatch
 {
+
     public:
         std::vector<Client *> &_clients;
         std::vector<Channel *> _channels;
@@ -22,6 +23,11 @@ class Dispatch
         bool ft_nick(Command cmd, int fd);
         bool ft_user(Command cmd, int fd);
         bool ft_join(Command cmd, int fd);
+        bool parseNick(std::string line);
+        void ft_PRIVMSG(Command cmd, int fd);
+        void ft_PRIVMSG_client(Command cmd, int fd);
+        void ft_PRIVMSG_channel(Command cmd, int fd);
+        int	findClient(std::string nick);
 
         bool ft_mode(Command cmd, int fd);
         bool setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string msg, Client* client, std::vector<std::string> tokens);
@@ -31,6 +37,7 @@ class Dispatch
         
 
         bool isChannelExist(std::string chanName);
+        Channel*    getChannel(std::string target);
         Client *getClientFd(int fd_client);
         void tryRegister(Client* client);
 };

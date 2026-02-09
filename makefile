@@ -12,7 +12,8 @@ FILES=	Client.cpp \
 		Parser.cpp \
 		Data.cpp \
 		Dispatch.cpp\
-		Channel.cpp
+		Channel.cpp \
+		Register.cpp
 
 FILES_UTILS=	split.cpp
 

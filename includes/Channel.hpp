@@ -1,10 +1,8 @@
 #pragma once
-
 #include <string>
 #include <vector>
 
 class Client;  // Forward declaration
-
 
 class Channel
 {
@@ -35,9 +33,14 @@ class Channel
         int getMaxUsers() const;
         bool addInvited(Client* user);
         bool isInvited(Client* user) const;
-        
        
     private:
+        bool _inviteOnly;   // +i
+        bool _topicRestricted; // +t
+        bool _hasKey; // +k
+        std::size_t _userLimit; // +l
+        std::vector<Client*> invited;
+        
         std::string _topic;
         std::string _name;
         std::size_t _id;
@@ -45,7 +48,5 @@ class Channel
         std::vector <Client *> users;
         std::vector <Client *> operators;
         bool _protectTopic;
-        bool _inviteOnly;
         int _maxUsers;
-        std::vector <Client *> invited;
 };

@@ -38,11 +38,15 @@ public:
 	Server(int port, std::string password):Port(port), _password(password) {
 		/* dispatch = dispatch() */
 		SerSocketFd = -1;}
-	~Server() {return ;};
+	~Server() {
+	CloseFds();
+    for (size_t i = 0; i < clients.size(); i++)
+    delete clients[i];};
 	void ServerInit();
 	void SerSocket(); //-> server socket creation
 	void AcceptNewClient(); //-> accept new client
 	void ReceiveNewData(int fd, Dispatch &dispatch); //-> receive new data from a registered client
+	int	findClient(std::string nick);
 
 	static void SignalHandler(int signum); //-> signal handler
  

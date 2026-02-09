@@ -1,6 +1,5 @@
 #include "../../includes/Channel.hpp"
 
-
 Channel::Channel(std::string topic, std::string name, std::size_t id, std::string key)
 :_topic(topic), _name(name), _id(id), _key(key)
 {
