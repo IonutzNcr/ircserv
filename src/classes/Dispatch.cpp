@@ -370,11 +370,22 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             return false;
         std::string line = cmd.getLine();
         std::vector<std::string> tokens = split(line, ' ');
+        
         if (tokens.size() < 3) {
             std::string msg = ":server 461 KICK :Not enough parameters\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
             return false;
         }
+        std::vector <std::string> split_channels = split(tokens[1], ',');
+        std::vector <std::string> split_target = split(tokens[2], ',');
+
+        if (split_channels.size() != split_target.size())
+        {
+            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+
         std::string chanName = tokens[1];
         std::string targetNick = tokens[2];
         std::string reason = (tokens.size() > 3) ? line.substr(line.find(tokens[3])) : "No reason";
