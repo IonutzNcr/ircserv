@@ -385,7 +385,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
                     send(fd, errMsg.c_str(), errMsg.length(), 0);
                     return false;
                 }
-                if (!tokens[3].empty()) {
+                if (channel->getKey() != "") {
                     std::string errMsg = ":server 467 " + client->GetNick() + " " + channel->getName() + " :Channel key already set\r\n";
                     send(fd, errMsg.c_str(), errMsg.length(), 0);
                     return false;
@@ -404,8 +404,22 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
                     send(fd, errMsg.c_str(), errMsg.length(), 0);
                     return false;
                 }
-                int maxUsers = std::stoi(tokens[3]);
-                channel->setMaxUsers(maxUsers);
+                try
+                {
+                    int maxUsers = std::stoi(tokens[3]);
+                    if (maxUsers <= 0) {
+                        std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
+                        send(fd, errMsg.c_str(), errMsg.length(), 0);
+                        return false;
+                    }
+                    channel->setMaxUsers(maxUsers);
+                }
+                catch(const std::exception& e)
+                {
+                    std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
+                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+                    return false;
+                }
             }
             else {
                 channel->setMaxUsers(0);
@@ -482,7 +496,10 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
         modeMsg += " " + tokens[i];
     }
     modeMsg += "\r\n";
-    send(fd, modeMsg.c_str(), modeMsg.length(), 0);
+    std::vector<Client*> users = channel->getUsers();
+    for (size_t j = 0; j < users.size(); j++) {
+        send(users[j]->GetFd(), modeMsg.c_str(), modeMsg.length(), 0);
+    }
     return true;
 }
 
@@ -499,9 +516,40 @@ bool Dispatch::ft_mode(Command cmd, int fd)
         return false;
     }
     if (tokens.size() == 2) {
-        std::string errMsg = ":server 324 " + client->GetNick() + " " + tokens[1] + " :No modes set\r\n";
-        send(fd, errMsg.c_str(), errMsg.length(), 0);
-        return false;
+        std::string target = tokens[1];
+        if (target[0] == '#') {
+            Channel* channel = nullptr;
+            for (size_t i = 0; i < _channels.size(); i++) {
+                if (_channels[i]->getName() == target) {
+                    channel = _channels[i];
+                    break;
+                }
+            }
+            if (!channel) {
+                std::string msg = ":server 403 " + client->GetNick() + " " + target + " :No such channel\r\n";
+                send(fd, msg.c_str(), msg.length(), 0);
+                return false;
+            }
+            std::string options = "";
+            if (channel->isTopicProtected())
+                options += "t";
+            if (channel->isInviteOnly())
+                options += "i";
+            if (!channel->getKey().empty())
+                options += "k";
+            if (channel->getMaxUsers() > 0)
+                options += "l";
+            std::string msg = ":server 324 " + client->GetNick() + " " + channel->getName() + " +" + options + "\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            std::string msg2 = ":server 329 " + client->GetNick() + " " + channel->getName() + " " + std::to_string(channel->getId()) + "\r\n";
+            send(fd, msg2.c_str(), msg2.length(), 0);
+        }
+        else {
+            std::string msg = ":server 472 " + client->GetNick() + " " + target + " :is unknown mode char to me\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+        return true;
     }
     std::string target = tokens[1];
     std::string modeChanges = tokens[2];
@@ -613,8 +661,15 @@ bool Dispatch::ft_topic(Command cmd, int fd)
     Client* client = getClientFd(fd);
     if (!client)
         return false;
-
-    std::string channelName = cmd.getArgs();
+    
+    std::string line = cmd.getLine();
+    std::vector<std::string> tokens = split(line, ' ');
+    if (tokens.size() < 2) {
+        std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
+        send(fd, msg.c_str(), msg.length(), 0);
+        return false;
+    }
+    std::string channelName = tokens[1];
     if (channelName.empty())
     {
         std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
