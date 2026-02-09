@@ -18,9 +18,14 @@ void Server::ClearClients(int fd){ //-> clear the clients
 			{fds.erase(fds.begin() + i); break;}
 	}
 	for(size_t i = 0; i < clients.size(); i++){ //-> remove the client from the vector of clients
-		if (clients[i]->GetFd() == fd)
-			{clients.erase(clients.begin() + i); break;}
+		if (clients[i]->GetFd() == fd) {
+			clients.erase(clients.begin() + i); break;
+			delete clients[i];
+			close(fd);
+		}
 	}
+	//Channels : si ton client était dans des channels, tu dois le retirer → sinon “fantôme”.
+	//Broadcast QUIT : informer les autres clients que ce client est parti.
 
 }
 
@@ -162,4 +167,14 @@ void Server::ReceiveNewData(int fd)
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		
 	}
+}
+
+int	Server::findClient(std::string nick)
+{
+	for(size_t i = 0; i < clients.size(); i++){
+		if (clients[i]->GetNick() == nick) {
+                return (clients[i]->GetFd());
+            }
+	}
+	return (NULL);
 }

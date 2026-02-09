@@ -8,14 +8,14 @@
 
 
 
-Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients):_password(pass), _clients(clients)
+Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients): _password(pass), _clients(clients)
 {
-
+    return ;
 }
 
 Dispatch::~Dispatch()
 {
-
+    return ;
 }
 
 void Dispatch::dispatch(Command cmd, int fd)
@@ -29,7 +29,98 @@ void Dispatch::dispatch(Command cmd, int fd)
     if (cmd.getCmd() == "USER")
         ft_user(cmd, fd);
     if (cmd.getCmd() == "JOIN")
-        ft_join(cmd, fd); 
+        ft_join(cmd, fd);
+    if (cmd.getCmd() == "PRIVMSG")
+        ft_PRIVMSG(cmd, fd);
+}
+//le cas pour channel n'est pas fait encore
+void    Dispatch::ft_PRIVMSG(Command cmd, int fd, int choice)
+{
+    if (choice == 1)
+        ft_PRIVMSG_client(cmd, fd);
+    else if (choice == 2)
+        ft_PRIVMSG_channel(cmd, fd);
+    else
+        return ;
+
+}
+
+void    Dispatch::ft_PRIVMSG_channel(Command cmd, int fd)
+{
+    Client* client = getClientFd(fd);
+    if (!client)
+        return;
+    if (!client->isRegistered()) {
+        std::string err = "You are not registered\r\n";
+        send(fd, err.c_str(), err.length(), 0);
+        return;
+    }
+    if (cmd.getArgs().empty()) {
+        std::string err = "Error: no recipient\r\n";
+        send(fd, err.c_str(), err.length(), 0);
+        return;
+    }
+    std::string channelName = cmd.getArgs();
+    if (cmd.getTrailing().empty()) {
+        std::string err = "Error: no text to send\r\n";
+        send(fd, err.c_str(), err.length(), 0);
+        return;
+    }
+
+    Channel* channel = getChannel(channelName);
+    if (!channel) {
+        std::string err = "Error: no such channel\r\n";
+        send(fd, err.c_str(), err.length(), 0);
+        return;
+    }
+
+    if (!channel->hasClient(client)) { // Vérifier que le client est dans le channel
+        std::string err = "Error: you're not on that channel\r\n";
+        send(fd, err.c_str(), err.length(), 0);
+        return;
+    }
+    std::string msg = ":" + client->GetNick() + " PRIVMSG " + channelName
+        + " :" + cmd.getTrailing() + "\r\n";
+    const std::vector<Client*>& members = channel->getClients();
+    for (size_t i = 0; i < members.size(); i++) {
+        if (members[i]->getFd() != fd) {
+            send(members[i]->getFd(), msg.c_str(), msg.length(), 0);
+        }
+    }
+    return ;
+}
+
+void    Dispatch::ft_PRIVMSG_client(Command cmd, int fd)
+{
+    Client* client = getClientFd(fd);
+    if (cmd.getArgs().empty()) {
+        std::string txt2 = "Error: no destinataire\r\n";
+        send(fd, txt2.c_str(), txt2.length(), 0);
+        return ;
+    }
+    std::string client2 = cmd.getArgs();
+    if (!client)
+        return ;
+    if (!client->isRegistered()) {
+        std::string txt2 = "You are not register\r\n";
+        send(fd, txt2.c_str(), txt2.length(), 0);
+        return ;
+    }
+    if (cmd.getTrailing().empty()) {
+        std::string txt2 = "Error: texte missing\r\n";
+        send(fd, txt2.c_str(), txt2.length(), 0);
+        return ;
+    }
+    // mettre une protction pour savoir si il ya bien un message
+    int fd2 = findClient(client2);
+    if (fd2 < 0) {
+        std::string txt2 = "Error: no such nick\r\n";
+        send(fd, txt2.c_str(), txt2.length(), 0);
+        return ;
+    }
+    std::string sendText = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + cmd.getTrailing() + "\r\n";
+    send(fd2, sendText.c_str(), sendText.length(), 0); //Msg envoyer au deuxieme client
+
 }
 
 bool Dispatch::ft_cap(Command cmd)
@@ -42,13 +133,12 @@ bool Dispatch::ft_pass(Command cmd, int fd)
 {
    
     Client* client = getClientFd(fd);
-   
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt = ":server 462 :You may not reregister\r\n";
-        send(fd, txt.c_str(), txt.length(), 0);
-        return false;
+        std::string txt2 = fd + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
+        send(fd, txt2.c_str(), txt2.length(), 0);
+        return true;
     }
   
     std::string line = cmd.getLine();
@@ -58,18 +148,16 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     pass.erase(0, pass.find_first_not_of(" \t"));
     if (!pass.empty() && pass[0] == ':')
         pass.erase(0, 1);
-    
     pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
-   
     if (pass.empty()) { 
-        std::string msg = ":server 461 PASS :Not enough parameters\r\n";
+        std::string msg = fd + " PASS :Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
         send(fd, msg.c_str(), msg.length(), 0);
-        return false;
+        return true;
     }
     if (pass != _password) {    // si le pass est differend de celui des parametre => error
-        std::string txt = ":server 464 :Password incorrect\r\n";
+        std::string txt = fd + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
         send(fd, txt.c_str(), txt.length(), 0);
-        return false;
+        return true;
     }
    
     client->setAuthenticated(true);
@@ -78,7 +166,19 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     return true; 
 }
  
- 
+
+
+bool Dispatch::parseNick(std::string line)
+{
+    // build une fonction pour le parsing de nick (erreur 433)
+
+
+
+
+
+
+    return true;
+}
 bool Dispatch::ft_nick(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
@@ -91,44 +191,36 @@ bool Dispatch::ft_nick(Command cmd, int fd)
         nick.erase(0, 1);
     nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
     if (nick.empty()) {     // si pas de new nick => erreur 
-        std::string msg = "431 :No nickname given\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
+        std::string msg = fd + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
+        send(fd, msg.c_str(), msg.length(), 0);     
         return false;
     }
     for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
             if (_clients[i]->GetNick() == nick && _clients[i] != client) {
-                std::string msg = "serveur 433 * " + nick + " :Nickname is already in use\r\n";
+                std::string msg = fd + " " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
                 send(fd, msg.c_str(), msg.length(), 0);
-                return false;
+                return true;
             }
     }
     std::string oldNick = client->GetNick();
     client->SetNick(nick);
-    // std::string mssg = "ft_Nick set a true " + nick + "\r\n";
-    // send(fd, mssg.c_str(), mssg.size(), 0);
+    if (!oldNick.empty() && client->isRegistered()) {       // si le client est deja enregistrer et qu'il modifie le nick
+        std::string ret = ":" + oldNick + " NICK :" + nick + "\r\n";
+        send(fd, ret.c_str(), ret.length(), 0);
+    }    
     tryRegister(client);
-
-    std::string ret;    //  affichage et envoie
-    if (!oldNick.empty())
-        ret = ":" + oldNick + " NICK :" + nick + "\r\n";
-    else
-        ret = ":" + nick + " NICK :" + nick + "\r\n";
-    send(fd, ret.c_str(), ret.length(), 0);
     return true; 
 }
+
 bool Dispatch::ft_user(Command cmd, int fd)
 {   
-    std::string mssg2 = "ft_User set a true \r\n";
-    send(fd, mssg2.c_str(), mssg2.size(), 0);
     Client* client = getClientFd(fd);
     if (!client)
         return false;
-    // std::string mssg2 = "ft_User set a true \r\n";
-    // send(fd, mssg2.c_str(), mssg2.size(), 0);
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt = ":server 462 :You may not reregister\r\n";
+        std::string txt = fd + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
         send(fd, txt.c_str(), txt.length(), 0);
-        return false;
+        return true;
     }
     std::string line = cmd.getLine();
     std::string user = line.substr(4); // on stock la string apres le NICK
@@ -137,28 +229,19 @@ bool Dispatch::ft_user(Command cmd, int fd)
         user.erase(0, 1);
     user.erase(user.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
     if (user.empty()) {     // si pas de new nick => erreur 
-        std::string msg = "461 :No nickname given\r\n";
+        std::string msg = fd + " USER :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
         send(fd, msg.c_str(), msg.length(), 0);
-        return false;
+        return true;
     }
     std::string oldUser = client->GetUser();
     client->SetUser(user);
-    // std::string mssg = "ft_User set a true " + user + "\r\n";
-    // send(fd, mssg.c_str(), mssg.size(), 0);
     tryRegister(client);
-    std::string ret;    //  affichage et envoie
-    if (!oldUser.empty())
-        ret = ":" + oldUser + " USER :" + user + "\r\n";
-    else
-        ret = ":" + user + " USER :" + user + "\r\n";
-    send(fd, ret.c_str(), ret.length(), 0);
     return true; 
 }
 bool Dispatch::ft_join(Command cmd, int fd)
 {
     return true;
 }
-
 
 Client *Dispatch::getClientFd(int fd_client)
 {
@@ -175,11 +258,22 @@ void    Dispatch::tryRegister(Client* client)
         return ;
     if (client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
         client->setRegistered(true);
-    //sendWelcome(client);  // fonction a buid et a renomer pour notifier que le client c'est bien enregistrer
         std::string msg = ":server 001 " + client->GetNick() + " :Welcome to the IRC server!\r\n";
         send(client->GetFd(), msg.c_str(), msg.length(), 0);
     }
     if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
-        
+        std::string msg2 = "464 * :Password incorrect\r\n";
+        send(client->GetFd(), msg2.c_str(), msg2.length(), 0);
+        // a voir si on deconnecte le client ou pas
     }
+}
+
+int	Dispatch::findClient(std::string nick)
+{
+	for(size_t i = 0; i < _clients.size(); i++){
+		if (_clients[i]->GetNick() == nick) {
+                return (_clients[i]->GetFd());
+            }
+	}
+	return (-1);
 }

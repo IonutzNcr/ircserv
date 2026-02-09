@@ -1,0 +1,171 @@
+Comment faire attention aux zombies (conceptuellement)
+🧠 1. Le serveur ne fait jamais confiance au client
+
+Principe fondamental réseau :
+
+Un client peut mourir à tout moment, sans prévenir.
+
+👉 Donc :
+
+chaque socket doit être considérée comme potentiellement morte
+
+aucune action ne doit supposer que le client est encore vivant
+
+🧠 2. recv() est ta première ligne de défense
+
+Quand :
+
+recv() retourne 0
+→ connexion fermée proprement
+
+recv() retourne -1
+→ erreur → client probablement mort
+
+👉 À ce moment-là :
+
+supprimer le client
+
+le retirer de tous les channels
+
+libérer la mémoire
+
+🧠 3. Poll / select = détecteur de zombies
+
+Avec poll() ou select() :
+
+un fd devient :
+
+lisible
+
+ou en erreur
+
+mais recv() ne renvoie plus rien
+
+👉 Signal clair que le client est zombie.
+
+=====================================================================================
+
+une fois le client enregistrer, il n'a plus droit de modifier son user mais son nick oui.
+Pour set USER :
+    la commande doit etre ecrite comme ca =>  USER toto 0 * :Toto
+    pas comme ca => USER Toto => erreur 461 enought parameter
+
+Pour NICK :
+
+===> Si le serveur n'accepte pas le nouveau pseudo fourni par le client (par exemple, s'il contient des caractères invalides), 
+il doit renvoyer une erreur numérique ERR_ERRONEUSNICKNAME et ignorer la commande NICK. Les serveurs DOIVENT autoriser au moins
+ tous les caractères alphanumériques, les crochets et accolades ([]{}), les barres obliques inverses (\) et les barres verticales (|) 
+ dans les pseudos, et PEUVENT interdire les chiffres en premier caractère. Les serveurs PEUVENT autoriser des caractères supplémentaires, 
+ à condition qu'ils n'introduisent pas d'ambiguïté dans les autres commandes, notamment :
+
+ pas de caractère # en début de commande ni d'autre caractère annoncé dans CHANTYPES
+
+pas de deux-points (:) en début de commande
+
+pas d'espace ASCII
+
+Si le serveur ne reçoit pas le paramètre <nickname> avec la commande NICK, 
+il doit renvoyer une erreur numérique ERR_NONICKNAMEGIVEN et ignorer la commande NICK.
+
+Le message NICK peut être envoyé par le serveur aux clients pour confirmer la réussite de leur commande NICK et 
+informer les autres clients du changement de pseudonyme. Dans ce cas, la source du message sera l'ancien 
+pseudonyme [ [ "!" utilisateur ] "@" hôte ] de l'utilisateur qui change de pseudonyme.
+
+
+===> erreur 436 pas besoin de gerer je pense puisque on aura qu'un seul serveur.
+
+=======================================================================================
+
+5️⃣ Comment ta classe sera utilisée dans JOIN
+
+Conceptuellement, JOIN fera :
+
+- client enregistré ?
+- channel existe ?
+    NON → créer Channel
+    OUI → vérifier règles
+- +i ? → invité ?
+- +l ? → plein ?
+- +k ? → clé valide ?
+- addUser(client)
+- si premier → addOperator(client)
+
+
+👉 Toute cette logique vit dans Channel, pas dans JOIN.
+
+JOIN doit poser des questions, Channel doit répondre.
+
+=====================================================
+Pour PRIVTMSG
+
+6️⃣.1 Vérifier qu’il y a un MESSAGE
+❌ Cas incorrect (message manquant)
+
+Le client envoie :
+
+PRIVMSG bob
+
+
+👉 Problème :
+
+il y a une cible (bob)
+
+mais aucun texte
+
+Réaction du serveur :
+
+NE PAS envoyer quoi que ce soit à bob
+
+envoyer une erreur au client expéditeur
+
+Message conceptuel :
+
+“Tu n’as pas fourni de texte à envoyer”
+
+❌ Autre cas incorrect
+PRIVMSG bob :
+
+
+👉 Le : est là, mais le message est vide
+👉 Toujours une erreur
+
+✅ Cas correct
+PRIVMSG bob :Salut Bob !
+
+
+👉 Message valide
+
+🔴 6️⃣.2 Envoyer le message au client cible
+🎯 Situation
+
+alice envoie :
+
+PRIVMSG bob :Salut Bob
+
+❌ Mauvais comportement serveur
+
+le serveur vérifie tout
+
+MAIS :
+
+n’envoie rien à bob
+
+ou envoie à alice
+
+👉 bob ne reçoit jamais le message ❌
+
+✅ Bon comportement serveur
+
+le serveur envoie UNIQUEMENT à bob
+
+avec l’identité d’alice
+
+Message reçu par bob (conceptuellement) :
+
+alice : Salut Bob
+
+👉 bob sait :
+
+qui parle
+
+quoi
