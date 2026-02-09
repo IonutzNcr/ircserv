@@ -222,7 +222,7 @@ bool Dispatch::isChannelExist(std::string chanName)
     return false;
 }
 
-/* bool Dispatch::ft_ping(Command cmd, int fd)
+bool Dispatch::ft_ping(Command cmd, int fd)
 {
     std::string line = cmd.getLine();
     std::string token;
@@ -240,7 +240,7 @@ bool Dispatch::isChannelExist(std::string chanName)
     std::string reply = ":server PONG server :" + token + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     return true;
-} */
+}
 
 Channel*    Dispatch::getChannel(std::string target)
 {
@@ -249,4 +249,14 @@ Channel*    Dispatch::getChannel(std::string target)
             return (_channels[i]);
     }
     return (NULL);
+}
+
+int	Dispatch::findClient(std::string nick)
+{
+	for(size_t i = 0; i < _clients.size(); i++){
+		if (_clients[i]->GetNick() == nick) {
+                return (_clients[i]->GetFd());
+            }
+	}
+	return (-1);
 }

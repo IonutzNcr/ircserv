@@ -13,7 +13,8 @@ bool Dispatch::ft_topic(Command cmd, int fd)
     Client* client = getClientFd(fd);
     if (!client)
         return false;
-    
+    if (!client->isRegistered()) // si le client n'es pas register just return false
+		return false;
     std::string line = cmd.getLine();
     std::vector<std::string> tokens = split(line, ' ');
     if (tokens.size() < 2) {
@@ -81,14 +82,4 @@ bool Dispatch::ft_topic(Command cmd, int fd)
         send(users[i]->GetFd(), topicMsg.c_str(), topicMsg.length(), 0);
 
     return true;
-}
-
-int	Dispatch::findClient(std::string nick)
-{
-	for(size_t i = 0; i < _clients.size(); i++){
-		if (_clients[i]->GetNick() == nick) {
-                return (_clients[i]->GetFd());
-            }
-	}
-	return (-1);
 }

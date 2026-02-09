@@ -16,8 +16,7 @@ FILES=	Client.cpp \
 		Register.cpp \
 		Mode.cpp \
 		Invite.cpp \
-		Topic.cpp \
-		Ping.cpp
+		Topic.cpp
 
 FILES_UTILS=	split.cpp
 

@@ -152,6 +152,8 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     Client* client = getClientFd(fd);
     if (!client)
         return false;
+	if (!client->isRegistered()) // si le client n'es pas register just return false
+		return false;
     std::string line = cmd.getLine();
     std::vector<std::string> tokens = split(line, ' ');
     if (tokens.size() < 2) {
