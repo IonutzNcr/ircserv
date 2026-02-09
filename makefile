@@ -13,7 +13,11 @@ FILES=	Client.cpp \
 		Data.cpp \
 		Dispatch.cpp\
 		Channel.cpp \
-		Register.cpp
+		Register.cpp \
+		Mode.cpp \
+		Invite.cpp \
+		Topic.cpp \
+		Ping.cpp
 
 FILES_UTILS=	split.cpp
 
