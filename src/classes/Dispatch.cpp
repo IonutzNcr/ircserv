@@ -368,16 +368,17 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             return false;
         if (!client->isRegistered()) // si le client n'es pas register just return false
             return false;
-        std::string line = cmd.getLine();
+        std::string line = cmd.getArgs();
         std::vector<std::string> tokens = split(line, ' ');
         
-        if (tokens.size() < 3) {
+        if (tokens.size() < 2) {
             std::string msg = ":server 461 KICK :Not enough parameters\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
             return false;
         }
-        std::vector <std::string> split_channels = split(tokens[1], ',');
-        std::vector <std::string> split_target = split(tokens[2], ',');
+
+        std::vector <std::string> split_channels = split(tokens[0], ',');
+        std::vector <std::string> split_target = split(tokens[1], ',');
 
         if (split_channels.size() != split_target.size())
         {
@@ -385,55 +386,98 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             send(fd, msg.c_str(), msg.length(), 0);
             return false;
         }
+        for(size_t i = 0; i < split_channels.size(); i++)
+        {
+            std::string chanName = split_channels[i];
+            std::string targetNick = split_target[i];
+            if (chanName.empty() || targetNick.empty()) {
+                std::string msg = ":server 461 KICK :Not enough parameters\r\n";
+                send(fd, msg.c_str(), msg.length(), 0);
+                return false;
+            }
 
-        std::string chanName = tokens[1];
-        std::string targetNick = tokens[2];
-        std::string reason = (tokens.size() > 3) ? line.substr(line.find(tokens[3])) : "No reason";
+        }
+
+        std::string chanName = tokens[0];
+        std::string targetNick = tokens[1];
+        std::string reason = (cmd.getTrailing().empty() ? "No reason" : cmd.getTrailing());
     
-        Channel* channel = nullptr;
-        for (size_t i = 0; i < _channels.size(); i++) {
-            if (_channels[i]->getName() == chanName) {
+        if (chanName.empty() || targetNick.empty()) {
+            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+
+        if (chanName.size() != targetNick.size()) {
+            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+
+       
+
+
+        for(size_t i = 0; i < chanName.size(); i++)
+        {
+            Channel* channel = nullptr;
+            for (size_t i = 0; i < _channels.size(); i++)
+            {
+                if (_channels[i]->getName() == chanName)
+                {
                 channel = _channels[i];
                 break;
+                }
             }
-        }
-        if (!channel) {
-            std::string msg = ":server 403 " + client->GetNick() + " " + chanName + " :No such channel\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        }
-        if (!channel->isOperator(client)) {
-            std::string msg = ":server 482 " + client->GetNick() + " " + chanName + " :You're not channel operator\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        }
-        Client* targetClient = nullptr;
-        for (size_t i = 0; i < _clients.size(); i++) {
-            if (_clients[i]->GetNick() == targetNick) {
-                targetClient = _clients[i];
-                break;
+
+            if (!channel)
+            {
+                std::string msg = ":server 403 " + client->GetNick() + " " + chanName + " :No such channel\r\n";
+                send(fd, msg.c_str(), msg.length(), 0);
+                return false;
             }
-        }
-        if (!targetClient || !channel->isUserInChannel(targetClient)) {
-            std::string msg = ":server 441 " + client->GetNick() + " " + targetNick + " " + chanName + " :They aren't on that channel\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
+
+            if (!channel->isOperator(client))
+            {
+                std::string msg = ":server 482 " + client->GetNick() + " " + chanName + " :You're not channel operator\r\n";
+                send(fd, msg.c_str(), msg.length(), 0);
+                return false;
+            }
+            
+            Client* targetClient = nullptr;
+            for (size_t i = 0; i < _clients.size(); i++) {
+                if (_clients[i]->GetNick() == targetNick) {
+                    targetClient = _clients[i];
+                    break;
+                }
+            }
+
+            if (!targetClient || !channel->isUserInChannel(targetClient)) {
+                std::string msg = ":server 441 " + client->GetNick() + " " + targetNick + " " + chanName + " :They aren't on that channel\r\n";
+                send(fd, msg.c_str(), msg.length(), 0);
+                return false;
+            }
+            
+            // Broadcast KICK message to all channel members
+            std::string kickMsg = ":" + client->GetNick() + " KICK " + chanName + " " + targetNick + " :" + reason + "\r\n";
+            std::vector<Client *> channelUsers = channel->getUsers();
+            for (std::size_t i = 0; i < channelUsers.size(); i++)
+            {
+                send(channelUsers[i]->GetFd(), kickMsg.c_str(), kickMsg.length(), 0);
+            }
+
+            // Remove target client from channel
+            std::vector<Client *> &users = channel->getUserRefs();
+            for (std::vector<Client *>::iterator it = users.begin(); it != users.end(); ++it)
+            {
+                if (*it == targetClient) {
+                    users.erase(it);
+                    break;
+                }
+            }
         }
         
-        // Broadcast KICK message to all channel members
-        std::string kickMsg = ":" + client->GetNick() + " KICK " + chanName + " " + targetNick + " :" + reason + "\r\n";
-        std::vector<Client *> channelUsers = channel->getUsers();
-        for (std::size_t i = 0; i < channelUsers.size(); i++
-        ) {
-            send(channelUsers[i]->GetFd(), kickMsg.c_str(), kickMsg.length(), 0);
-        }
-        // Remove target client from channel
-        std::vector<Client *> &users = channel->getUserRefs();
-        for (std::vector<Client *>::iterator it = users.begin(); it != users.end(); ++it) {
-            if (*it == targetClient) {
-                users.erase(it);
-                break;
-            }
-        }
+
+
+        
         return true;    
 }
