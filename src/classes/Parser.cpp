@@ -3,6 +3,7 @@
 #include "../../includes/Parser.hpp"
 #include <iostream>
 #include "../../includes/Command.hpp"
+#include "../../includes/split.hpp"
 
 Parser::Parser(){}
 Parser::~Parser(){}
@@ -62,6 +63,9 @@ Command Parser::getCommand(std::string cmdline)
                 cmd.setArgs("");
             cmd.setTrailing(cmdline.substr(end + 1));
         }
+        // set args vector
+        std::vector<std::string> argsVector = split(cmd.getArgs(), ' ');
+        cmd.setArgsVector(argsVector);
     }
     catch(const std::exception& e)
     {
