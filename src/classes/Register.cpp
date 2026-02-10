@@ -20,6 +20,7 @@ bool Dispatch::parseNick(std::string line)
 
     return true;
 }
+
 bool Dispatch::ft_nick(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
@@ -53,6 +54,40 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     return true; 
 }
 
+std::vector<std::string> Dispatch::SplitParams(std::string line) const
+{
+    std::vector<std::string> params;
+    size_t pos = 0;
+
+    pos = line.find(' ');   // enlever le 1er mot(USER)
+    if (pos == std::string::npos)
+        return params;
+    line = line.substr(pos + 1);
+    while (!line.empty())   // parser les paramètres
+    {
+        size_t start = line.find_first_not_of(" \t");   // supprimer espaces initiaux
+        if (start == std::string::npos)
+            break;
+        line.erase(0, start);
+        if (line[0] == ':') // si ':' trouver pushback le reste
+        {
+            params.push_back(line.substr(1));
+            break;
+        }
+
+        // paramètre normal
+        size_t space = line.find(' ');
+        if (space == std::string::npos)
+        {
+            params.push_back(line);
+            break;
+        }
+        params.push_back(line.substr(0, space));
+        line.erase(0, space + 1);
+    }
+    return params;
+}
+
 bool Dispatch::ft_user(Command cmd, int fd)
 {   
     Client* client = getClientFd(fd);
@@ -64,25 +99,22 @@ bool Dispatch::ft_user(Command cmd, int fd)
         return true;
     }
     std::string line = cmd.getLine();
-    std::string user = line.substr(4); // on stock la string apres le NICK
-    user.erase(0, user.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
-    if (!user.empty() && user[0] == ':') // a voir pour traiter un seul ou plusieur ':'
-        user.erase(0, 1);
-    user.erase(user.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
-    if (user.empty()) {     // si pas de new nick => erreur 
-        std::string msg = fd + " USER :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
+    std::vector<std::string> params = SplitParams(line);
+    if (params.size() < 4 || params[0].empty() || params[1].empty() || params[2].empty() || params[3].empty())
+    {
+        std::string msg = "USER :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
         send(fd, msg.c_str(), msg.length(), 0);
         return true;
     }
-    std::string oldUser = client->GetUser();
-    client->SetUser(user);
+    //std::string oldUser = client->GetUser();
+    client->SetUser(params[0]);
+    client->SetRealName(params[3]);
     tryRegister(client);
-    return true; 
+    return true;
 }
 
 bool Dispatch::ft_pass(Command cmd, int fd)
 {
-   
     Client* client = getClientFd(fd);
     if (!client)
         return false;
@@ -91,11 +123,8 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         send(fd, txt2.c_str(), txt2.length(), 0);
         return true;
     }
-  
     std::string line = cmd.getLine();
-    
     std::string pass = line.substr(4);
-   
     pass.erase(0, pass.find_first_not_of(" \t"));
     if (!pass.empty() && pass[0] == ':')
         pass.erase(0, 1);
@@ -116,57 +145,74 @@ bool Dispatch::ft_pass(Command cmd, int fd)
    
     return true; 
 }
- 
+
+int Dispatch::ft_choice(const std::string& target)
+{
+    if (target.empty())
+        return 0;
+    size_t i = 0;    
+    while (i < target.size() && (target[i] == '@' || target[i] == '%' || target[i] == '+')) // Ignorer les préfixes de statut @, %, +
+        i++;    
+    if (i < target.size() && (target[i] == '#' || target[i] == '&'))    // Vérifier si c'est un channel si oui renvoie 2
+        return (2);
+    return (1);
+}
+
+// revoir les message d'erreur
 //le cas pour channel n'est pas fait encore
 void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
 {
-    int choice = 1;
-
+    
+    Client* client = getClientFd(fd);
+    std::vector<std::string>    params = SplitParams(cmd.getLine());
+    if (!client->isRegistered()) {
+        std::string err = ":server 451 * :You have not registered\r\n";
+        send(fd, err.c_str(), err.length(), 0);
+        return;
+    }
+    if (params.size() < 3) {
+        std::string err = "Error: need params\r\n";
+        send(fd, err.c_str(), err.length(), 0);
+        return;
+    }
+    if (params[1].empty()) {
+        std::string err = ":server 411 * :No recipient given\r\n";
+        send(fd, err.c_str(), err.length(), 0);
+        return;
+    }
+    if (params[2].empty()) {
+        std::string txt2 = ":server 412 * :No text to send\r\n";
+        send(fd, txt2.c_str(), txt2.length(), 0);
+        return ;
+    }
+    int choice = ft_choice(params[1]);
     if (choice == 1)
-        ft_PRIVMSG_client(cmd, fd);
+        ft_PRIVMSG_client(params, fd);
     else if (choice == 2)
-        ft_PRIVMSG_channel(cmd, fd);
+        ft_PRIVMSG_channel(params, fd);
     else
         return ;
 
 }
 
-void    Dispatch::ft_PRIVMSG_channel(Command cmd, int fd)
+void    Dispatch::ft_PRIVMSG_channel(std::vector<std::string> params, int fd)
 {
     Client* client = getClientFd(fd);
     if (!client)
         return;
-    if (!client->isRegistered()) {
-        std::string err = "You are not registered\r\n";
-        send(fd, err.c_str(), err.length(), 0);
-        return;
-    }
-    if (cmd.getArgs().empty()) {
-        std::string err = "Error: no recipient\r\n";
-        send(fd, err.c_str(), err.length(), 0);
-        return;
-    }
-    std::string channelName = cmd.getArgs();
-    if (cmd.getTrailing().empty()) {
-        std::string err = "Error: no text to send\r\n";
-        send(fd, err.c_str(), err.length(), 0);
-        return;
-    }
-
+    std::string channelName = params[1];
     Channel* channel = getChannel(channelName);
     if (!channel) {
-        std::string err = "Error: no such channel\r\n";
+        std::string err = ":server 403 * :No such channel\r\n";
         send(fd, err.c_str(), err.length(), 0);
         return;
     }
-
     if (!channel->isUserInChannel(client)) { // Vérifier que le client est dans le channel
-        std::string err = "Error: you're not on that channel\r\n";
+        std::string err = ":server 404 * :Cannot send to channel\r\n";
         send(fd, err.c_str(), err.length(), 0);
         return;
     }
-    std::string msg = ":" + client->GetNick() + " PRIVMSG " + channelName
-        + " :" + cmd.getTrailing() + "\r\n";
+    std::string msg = ":" + client->GetNick() + " PRIVMSG " + channelName + " :" + params[2] + "\r\n";
     const std::vector<Client*>& members = channel->getUsers();
     for (size_t i = 0; i < members.size(); i++) {
         if (members[i]->GetFd() != fd) {
@@ -176,34 +222,18 @@ void    Dispatch::ft_PRIVMSG_channel(Command cmd, int fd)
     return ;
 }
 
-void    Dispatch::ft_PRIVMSG_client(Command cmd, int fd)
+void    Dispatch::ft_PRIVMSG_client(std::vector<std::string> params, int fd)
 {
     Client* client = getClientFd(fd);
-    if (cmd.getArgs().empty()) {
-        std::string txt2 = "Error: no destinataire\r\n";
-        send(fd, txt2.c_str(), txt2.length(), 0);
-        return ;
-    }
-    std::string client2 = cmd.getArgs();
     if (!client)
-        return ;
-    if (!client->isRegistered()) {
-        std::string txt2 = "You are not register\r\n";
-        send(fd, txt2.c_str(), txt2.length(), 0);
-        return ;
-    }
-    if (cmd.getTrailing().empty()) {
-        std::string txt2 = "Error: texte missing\r\n";
-        send(fd, txt2.c_str(), txt2.length(), 0);
-        return ;
-    }
-    // mettre une protction pour savoir si il ya bien un message
+        return;
+    std::string client2 = params[1];
     int fd2 = findClient(client2);
     if (fd2 < 0) {
-        std::string txt2 = "Error: no such nick\r\n";
+        std::string txt2 =  ":server 401 " + client->GetNick() + " " + client2 + " :No such nick\r\n";
         send(fd, txt2.c_str(), txt2.length(), 0);
         return ;
     }
-    std::string sendText = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + cmd.getTrailing() + "\r\n";
+    std::string sendText = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + params[2] + "\r\n";
     send(fd2, sendText.c_str(), sendText.length(), 0); //Msg envoyer au deuxieme client
 }
