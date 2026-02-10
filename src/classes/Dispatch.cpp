@@ -368,97 +368,80 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             return false;
         if (!client->isRegistered()) // si le client n'es pas register just return false
             return false;
+        std::cout << "FT_KICK" << std::endl;
         std::string line = cmd.getArgs();
         std::vector<std::string> tokens = split(line, ' ');
         
         if (tokens.size() < 2) {
+             std::cout << "FT_KICK bis 2" << std::endl;
             std::string msg = ":server 461 KICK :Not enough parameters\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
             return false;
         }
-
+        //pb ici 1000%
         std::vector <std::string> split_channels = split(tokens[0], ',');
-        std::vector <std::string> split_target = split(tokens[1], ',');
+        std::vector <std::string> split_target = split(tokens[1], ','); // 1 element
 
-        if (split_channels.size() != split_target.size())
-        {
+
+        
+        /* std::string chanName = tokens[0];
+        std::string targetNick = tokens[1]; */
+        std::string reason = (cmd.getTrailing().empty() ? "No reason" : cmd.getTrailing());
+        //INUTILE ...
+       /*  if (chanName.empty() || targetNick.empty()) {
+            std::cout << "FT_KICK 2 bis" << std::endl;
             std::string msg = ":server 461 KICK :Not enough parameters\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
             return false;
-        }
+        } */
+       
+        //TODO:: il reconnait pas le channel pk?
         for(size_t i = 0; i < split_channels.size(); i++)
         {
-            std::string chanName = split_channels[i];
-            std::string targetNick = split_target[i];
-            if (chanName.empty() || targetNick.empty()) {
-                std::string msg = ":server 461 KICK :Not enough parameters\r\n";
-                send(fd, msg.c_str(), msg.length(), 0);
-                return false;
-            }
-
-        }
-
-        std::string chanName = tokens[0];
-        std::string targetNick = tokens[1];
-        std::string reason = (cmd.getTrailing().empty() ? "No reason" : cmd.getTrailing());
-    
-        if (chanName.empty() || targetNick.empty()) {
-            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        }
-
-        if (chanName.size() != targetNick.size()) {
-            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        }
-
-       
-
-
-        for(size_t i = 0; i < chanName.size(); i++)
-        {
             Channel* channel = nullptr;
-            for (size_t i = 0; i < _channels.size(); i++)
+            for (size_t k = 0; i < _channels.size(); k++)
             {
-                if (_channels[i]->getName() == chanName)
+                std::cout << "FT_KICK 3 bis 0 "<< ":";
+                std::cout << _channels[i]->getName() << std::endl;
+                if (_channels[k]->getName() == split_channels[i])
                 {
-                channel = _channels[i];
-                break;
+                    channel = _channels[k];
+                    break;
                 }
             }
 
             if (!channel)
             {
-                std::string msg = ":server 403 " + client->GetNick() + " " + chanName + " :No such channel\r\n";
+                std::cout << "FT_KICK 3 bis 1" << std::endl;
+                std::string msg = ":server 403 " + client->GetNick() + " " + split_channels[i] + " :No such channel\r\n";
                 send(fd, msg.c_str(), msg.length(), 0);
                 return false;
             }
 
             if (!channel->isOperator(client))
             {
-                std::string msg = ":server 482 " + client->GetNick() + " " + chanName + " :You're not channel operator\r\n";
+                std::cout << "FT_KICK 3 bis 2" << std::endl;
+                std::string msg = ":server 482 " + client->GetNick() + " " + split_channels[i] + " :You're not channel operator\r\n";
                 send(fd, msg.c_str(), msg.length(), 0);
                 return false;
             }
-            
+              std::cout << "FT_KICK 4" << std::endl;
             Client* targetClient = nullptr;
             for (size_t i = 0; i < _clients.size(); i++) {
-                if (_clients[i]->GetNick() == targetNick) {
+                if (_clients[i]->GetNick() == split_target[0]) {
                     targetClient = _clients[i];
                     break;
                 }
             }
 
             if (!targetClient || !channel->isUserInChannel(targetClient)) {
-                std::string msg = ":server 441 " + client->GetNick() + " " + targetNick + " " + chanName + " :They aren't on that channel\r\n";
+                std::string msg = ":server 441 " + client->GetNick() + " " + split_target[0] + " " + split_channels[i] + " :They aren't on that channel\r\n";
                 send(fd, msg.c_str(), msg.length(), 0);
                 return false;
             }
             
             // Broadcast KICK message to all channel members
-            std::string kickMsg = ":" + client->GetNick() + " KICK " + chanName + " " + targetNick + " :" + reason + "\r\n";
+            std::string kickMsg = ":" + client->GetNick() + " KICK " + split_channels[i] + " " + split_target[0] + " :" + reason + "\r\n";
             std::vector<Client *> channelUsers = channel->getUsers();
             for (std::size_t i = 0; i < channelUsers.size(); i++)
             {

@@ -17,8 +17,14 @@ class Command
         void setPrefix(std::string prefix);
         void setTrailing(std::string trailing);
         void setArgs(std::string arguments);
-        void setArgsVector(std::vector<std::string> argsVector);
-        std::vector<std::string> getArgsVector() const;
+        void setArgsVector(std::vector<std::string> argsVector)
+        {
+            _argsVector = argsVector;
+        };
+        std::vector<std::string> getArgsVector() const
+        {
+            return _argsVector;
+        };
 
     private:
         std::string _prefix;
