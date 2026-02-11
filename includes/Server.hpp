@@ -51,7 +51,7 @@ public:
 	static void SignalHandler(int signum); //-> signal handler
  
 	void CloseFds(); //-> close file descriptors
-	void ClearClients(int fd); //-> clear clients
+	void ClearClients(int fd, Dispatch &dispatch); //-> clear clients
 };
 
 
