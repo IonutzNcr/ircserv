@@ -14,6 +14,7 @@ class Client //-> class for client
         std::string _username;
         bool        _authentificated;
         bool        _registered;
+        std::string _msgQuit;
     public :
         Client(int fd);
         ~Client() {return ;}
@@ -31,4 +32,7 @@ class Client //-> class for client
     bool        isRegistered() const {return _registered;}
     void        setAuthenticated(bool etat) {_authentificated = etat;}
     bool        isAuthenticated() const {return _authentificated;}
+    std::string GetIpAdd() const { return _IPadd; } // to fix the get ip address function
+    void        SetMsgQuit(std::string msg) {_msgQuit = msg;}
+    std::string GetMsgQuit() const { return _msgQuit; }
 };

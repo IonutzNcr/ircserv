@@ -16,9 +16,12 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 {
     Client* clientToRemove = NULL;
 
+	std::string quitMsg = "";
+
     for(size_t i = 0; i < clients.size(); i++){
         if (clients[i]->GetFd() == fd) {
             clientToRemove = clients[i];
+            quitMsg = clientToRemove->GetMsgQuit();
             clients.erase(clients.begin() + i);
             break;
         }
@@ -26,15 +29,15 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 
     if (!clientToRemove)
         return;
-
-	std::string quitMsg = ":" + clientToRemove->GetNick() + " QUIT :Client disconnected\r\n";
+	std::string quitMsgCrtlC = ":" + clientToRemove->GetNick() + " QUIT :Client disconnected\r\n";
+	if (quitMsg.empty())
+		quitMsg = quitMsgCrtlC;
 	for (size_t i = 0; i < dispatch._channels.size(); i++) {
 		if (dispatch._channels[i]->isUserInChannel(clientToRemove)) {
 			const std::vector<Client*>& channelUsers = dispatch._channels[i]->getUsers();
 			for (size_t j = 0; j < channelUsers.size(); j++) {
-				if (channelUsers[j]->GetFd() != fd) {
+				if (channelUsers[j]->GetFd() != fd)
 					send(channelUsers[j]->GetFd(), quitMsg.c_str(), quitMsg.length(), 0);
-				}
 			}
 		}
 	}
@@ -179,7 +182,6 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 		if (errno != EWOULDBLOCK && errno != EAGAIN) //-> check if the error is not EWOULDBLOCK or EAGAIN
 			std::cout << "recv() failed" << std::endl;
 	}
-
 	else{ //-> print the received data
 		buff[bytes] = '\0';
 		Command cmd;

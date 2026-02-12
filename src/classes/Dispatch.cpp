@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+
 Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients): _password(pass), _clients(clients)
 {
     return ;
@@ -42,6 +43,9 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_PRIVMSG(cmd, fd);
     if (cmd.getCmd() == "PING")
         ft_ping(cmd, fd);
+    if (cmd.getCmd() == "QUIT")
+        ft_quit(cmd, fd);
+
 }
 
 bool Dispatch::ft_cap(Command cmd, int fd)
