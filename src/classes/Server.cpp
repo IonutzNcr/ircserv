@@ -110,7 +110,7 @@ void Server::ServerInit()
 				close(deadFd);
 				ClearClients(deadFd, dispatch);
 				fds.erase(fds.begin() + i);
-				i--; // important car erase décale le vector
+				i--;
 				continue;
 			}
 
