@@ -24,6 +24,7 @@ class Dispatch
         bool ft_join(Command cmd, int fd);
         bool ft_mode(Command cmd, int fd);
         bool setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string msg, Client* client);
+        bool ft_kick(Command cmd, int fd);
      /*    bool ft_ping(Command cmd, int fd); */
         
 

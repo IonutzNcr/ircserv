@@ -3,6 +3,7 @@
 #include "../../includes/Parser.hpp"
 #include <iostream>
 #include "../../includes/Command.hpp"
+#include "../../includes/split.hpp"
 
 Parser::Parser(){}
 Parser::~Parser(){}
@@ -23,7 +24,7 @@ Command Parser::getCommand(std::string cmdline)
                 cmd.setCmd("");
                 throw std::runtime_error("No command found after prefix");
             }
-            cmd.setPrefix(cmdline.substr(0, end));
+            cmd.setPrefix(cmdline.substr(1, end));
             cmdline = cmdline.substr(end + 1);  // ✅ Skip l'espace
         }
         else
@@ -62,6 +63,9 @@ Command Parser::getCommand(std::string cmdline)
                 cmd.setArgs("");
             cmd.setTrailing(cmdline.substr(end + 1));
         }
+        // set args vector
+        std::vector<std::string> argsVector = split(cmd.getArgs(), ' ');
+        cmd.setArgsVector(argsVector);
     }
     catch(const std::exception& e)
     {

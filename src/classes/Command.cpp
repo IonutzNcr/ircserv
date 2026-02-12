@@ -54,3 +54,5 @@ void Command::setLine(std::string line)
 {
     _line = line;
 }
+
+

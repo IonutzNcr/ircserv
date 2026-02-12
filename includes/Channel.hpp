@@ -27,6 +27,7 @@ class Channel
         bool isTopicProtected() const;
         void setInviteOnly(bool inviteOnly);
         bool isInviteOnly() const;
+        std::vector<Client *> &getUserRefs();
         
        
     private:

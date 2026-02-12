@@ -95,3 +95,7 @@ bool Channel::isInviteOnly() const
 {
     return _inviteOnly;
 }
+std::vector<Client *> &Channel::getUserRefs()
+{
+    return users;
+}

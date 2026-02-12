@@ -22,6 +22,16 @@ Dispatch::~Dispatch()
 
 void Dispatch::dispatch(Command cmd, int fd)
 {
+    //print cmd for debug
+    std::cout << "----------------------------------------------------" << std::endl;
+                
+    std::cout << "Received command: " << cmd.getLine() << std::endl
+                << "Parsed command: " << cmd.getCmd() << std::endl
+                << "Arguments: " << cmd.getArgs() << std::endl
+                << "Trailing: " << cmd.getTrailing() << std::endl
+                << "Prefix: " << cmd.getPrefix() << std::endl;
+    std::cout << "----------------------------------------------------" << std::endl;
+    /* ----------------------------------------------------------- */
     if (cmd.getCmd() == "CAP")
         ft_cap(cmd, fd);
     if (cmd.getCmd() == "PASS")
@@ -34,6 +44,8 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_join(cmd, fd);
     if (cmd.getCmd() == "MODE")
         ft_mode(cmd, fd);
+    if (cmd.getCmd() == "KICK")
+        ft_kick(cmd, fd);
     /* if (cmd.getCmd() == "PING")
         ft_ping(cmd, fd);  */
 }
@@ -182,6 +194,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
     std::string line = cmd.getLine();
     std::string channelName = line.substr(5); // on stock la string apres le JOIN
     std::vector<std::string> chanXkeys = split(channelName, ' ');
+
     if (chanXkeys.empty())
     {
         std::string msg = ":server 461 JOIN :Not enough parameters\r\n";
@@ -433,4 +446,108 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     }
 
     return true;
+}
+//TODO:: <channel>{,<channel>} <user>{,<user>} [<comment>] 
+bool Dispatch::ft_kick(Command cmd, int fd)
+{
+        Client* client = getClientFd(fd);
+        if (!client)
+            return false;
+        if (!client->isRegistered()) // si le client n'es pas register just return false
+            return false;
+        std::cout << "FT_KICK" << std::endl;
+        std::string line = cmd.getArgs();
+        std::vector<std::string> tokens = split(line, ' ');
+        
+        if (tokens.size() < 2) {
+             std::cout << "FT_KICK bis 2" << std::endl;
+            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        }
+        //pb ici 1000%
+        std::vector <std::string> split_channels = split(tokens[0], ',');
+        std::vector <std::string> split_target = split(tokens[1], ','); // 1 element
+
+
+        
+        /* std::string chanName = tokens[0];
+        std::string targetNick = tokens[1]; */
+        std::string reason = (cmd.getTrailing().empty() ? "No reason" : cmd.getTrailing());
+        //INUTILE ...
+       /*  if (chanName.empty() || targetNick.empty()) {
+            std::cout << "FT_KICK 2 bis" << std::endl;
+            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
+            send(fd, msg.c_str(), msg.length(), 0);
+            return false;
+        } */
+       
+        //TODO:: il reconnait pas le channel pk?
+        for(size_t i = 0; i < split_channels.size(); i++)
+        {
+            Channel* channel = nullptr;
+            for (size_t k = 0; i < _channels.size(); k++)
+            {
+                std::cout << "FT_KICK 3 bis 0 "<< ":";
+                std::cout << _channels[i]->getName() << std::endl;
+                if (_channels[k]->getName() == split_channels[i])
+                {
+                    channel = _channels[k];
+                    break;
+                }
+            }
+
+            if (!channel)
+            {
+                std::cout << "FT_KICK 3 bis 1" << std::endl;
+                std::string msg = ":server 403 " + client->GetNick() + " " + split_channels[i] + " :No such channel\r\n";
+                send(fd, msg.c_str(), msg.length(), 0);
+                return false;
+            }
+
+            if (!channel->isOperator(client))
+            {
+                std::cout << "FT_KICK 3 bis 2" << std::endl;
+                std::string msg = ":server 482 " + client->GetNick() + " " + split_channels[i] + " :You're not channel operator\r\n";
+                send(fd, msg.c_str(), msg.length(), 0);
+                return false;
+            }
+              std::cout << "FT_KICK 4" << std::endl;
+            Client* targetClient = nullptr;
+            for (size_t i = 0; i < _clients.size(); i++) {
+                if (_clients[i]->GetNick() == split_target[0]) {
+                    targetClient = _clients[i];
+                    break;
+                }
+            }
+
+            if (!targetClient || !channel->isUserInChannel(targetClient)) {
+                std::string msg = ":server 441 " + client->GetNick() + " " + split_target[0] + " " + split_channels[i] + " :They aren't on that channel\r\n";
+                send(fd, msg.c_str(), msg.length(), 0);
+                return false;
+            }
+            
+            // Broadcast KICK message to all channel members
+            std::string kickMsg = ":" + client->GetNick() + " KICK " + split_channels[i] + " " + split_target[0] + " :" + reason + "\r\n";
+            std::vector<Client *> channelUsers = channel->getUsers();
+            for (std::size_t i = 0; i < channelUsers.size(); i++)
+            {
+                send(channelUsers[i]->GetFd(), kickMsg.c_str(), kickMsg.length(), 0);
+            }
+
+            // Remove target client from channel
+            std::vector<Client *> &users = channel->getUserRefs();
+            for (std::vector<Client *>::iterator it = users.begin(); it != users.end(); ++it)
+            {
+                if (*it == targetClient) {
+                    users.erase(it);
+                    break;
+                }
+            }
+        }
+        
+
+
+        
+        return true;    
 }
