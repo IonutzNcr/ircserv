@@ -1,0 +1,2024 @@
+diff --git a/includes/Channel.hpp b/includes/Channel.hpp
+index ef106f7..de7d263 100644
+--- a/includes/Channel.hpp
++++ b/includes/Channel.hpp
+@@ -1,9 +1,11 @@
+ #pragma once
++
+ #include <string>
+ #include <vector>
+ 
+ class Client;  // Forward declaration
+ 
++
+ class Channel
+ {
+     public:
+@@ -21,32 +23,15 @@ class Channel
+         bool addOperator(Client* user);
+         bool isOperator(Client* user) const;
+         bool isUserInChannel(Client* user) const;
+-        void setProtectTopic(bool protect);
+-        bool isTopicProtected() const;
+-        void setInviteOnly(bool inviteOnly);
+-        bool isInviteOnly() const;
+-        void setKey(std::string key);
+-        bool checkKey(std::string key) const;
+-        bool removeUser(Client* user);
+-        void setMaxUsers(int maxUsers);
+-        bool removeOperator(Client* user);
+-        int getMaxUsers() const;
+-        bool addInvited(Client* user);
+-        bool isInvited(Client* user) const;
++        std::vector<Client *> &getUserRefs();
++        
+        
+     private:
+-        bool _inviteOnly;   // +i
+-        bool _topicRestricted; // +t
+-        bool _hasKey; // +k
+-        std::size_t _userLimit; // +l
+-        std::vector<Client*> invited;
+-        
+         std::string _topic;
+         std::string _name;
+         std::size_t _id;
+         std::string _key;
+         std::vector <Client *> users;
+         std::vector <Client *> operators;
+-        bool _protectTopic;
+-        int _maxUsers;
++       /*  std::vector <Client *> invited; */
+ };
+\ No newline at end of file
+diff --git a/includes/Client.hpp b/includes/Client.hpp
+index 7edb443..802d804 100644
+--- a/includes/Client.hpp
++++ b/includes/Client.hpp
+@@ -3,8 +3,6 @@
+ #include <iostream>
+ #include <string>
+ 
+-
+-
+ class Client //-> class for client
+ {
+ 	    private :
+@@ -14,7 +12,6 @@ class Client //-> class for client
+         std::string _username;
+         bool        _authentificated;
+         bool        _registered;
+-        std::string _msgQuit;
+     public :
+         Client(int fd);
+         ~Client() {return ;}
+@@ -32,7 +29,4 @@ class Client //-> class for client
+     bool        isRegistered() const {return _registered;}
+     void        setAuthenticated(bool etat) {_authentificated = etat;}
+     bool        isAuthenticated() const {return _authentificated;}
+-    std::string GetIpAdd() const { return _IPadd; } // to fix the get ip address function
+-    void        SetMsgQuit(std::string msg) {_msgQuit = msg;}
+-    std::string GetMsgQuit() const { return _msgQuit; }
+ };
+\ No newline at end of file
+diff --git a/includes/Command.hpp b/includes/Command.hpp
+index f87c053..5ccc3cd 100644
+--- a/includes/Command.hpp
++++ b/includes/Command.hpp
+@@ -20,11 +20,11 @@ class Command
+         void setArgsVector(std::vector<std::string> argsVector)
+         {
+             _argsVector = argsVector;
+-        }
++        };
+         std::vector<std::string> getArgsVector() const
+         {
+             return _argsVector;
+-        }
++        };
+ 
+     private:
+         std::string _prefix;
+diff --git a/includes/Dispatch.hpp b/includes/Dispatch.hpp
+index 36d6c6d..c66e9d8 100644
+--- a/includes/Dispatch.hpp
++++ b/includes/Dispatch.hpp
+@@ -8,7 +8,6 @@ class Command;
+ 
+ class Dispatch
+ {
+-
+     public:
+         std::vector<Client *> &_clients;
+         std::vector<Channel *> _channels;
+@@ -23,22 +22,11 @@ class Dispatch
+         bool ft_nick(Command cmd, int fd);
+         bool ft_user(Command cmd, int fd);
+         bool ft_join(Command cmd, int fd);
+-        bool parseNick(std::string line);
+-        void ft_PRIVMSG(Command cmd, int fd);
+-        void ft_PRIVMSG_client(Command cmd, int fd);
+-        void ft_PRIVMSG_channel(Command cmd, int fd);
+-        int	findClient(std::string nick);
+-
+-        bool ft_mode(Command cmd, int fd);
+-        bool setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string msg, Client* client, std::vector<std::string> tokens);
+-        bool ft_ping(Command cmd, int fd);
+-        bool ft_invite(Command cmd, int fd);
+-        bool ft_topic(Command cmd, int fd);
+-        bool ft_quit(Command cmd, int fd);
++        bool ft_kick(Command cmd, int fd);
++     /*    bool ft_ping(Command cmd, int fd); */
+         
+ 
+         bool isChannelExist(std::string chanName);
+-        Channel*    getChannel(std::string target);
+         Client *getClientFd(int fd_client);
+         void tryRegister(Client* client);
+ };
+diff --git a/includes/Server.hpp b/includes/Server.hpp
+index b896c3c..db8aca7 100644
+--- a/includes/Server.hpp
++++ b/includes/Server.hpp
+@@ -38,20 +38,16 @@ public:
+ 	Server(int port, std::string password):Port(port), _password(password) {
+ 		/* dispatch = dispatch() */
+ 		SerSocketFd = -1;}
+-	~Server() {
+-	CloseFds();
+-    for (size_t i = 0; i < clients.size(); i++)
+-    delete clients[i];};
++	~Server() {return ;};
+ 	void ServerInit();
+ 	void SerSocket(); //-> server socket creation
+ 	void AcceptNewClient(); //-> accept new client
+ 	void ReceiveNewData(int fd, Dispatch &dispatch); //-> receive new data from a registered client
+-	int	findClient(std::string nick);
+ 
+ 	static void SignalHandler(int signum); //-> signal handler
+  
+ 	void CloseFds(); //-> close file descriptors
+-	void ClearClients(int fd, Dispatch &dispatch); //-> clear clients
++	void ClearClients(int fd); //-> clear clients
+ };
+ 
+ 
+diff --git a/ircserv2 b/ircserv2
+new file mode 100755
+index 0000000..f473eb0
+Binary files /dev/null and b/ircserv2 differ
+diff --git a/makefile b/makefile
+index 7ca8c96..8e72712 100644
+--- a/makefile
++++ b/makefile
+@@ -12,12 +12,7 @@ FILES=	Client.cpp \
+ 		Parser.cpp \
+ 		Data.cpp \
+ 		Dispatch.cpp\
+-		Channel.cpp \
+-		Register.cpp \
+-		Mode.cpp \
+-		Invite.cpp \
+-		Topic.cpp \
+-		Quit.cpp
++		Channel.cpp
+ 
+ FILES_UTILS=	split.cpp
+ 
+@@ -61,8 +56,6 @@ $(DIRO_UTILS)%.o: $(DIR_UTILS)%.cpp $(INCLUDES)
+ fclean:
+ 	rm -rf ./obj/classes/*.o ./obj/main.o ircserv2
+ 
+-re: fclean all
+-
+-.PHONY: all fclean re
++.PHONY: all fclean
+ 
+ .PHONY: all
+diff --git a/obj/classes/Channel.o b/obj/classes/Channel.o
+new file mode 100644
+index 0000000..0b18852
+Binary files /dev/null and b/obj/classes/Channel.o differ
+diff --git a/obj/classes/Client.o b/obj/classes/Client.o
+new file mode 100644
+index 0000000..0e8086c
+Binary files /dev/null and b/obj/classes/Client.o differ
+diff --git a/obj/classes/Command.o b/obj/classes/Command.o
+new file mode 100644
+index 0000000..b1a91b5
+Binary files /dev/null and b/obj/classes/Command.o differ
+diff --git a/obj/classes/Data.o b/obj/classes/Data.o
+new file mode 100644
+index 0000000..de341a9
+Binary files /dev/null and b/obj/classes/Data.o differ
+diff --git a/obj/classes/Dispatch.o b/obj/classes/Dispatch.o
+new file mode 100644
+index 0000000..40dc051
+Binary files /dev/null and b/obj/classes/Dispatch.o differ
+diff --git a/obj/classes/Parser.o b/obj/classes/Parser.o
+new file mode 100644
+index 0000000..f9fe27f
+Binary files /dev/null and b/obj/classes/Parser.o differ
+diff --git a/obj/classes/Server.o b/obj/classes/Server.o
+new file mode 100644
+index 0000000..8a8df93
+Binary files /dev/null and b/obj/classes/Server.o differ
+diff --git a/obj/main.o b/obj/main.o
+new file mode 100644
+index 0000000..fe413a9
+Binary files /dev/null and b/obj/main.o differ
+diff --git a/obj/utils/split.o b/obj/utils/split.o
+index 839b8a3..bde245d 100644
+Binary files a/obj/utils/split.o and b/obj/utils/split.o differ
+diff --git a/scripts/test_nick.sh b/scripts/test_nick.sh
+deleted file mode 100755
+index dc1c2c9..0000000
+--- a/scripts/test_nick.sh
++++ /dev/null
+@@ -1,24 +0,0 @@
+-#!/bin/bash
+-# Minimal test: send PASS, NICK and USER to the IRC server using nc (netcat)
+-# Usage:
+-#   chmod +x scripts/test_nick.sh
+-#   ./scripts/test_nick.sh
+-
+-HOST=localhost
+-PORT=4444
+-
+-echo "Connecting to $HOST:$PORT..."
+-{
+-  printf "PASS caca\r\n"
+-  sleep 0.5
+-  printf "NICK toto\r\n"
+-  sleep 0.5
+-  printf "USER arnaud 0 * :Arnaud\r\n"
+-  # keep connection open for a few seconds to receive server responses
+-  sleep 2
+-} | nc "$HOST" "$PORT"
+-
+-RC=$?
+-echo "nc exit code: $RC"
+-
+-# If your nc supports -q, you might prefer: | nc -q 1 "$HOST" "$PORT"
+diff --git a/scripts/test_nick_py.py b/scripts/test_nick_py.py
+deleted file mode 100644
+index 4884d0e..0000000
+--- a/scripts/test_nick_py.py
++++ /dev/null
+@@ -1,47 +0,0 @@
+-#!/usr/bin/env python3
+-"""
+-Minimal Python test to send PASS, NICK, USER to the IRC server and print server replies.
+-Usage:
+-    python3 scripts/test_nick_py.py
+-"""
+-import socket
+-import time
+-
+-HOST = 'localhost'
+-PORT = 4444
+-
+-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+-try:
+-    s.connect((HOST, PORT))
+-except Exception as e:
+-    print('Connect failed:', e)
+-    raise
+-
+-def send(line):
+-    print('->', line)
+-    s.sendall((line + '\r\n').encode())
+-    time.sleep(0.2)
+-
+-send('PASS caca')
+-send('NICK toto')
+-send('USER arnaud 0 * :Arnaud')
+-
+-# wait for responses
+-time.sleep(1)
+-
+-s.settimeout(2.0)
+-recv = b''
+-try:
+-    while True:
+-        chunk = s.recv(4096)
+-        if not chunk:
+-            break
+-        recv += chunk
+-except socket.timeout:
+-    pass
+-
+-print('\n--- SERVER REPLY ---')
+-print(recv.decode(errors='replace'))
+-print('--- END ---')
+-
+-s.close()
+\ No newline at end of file
+diff --git a/server.log b/server.log
+deleted file mode 100644
+index e995579..0000000
+--- a/server.log
++++ /dev/null
+@@ -1,71 +0,0 @@
+----- SERVER ----
+-[1;32mServer <3> Connected[0;37m
+-Waiting to accept a connection...
+-[1;32mClient <4> Connected[0;37m
+-loop server
+-In receive new data, about to get command in getCmdtwo cmd : PASS caca
+-
+-PASS caca
+-in getCmdtwo cmd : PASS caca
+-
+-in extract cmd : PASS caca
+-
+-je passe par la 
+-je passe par la 
+-No command found
+-loop server
+-In receive new data, about to get command in getCmdtwo cmd : NICK toto
+-
+-NICK toto
+-in getCmdtwo cmd : NICK toto
+-
+-in extract cmd : NICK toto
+-
+-je passe par la 
+-[DEBUG] Client <4> set nick 'toto' (old: '')
+-je passe par la 
+-No command found
+-loop server
+-In receive new data, about to get command in getCmdtwo cmd : USER arnaud 0 * :Arnaud
+-
+-USER arnaud 0 * :Arnaud
+-in getCmdtwo cmd : USER arnaud 0 * :Arnaud
+-
+-in extract cmd : USER arnaud 0 * :Arnaud
+-
+-je passe par la 
+-loop server
+-[1;31mClient <4> Disconnected (peer closed)[0;37m
+-loop server
+-[1;32mClient <4> Connected[0;37m
+-loop server
+-In receive new data, about to get command in getCmdtwo cmd : PASS caca
+-
+-PASS caca
+-in getCmdtwo cmd : PASS caca
+-
+-in extract cmd : PASS caca
+-
+-je passe par la 
+-je passe par la 
+-No command found
+-loop server
+-In receive new data, about to get command in getCmdtwo cmd : NICK toto
+-
+-NICK toto
+-in getCmdtwo cmd : NICK toto
+-
+-in extract cmd : NICK toto
+-
+-je passe par la 
+-[DEBUG] Client <4> set nick 'toto' (old: '')
+-je passe par la 
+-No command found
+-loop server
+-In receive new data, about to get command in getCmdtwo cmd : USER arnaud 0 * :Arnaud
+-
+-USER arnaud 0 * :Arnaud
+-in getCmdtwo cmd : USER arnaud 0 * :Arnaud
+-
+-in extract cmd : USER arnaud 0 * :Arnaud
+-
+diff --git a/src/classes/Channel.cpp b/src/classes/Channel.cpp
+index 3db1278..d31c4ae 100644
+--- a/src/classes/Channel.cpp
++++ b/src/classes/Channel.cpp
+@@ -1,5 +1,6 @@
+ #include "../../includes/Channel.hpp"
+ 
++
+ Channel::Channel(std::string topic, std::string name, std::size_t id, std::string key)
+ :_topic(topic), _name(name), _id(id), _key(key)
+ {
+@@ -70,91 +71,7 @@ bool Channel::addOperator(Client* user)
+     return true;
+ }
+ 
+-void Channel::setTopic(std::string topic)
+-{
+-    _topic = topic;
+-}
+-
+-void Channel::setProtectTopic(bool protect)
++std::vector<Client *> &Channel::getUserRefs()
+ {
+-    _protectTopic = protect;
+-}
+-
+-bool Channel::isTopicProtected() const
+-{
+-    return _protectTopic;
+-}
+-
+-void Channel::setInviteOnly(bool inviteOnly)
+-{
+-    _inviteOnly = inviteOnly;
+-}
+-
+-bool Channel::isInviteOnly() const
+-{
+-    return _inviteOnly;
+-}
+-
+-void Channel::setKey(std::string key)
+-{
+-    _key = key;
+-}
+-
+-bool Channel::checkKey(std::string key) const
+-{
+-    return _key == key;
+-}
+-
+-void Channel::setMaxUsers(int maxUsers)
+-{
+-    _maxUsers = maxUsers;
+-}
+-
+-bool Channel::removeUser(Client* user)
+-{
+-    for (size_t i = 0; i < users.size(); i++)
+-    {
+-        if (users[i] == user)
+-        {
+-            users.erase(users.begin() + i);
+-            return true;
+-        }
+-    }
+-    return false;
+-}
+-
+-bool Channel::removeOperator(Client* user)
+-{
+-    for (size_t i = 0; i < operators.size(); i++)
+-    {
+-        if (operators[i] == user)
+-        {
+-            operators.erase(operators.begin() + i);
+-            return true;
+-        }
+-    }
+-    return false;
+-}
+-
+-int Channel::getMaxUsers() const
+-{
+-    return _maxUsers;
+-}
+-
+-bool Channel::isInvited(Client* user) const
+-{
+-    for (size_t i = 0; i < invited.size(); i++)
+-    {
+-        if (invited[i] == user)
+-            return true;
+-    }
+-    return false;
+-}
+-
+-bool Channel::addInvited(Client* user)
+-{
+-    if (isInvited(user))
+-        return false;
+-    invited.push_back(user);
+-    return true;
+-}
++    return users;
++}
+\ No newline at end of file
+diff --git a/src/classes/Command.cpp b/src/classes/Command.cpp
+index 4ff8250..938b643 100644
+--- a/src/classes/Command.cpp
++++ b/src/classes/Command.cpp
+@@ -54,3 +54,5 @@ void Command::setLine(std::string line)
+ {
+     _line = line;
+ }
++
++
+diff --git a/src/classes/Dispatch.cpp b/src/classes/Dispatch.cpp
+index 9190c70..ceadf98 100644
+--- a/src/classes/Dispatch.cpp
++++ b/src/classes/Dispatch.cpp
+@@ -9,20 +9,29 @@
+ #include <sys/socket.h>
+ 
+ 
+-Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients): _password(pass), _clients(clients)
++
++Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients):_password(pass), _clients(clients)
+ {
+-    return ;
++
+ }
+ 
+ Dispatch::~Dispatch()
+ {
+-    return ;
++
+ }
+ 
+ void Dispatch::dispatch(Command cmd, int fd)
+ {
+-    int choice = 0;
+-
++    //print cmd for debug
++    std::cout << "----------------------------------------------------" << std::endl;
++                
++    std::cout << "Received command: " << cmd.getLine() << std::endl
++                << "Parsed command: " << cmd.getCmd() << std::endl
++                << "Arguments: " << cmd.getArgs() << std::endl
++                << "Trailing: " << cmd.getTrailing() << std::endl
++                << "Prefix: " << cmd.getPrefix() << std::endl;
++    std::cout << "----------------------------------------------------" << std::endl;
++    /* ----------------------------------------------------------- */
+     if (cmd.getCmd() == "CAP")
+         ft_cap(cmd, fd);
+     if (cmd.getCmd() == "PASS")
+@@ -33,19 +42,10 @@ void Dispatch::dispatch(Command cmd, int fd)
+         ft_user(cmd, fd);
+     if (cmd.getCmd() == "JOIN")
+         ft_join(cmd, fd);
+-    if (cmd.getCmd() == "MODE")
+-        ft_mode(cmd, fd);
+-    if (cmd.getCmd() == "INVITE")
+-        ft_invite(cmd, fd);
+-    if (cmd.getCmd() == "TOPIC")
+-        ft_topic(cmd, fd);
+-    if (cmd.getCmd() == "PRIVMSG")
+-        ft_PRIVMSG(cmd, fd);
+-    if (cmd.getCmd() == "PING")
+-        ft_ping(cmd, fd);
+-    if (cmd.getCmd() == "QUIT")
+-        ft_quit(cmd, fd);
+-
++    if (cmd.getCmd() == "KICK")
++        ft_kick(cmd, fd);
++    /* if (cmd.getCmd() == "PING")
++        ft_ping(cmd, fd);  */
+ }
+ 
+ bool Dispatch::ft_cap(Command cmd, int fd)
+@@ -66,6 +66,120 @@ bool Dispatch::ft_cap(Command cmd, int fd)
+     return true;
+ }
+ 
++bool Dispatch::ft_pass(Command cmd, int fd)
++{
++   
++    Client* client = getClientFd(fd);
++   
++    if (!client)
++        return false;
++    if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
++        std::string txt = ":server 462 :You may not reregister\r\n";
++        send(fd, txt.c_str(), txt.length(), 0);
++        return false;
++    }
++  
++    std::string line = cmd.getLine();
++    
++    std::string pass = line.substr(4);
++   
++    pass.erase(0, pass.find_first_not_of(" \t"));
++    if (!pass.empty() && pass[0] == ':')
++        pass.erase(0, 1);
++    
++    pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
++   
++    if (pass.empty()) { 
++        std::string msg = ":server 461 PASS :Not enough parameters\r\n";
++        send(fd, msg.c_str(), msg.length(), 0);
++        return false;
++    }
++    if (pass != _password) {    // si le pass est differend de celui des parametre => error
++        std::string txt = ":server 464 :Password incorrect\r\n";
++        send(fd, txt.c_str(), txt.length(), 0);
++        return false;
++    }
++   
++    client->setAuthenticated(true);
++    tryRegister(client);
++   
++    return true; 
++}
++ 
++ 
++bool Dispatch::ft_nick(Command cmd, int fd)
++{
++    Client* client = getClientFd(fd);
++    if (!client)
++        return false;
++    std::string line = cmd.getLine();
++    std::string nick = line.substr(4); // on stock la string apres le NICK
++    nick.erase(0, nick.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
++    if (!nick.empty() && nick[0] == ':') // a voir pour traiter un seul ou plusieur ':'
++        nick.erase(0, 1);
++    nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
++    if (nick.empty()) {     // si pas de new nick => erreur 
++        std::string msg = "431 :No nickname given\r\n";
++        send(fd, msg.c_str(), msg.length(), 0);
++        return false;
++    }
++    for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
++            if (_clients[i]->GetNick() == nick && _clients[i] != client) {
++                std::string msg = "serveur 433 * " + nick + " :Nickname is already in use\r\n";
++                send(fd, msg.c_str(), msg.length(), 0);
++                return false;
++            }
++    }
++    std::string oldNick = client->GetNick();
++    client->SetNick(nick);
++    // std::string mssg = "ft_Nick set a true " + nick + "\r\n";
++    // send(fd, mssg.c_str(), mssg.size(), 0);
++    tryRegister(client);
++
++    std::string ret;    //  affichage et envoie
++    if (!oldNick.empty())
++        ret = ":" + oldNick + " NICK :" + nick + "\r\n";
++    else
++        ret = ":" + nick + " NICK :" + nick + "\r\n";
++    send(fd, ret.c_str(), ret.length(), 0);
++    return true; 
++}
++bool Dispatch::ft_user(Command cmd, int fd)
++{   
++    Client* client = getClientFd(fd);
++    if (!client)
++        return false;
++    if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
++        std::string txt = ":server 462 :You may not reregister\r\n";
++        send(fd, txt.c_str(), txt.length(), 0);
++        return false;
++    }
++    std::string line = cmd.getLine();
++    std::string user = line.substr(4); // on stock la string apres le NICK
++    user.erase(0, user.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
++    if (!user.empty() && user[0] == ':') // a voir pour traiter un seul ou plusieur ':'
++        user.erase(0, 1);
++    user.erase(user.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
++    if (user.empty()) {     // si pas de new nick => erreur 
++        std::string msg = "461 :No nickname given\r\n";
++        send(fd, msg.c_str(), msg.length(), 0);
++        return false;
++    }
++    std::string oldUser = client->GetUser();
++    client->SetUser(user);
++    // std::string mssg = "ft_User set a true " + user + "\r\n";
++    // send(fd, mssg.c_str(), mssg.size(), 0);
++    tryRegister(client);
++    std::string ret;    //  affichage et envoie
++    if (!oldUser.empty())
++        ret = ":" + oldUser + " USER :" + user + "\r\n";
++    else
++        ret = ":" + user + " USER :" + user + "\r\n";
++    send(fd, ret.c_str(), ret.length(), 0);
++    return true; 
++}
++
++
+ //TODO::RPL_TOPIC
+ //TODO::RPL_NAMREPLY
+ bool Dispatch::ft_join(Command cmd, int fd)
+@@ -78,6 +192,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
+     std::string line = cmd.getLine();
+     std::string channelName = line.substr(5); // on stock la string apres le JOIN
+     std::vector<std::string> chanXkeys = split(channelName, ' ');
++
+     if (chanXkeys.empty())
+     {
+         std::string msg = ":server 461 JOIN :Not enough parameters\r\n";
+@@ -191,6 +306,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
+     return true;
+ }
+ 
++
+ Client *Dispatch::getClientFd(int fd_client)
+ {
+     for (size_t i = 0; i < _clients.size(); ++i) {
+@@ -206,13 +322,12 @@ void    Dispatch::tryRegister(Client* client)
+         return ;
+     if (client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
+         client->setRegistered(true);
++    //sendWelcome(client);  // fonction a buid et a renomer pour notifier que le client c'est bien enregistrer
+         std::string msg = ":server 001 " + client->GetNick() + " :Welcome to the IRC server!\r\n";
+         send(client->GetFd(), msg.c_str(), msg.length(), 0);
+     }
+     if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
+-        std::string msg2 = "464 * :Password incorrect\r\n";
+-        send(client->GetFd(), msg2.c_str(), msg2.length(), 0);
+-        // a voir si on deconnecte le client ou pas
++        
+     }
+ }
+ 
+@@ -226,7 +341,7 @@ bool Dispatch::isChannelExist(std::string chanName)
+     return false;
+ }
+ 
+-bool Dispatch::ft_ping(Command cmd, int fd)
++/* bool Dispatch::ft_ping(Command cmd, int fd)
+ {
+     std::string line = cmd.getLine();
+     std::string token;
+@@ -244,23 +359,108 @@ bool Dispatch::ft_ping(Command cmd, int fd)
+     std::string reply = ":server PONG server :" + token + "\r\n";
+     send(fd, reply.c_str(), reply.length(), 0);
+     return true;
+-}
+-
+-Channel*    Dispatch::getChannel(std::string target)
++} */
++//TODO:: <channel>{,<channel>} <user>{,<user>} [<comment>] 
++bool Dispatch::ft_kick(Command cmd, int fd)
+ {
+-    for (size_t i = 0; i < _channels.size(); i++) {
+-        if (_channels[i]->getName() == target)
+-            return (_channels[i]);
+-    }
+-    return (NULL);
+-}
++        Client* client = getClientFd(fd);
++        if (!client)
++            return false;
++        if (!client->isRegistered()) // si le client n'es pas register just return false
++            return false;
++        std::cout << "FT_KICK" << std::endl;
++        std::string line = cmd.getArgs();
++        std::vector<std::string> tokens = split(line, ' ');
++        
++        if (tokens.size() < 2) {
++             std::cout << "FT_KICK bis 2" << std::endl;
++            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
++            send(fd, msg.c_str(), msg.length(), 0);
++            return false;
++        }
++        //pb ici 1000%
++        std::vector <std::string> split_channels = split(tokens[0], ',');
++        std::vector <std::string> split_target = split(tokens[1], ','); // 1 element
+ 
+-int	Dispatch::findClient(std::string nick)
+-{
+-	for(size_t i = 0; i < _clients.size(); i++){
+-		if (_clients[i]->GetNick() == nick) {
+-                return (_clients[i]->GetFd());
++
++        
++        /* std::string chanName = tokens[0];
++        std::string targetNick = tokens[1]; */
++        std::string reason = (cmd.getTrailing().empty() ? "No reason" : cmd.getTrailing());
++        //INUTILE ...
++       /*  if (chanName.empty() || targetNick.empty()) {
++            std::cout << "FT_KICK 2 bis" << std::endl;
++            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
++            send(fd, msg.c_str(), msg.length(), 0);
++            return false;
++        } */
++       
++        //TODO:: il reconnait pas le channel pk?
++        for(size_t i = 0; i < split_channels.size(); i++)
++        {
++            Channel* channel = nullptr;
++            for (size_t k = 0; i < _channels.size(); k++)
++            {
++                std::cout << "FT_KICK 3 bis 0 "<< ":";
++                std::cout << _channels[i]->getName() << std::endl;
++                if (_channels[k]->getName() == split_channels[i])
++                {
++                    channel = _channels[k];
++                    break;
++                }
+             }
+-	}
+-	return (-1);
++
++            if (!channel)
++            {
++                std::cout << "FT_KICK 3 bis 1" << std::endl;
++                std::string msg = ":server 403 " + client->GetNick() + " " + split_channels[i] + " :No such channel\r\n";
++                send(fd, msg.c_str(), msg.length(), 0);
++                return false;
++            }
++
++            if (!channel->isOperator(client))
++            {
++                std::cout << "FT_KICK 3 bis 2" << std::endl;
++                std::string msg = ":server 482 " + client->GetNick() + " " + split_channels[i] + " :You're not channel operator\r\n";
++                send(fd, msg.c_str(), msg.length(), 0);
++                return false;
++            }
++              std::cout << "FT_KICK 4" << std::endl;
++            Client* targetClient = nullptr;
++            for (size_t i = 0; i < _clients.size(); i++) {
++                if (_clients[i]->GetNick() == split_target[0]) {
++                    targetClient = _clients[i];
++                    break;
++                }
++            }
++
++            if (!targetClient || !channel->isUserInChannel(targetClient)) {
++                std::string msg = ":server 441 " + client->GetNick() + " " + split_target[0] + " " + split_channels[i] + " :They aren't on that channel\r\n";
++                send(fd, msg.c_str(), msg.length(), 0);
++                return false;
++            }
++            
++            // Broadcast KICK message to all channel members
++            std::string kickMsg = ":" + client->GetNick() + " KICK " + split_channels[i] + " " + split_target[0] + " :" + reason + "\r\n";
++            std::vector<Client *> channelUsers = channel->getUsers();
++            for (std::size_t i = 0; i < channelUsers.size(); i++)
++            {
++                send(channelUsers[i]->GetFd(), kickMsg.c_str(), kickMsg.length(), 0);
++            }
++
++            // Remove target client from channel
++            std::vector<Client *> &users = channel->getUserRefs();
++            for (std::vector<Client *>::iterator it = users.begin(); it != users.end(); ++it)
++            {
++                if (*it == targetClient) {
++                    users.erase(it);
++                    break;
++                }
++            }
++        }
++        
++
++
++        
++        return true;    
+ }
+\ No newline at end of file
+diff --git a/src/classes/Invite.cpp b/src/classes/Invite.cpp
+deleted file mode 100644
+index 078b50c..0000000
+--- a/src/classes/Invite.cpp
++++ /dev/null
+@@ -1,84 +0,0 @@
+-
+-#include "../../includes/Dispatch.hpp"
+-#include "../../includes/Command.hpp"
+-#include "../../includes/Client.hpp"
+-#include "../../includes/split.hpp"
+-#include "../../includes/Channel.hpp"
+-#include <string>
+-#include <sys/types.h>
+-#include <sys/socket.h>
+-
+-bool Dispatch::ft_invite(Command cmd, int fd)
+-{
+-    Client* client = getClientFd(fd);
+-    if (!client)
+-        return false;
+-	if (!client->isRegistered()) // si le client n'es pas register just return false
+-		return false;
+-    std::string line = cmd.getLine();
+-    std::vector<std::string> tokens = split(line, ' ');
+-    if (tokens.size() < 3) {
+-        std::string msg = ":server 461 " + client->GetNick() + " INVITE :Not enough parameters\r\n";
+-        send(fd, msg.c_str(), msg.length(), 0);
+-        return false;
+-    }
+-    std::string targetNick = tokens[1];
+-    std::string channelName = tokens[2];
+-    
+-    Client* targetClient = nullptr;
+-    for (size_t i = 0; i < _clients.size(); i++) {
+-        if (_clients[i]->GetNick() == targetNick) {
+-            targetClient = _clients[i];
+-            break;
+-        }
+-    }
+-
+-    if (!targetClient) {
+-        std::string errMsg = ":server 401 " + client->GetNick() + " " + targetNick + " :No such nick\r\n";
+-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-        return false;
+-    }
+-    
+-    Channel* channel = nullptr;
+-    for (size_t i = 0; i < _channels.size(); i++) {
+-        if (_channels[i]->getName() == channelName) {
+-            channel = _channels[i];
+-            break;
+-        }
+-    }
+-
+-    if (!channel) {
+-        std::string errMsg = ":server 403 " + client->GetNick() + " " + channelName + " :No such channel\r\n";
+-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-        return false;
+-    }
+-
+-    if (!channel->isUserInChannel(client))
+-    {
+-        std::string errMsg = ":server 442 " + client->GetNick() + " " + channel->getName() + " :You're not on that channel\r\n";
+-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-        return false;
+-    }
+-
+-    if (!channel->isOperator(client)) {
+-        std::string errMsg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
+-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-        return false;
+-    }
+-
+-    if (channel->isUserInChannel(targetClient)) {
+-        std::string errMsg = ":server 443 " + client->GetNick() + " " + targetClient->GetNick() + " " + channel->getName() + " :is already on channel\r\n";
+-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-        return false;
+-    }
+-    
+-    if (!channel->isInvited(targetClient)) {
+-        channel->addInvited(targetClient);
+-        std::string inviteMsg = ":" + client->GetNick() + " INVITE " + targetClient->GetNick() + " " + channel->getName() + "\r\n";
+-        send(targetClient->GetFd(), inviteMsg.c_str(), inviteMsg.length(), 0);
+-    }
+-
+-    std::string succesInviteMsg = ":server 341 " + client->GetNick() + " " + targetClient->GetNick() + " " + channel->getName() + "\r\n";
+-    send(client->GetFd(), succesInviteMsg.c_str(), succesInviteMsg.length(), 0);
+-    return true;
+-}
+diff --git a/src/classes/Mode.cpp b/src/classes/Mode.cpp
+deleted file mode 100644
+index 48827f6..0000000
+--- a/src/classes/Mode.cpp
++++ /dev/null
+@@ -1,230 +0,0 @@
+-
+-#include "../../includes/Dispatch.hpp"
+-#include "../../includes/Command.hpp"
+-#include "../../includes/Client.hpp"
+-#include "../../includes/split.hpp"
+-#include "../../includes/Channel.hpp"
+-#include <string>
+-#include <sys/types.h>
+-#include <sys/socket.h>
+-
+-bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string msg, Client* client, std::vector<std::string> tokens)
+-{
+-     if (modeChanges[0] != '+' && modeChanges[0] != '-') {
+-        std::string msg = ":server 501 " + client->GetNick() + " :Unknown MODE flag\r\n";
+-        send(fd, msg.c_str(), msg.length(), 0);
+-        return false;
+-    }
+-    for (size_t i = 1; i < modeChanges.size(); i++) 
+-    {
+-        char mode = modeChanges[i];
+-        switch (mode)
+-        {
+-        case 't':
+-            if (modeChanges[0] == '+')
+-                channel->setProtectTopic(true);
+-            else
+-                channel->setProtectTopic(false);
+-            break;
+-        case 'i':
+-            if (modeChanges[0] == '+')
+-                channel->setInviteOnly(true);
+-            else
+-                channel->setInviteOnly(false);
+-            break;
+-        case 'k':
+-            if (modeChanges[0] == '+') {
+-                if (tokens.size() < 4) {
+-                    std::string errMsg = ":server 461 MODE :Not enough parameters\r\n";
+-                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                    return false;
+-                }
+-                if (channel->getKey() != "") {
+-                    std::string errMsg = ":server 467 " + client->GetNick() + " " + channel->getName() + " :Channel key already set\r\n";
+-                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                    return false;
+-                }
+-                std::string newKey = tokens[3];
+-                channel->setKey(newKey);
+-            }
+-            else {
+-                channel->setKey("");
+-            }
+-            break;
+-        case 'l':
+-            if (modeChanges[0] == '+') {
+-                if (tokens.size() < 4) {
+-                    std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
+-                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                    return false;
+-                }
+-                try
+-                {
+-                    int maxUsers = std::stoi(tokens[3]);
+-                    if (maxUsers <= 0) {
+-                        std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
+-                        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                        return false;
+-                    }
+-                    channel->setMaxUsers(maxUsers);
+-                }
+-                catch(const std::exception& e)
+-                {
+-                    std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
+-                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                    return false;
+-                }
+-            }
+-            else {
+-                channel->setMaxUsers(0);
+-            }
+-            break;
+-        case 'o':
+-            if (tokens.size() < 4) {
+-                std::string errMsg = ":server 401 " + client->GetNick() + " " + target + " :No such nick/channel\r\n";
+-                send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                return false;
+-            }
+-            if (modeChanges[0] == '+') {
+-                std::string targetNick = tokens[3];
+-                Client* targetClient = nullptr;
+-                for (size_t j = 0; j < _clients.size(); j++) {
+-                    if (_clients[j]->GetNick() == targetNick) {
+-                        targetClient = _clients[j];
+-                        break;
+-                    }
+-                }
+-                if (!targetClient) {
+-                    std::string errMsg = ":server 401 " + client->GetNick() + " " + targetNick + " :No such nick\r\n";
+-                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                    return false;
+-                }
+-                if (!channel->isUserInChannel(targetClient)) {
+-                    std::string errMsg = ":server 441 " + client->GetNick() + " " + targetNick + " " + channel->getName() + " :They aren't on that channel\r\n";
+-                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                    return false;
+-                }
+-                channel->addOperator(targetClient);
+-            }
+-            else {
+-                std::string targetNick = tokens[3];
+-                Client* targetClient = nullptr;
+-                for (size_t j = 0; j < _clients.size(); j++) {
+-                    if (_clients[j]->GetNick() == targetNick) {
+-                        targetClient = _clients[j];
+-                        break;
+-                    }
+-                }
+-                if (!targetClient) {
+-                    std::string errMsg = ":server 401 " + client->GetNick() + " " + targetNick + " :No such nick\r\n";
+-                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                    return false;
+-                }
+-                if (!channel->isUserInChannel(targetClient)) {
+-                    std::string errMsg = ":server 441 " + client->GetNick() + " " + targetNick + " " + channel->getName() + " :They aren't on that channel\r\n";
+-                    send(fd, errMsg.c_str(), errMsg.length(), 0);
+-                    return false;
+-                }
+-                channel->removeOperator(targetClient);
+-            } 
+-            break;
+-        
+-        default:
+-            std::string errMsg = ":server 472 " + client->GetNick() + " " + modeChanges.substr(1, 1) + " :is unknown mode char to me\r\n";
+-            send(fd, errMsg.c_str(), errMsg.length(), 0);
+-            return false;
+-        }
+-    }
+-    std::string modeMsg = ":" + client->GetNick() + " MODE " + target + " " + modeChanges;
+-    for (size_t i = 3; i < tokens.size(); i++) {
+-        modeMsg += " " + tokens[i];
+-    }
+-    modeMsg += "\r\n";
+-    std::vector<Client*> users = channel->getUsers();
+-    for (size_t j = 0; j < users.size(); j++) {
+-        send(users[j]->GetFd(), modeMsg.c_str(), modeMsg.length(), 0);
+-    }
+-    return true;
+-}
+-
+-bool Dispatch::ft_mode(Command cmd, int fd)
+-{
+-    Client* client = getClientFd(fd);
+-    if (!client)
+-        return false;
+-	if (!client->isRegistered()) // si le client n'es pas register just return false
+-		return false;
+-    std::string line = cmd.getLine();
+-    std::vector<std::string> tokens = split(line, ' ');
+-    if (tokens.size() < 2) {
+-        std::string msg = ":server 461 " + client->GetNick() + " MODE :Not enough parameters\r\n";
+-        send(fd, msg.c_str(), msg.length(), 0);
+-        return false;
+-    }
+-    if (tokens.size() == 2) {
+-        std::string target = tokens[1];
+-        if (target[0] == '#') {
+-            Channel* channel = nullptr;
+-            for (size_t i = 0; i < _channels.size(); i++) {
+-                if (_channels[i]->getName() == target) {
+-                    channel = _channels[i];
+-                    break;
+-                }
+-            }
+-            if (!channel) {
+-                std::string msg = ":server 403 " + client->GetNick() + " " + target + " :No such channel\r\n";
+-                send(fd, msg.c_str(), msg.length(), 0);
+-                return false;
+-            }
+-            std::string options = "";
+-            if (channel->isTopicProtected())
+-                options += "t";
+-            if (channel->isInviteOnly())
+-                options += "i";
+-            if (!channel->getKey().empty())
+-                options += "k";
+-            if (channel->getMaxUsers() > 0)
+-                options += "l";
+-            std::string msg = ":server 324 " + client->GetNick() + " " + channel->getName() + " +" + options + "\r\n";
+-            send(fd, msg.c_str(), msg.length(), 0);
+-            std::string msg2 = ":server 329 " + client->GetNick() + " " + channel->getName() + " " + std::to_string(channel->getId()) + "\r\n";
+-            send(fd, msg2.c_str(), msg2.length(), 0);
+-        }
+-        else {
+-            std::string msg = ":server 472 " + client->GetNick() + " " + target + " :is unknown mode char to me\r\n";
+-            send(fd, msg.c_str(), msg.length(), 0);
+-            return false;
+-        }
+-        return true;
+-    }
+-    std::string target = tokens[1];
+-    std::string modeChanges = tokens[2];
+-    
+-    if (target[0] == '#') {
+-        Channel* channel = nullptr;
+-        for (size_t i = 0; i < _channels.size(); i++) {
+-            if (_channels[i]->getName() == target) {
+-                channel = _channels[i];
+-                break;
+-            }
+-        }
+-        if (!channel) {
+-            std::string msg = ":server 403 " + client->GetNick() + " " + target + " :No such channel\r\n";
+-            send(fd, msg.c_str(), msg.length(), 0);
+-            return false;
+-        }
+-        if (!channel->isOperator(client)) {
+-            std::string msg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
+-            send(fd, msg.c_str(), msg.length(), 0);
+-            return false;
+-        }
+-        if (setMode(channel, modeChanges, fd, target, line, client, tokens) == false) 
+-            return false;
+-    }
+-    else {
+-        std::string msg = ":server 472 " + client->GetNick() + " " + target + " :is unknown mode char to me\r\n";
+-        send(fd, msg.c_str(), msg.length(), 0);
+-        return false;
+-    }
+-    return true;
+-}
+\ No newline at end of file
+diff --git a/src/classes/Quit.cpp b/src/classes/Quit.cpp
+deleted file mode 100644
+index e8a4792..0000000
+--- a/src/classes/Quit.cpp
++++ /dev/null
+@@ -1,27 +0,0 @@
+-
+-#include "../../includes/Dispatch.hpp"
+-#include "../../includes/Command.hpp"
+-#include "../../includes/Client.hpp"
+-#include "../../includes/split.hpp"
+-#include "../../includes/Channel.hpp"
+-#include <string>
+-#include <sys/types.h>
+-#include <sys/socket.h>
+-#include <unistd.h>
+-
+-bool Dispatch::ft_quit(Command cmd, int fd)
+-{
+-    Client* client = getClientFd(fd);
+-    if (!client)
+-        return false;
+-
+-
+-    std::string quitMsg = "";
+-    if (cmd.getTrailing() == "leaving" || cmd.getTrailing() == "")
+-        quitMsg = ":" + client->GetNick() + " QUIT :Client disconnected\r\n";
+-    else
+-        quitMsg = ":" + client->GetNick() + " QUIT :" + cmd.getTrailing() + "\r\n";
+-
+-    client->SetMsgQuit(quitMsg); // Store the quit message in the client object
+-    return true;
+-}
+diff --git a/src/classes/Register.cpp b/src/classes/Register.cpp
+deleted file mode 100644
+index 140d030..0000000
+--- a/src/classes/Register.cpp
++++ /dev/null
+@@ -1,209 +0,0 @@
+-
+-#include "../../includes/Dispatch.hpp"
+-#include "../../includes/Command.hpp"
+-#include "../../includes/Client.hpp"
+-#include "../../includes/split.hpp"
+-#include "../../includes/Channel.hpp"
+-#include <string>
+-#include <sys/types.h>
+-#include <sys/socket.h>
+-
+-
+-bool Dispatch::parseNick(std::string line)
+-{
+-    // build une fonction pour le parsing de nick (erreur 433)
+-
+-
+-
+-
+-
+-
+-    return true;
+-}
+-bool Dispatch::ft_nick(Command cmd, int fd)
+-{
+-    Client* client = getClientFd(fd);
+-    if (!client)
+-        return false;
+-    std::string line = cmd.getLine();
+-    std::string nick = line.substr(4); // on stock la string apres le NICK
+-    nick.erase(0, nick.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
+-    if (!nick.empty() && nick[0] == ':') // a voir pour traiter un seul ou plusieur ':'
+-        nick.erase(0, 1);
+-    nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
+-    if (nick.empty()) {     // si pas de new nick => erreur 
+-        std::string msg = fd + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
+-        send(fd, msg.c_str(), msg.length(), 0);     
+-        return false;
+-    }
+-    for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
+-            if (_clients[i]->GetNick() == nick && _clients[i] != client) {
+-                std::string msg = fd + " " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
+-                send(fd, msg.c_str(), msg.length(), 0);
+-                return true;
+-            }
+-    }
+-    std::string oldNick = client->GetNick();
+-    client->SetNick(nick);
+-    if (!oldNick.empty() && client->isRegistered()) {       // si le client est deja enregistrer et qu'il modifie le nick
+-        std::string ret = ":" + oldNick + " NICK :" + nick + "\r\n";
+-        send(fd, ret.c_str(), ret.length(), 0);
+-    }    
+-    tryRegister(client);
+-    return true; 
+-}
+-
+-bool Dispatch::ft_user(Command cmd, int fd)
+-{   
+-    Client* client = getClientFd(fd);
+-    if (!client)
+-        return false;
+-    if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
+-        std::string txt = fd + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
+-        send(fd, txt.c_str(), txt.length(), 0);
+-        return true;
+-    }
+-    std::string line = cmd.getLine();
+-    std::string user = line.substr(4); // on stock la string apres le NICK
+-    user.erase(0, user.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
+-    if (!user.empty() && user[0] == ':') // a voir pour traiter un seul ou plusieur ':'
+-        user.erase(0, 1);
+-    user.erase(user.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
+-    if (user.empty()) {     // si pas de new nick => erreur 
+-        std::string msg = fd + " USER :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
+-        send(fd, msg.c_str(), msg.length(), 0);
+-        return true;
+-    }
+-    std::string oldUser = client->GetUser();
+-    client->SetUser(user);
+-    tryRegister(client);
+-    return true; 
+-}
+-
+-bool Dispatch::ft_pass(Command cmd, int fd)
+-{
+-   
+-    Client* client = getClientFd(fd);
+-    if (!client)
+-        return false;
+-    if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
+-        std::string txt2 = fd + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
+-        send(fd, txt2.c_str(), txt2.length(), 0);
+-        return true;
+-    }
+-  
+-    std::string line = cmd.getLine();
+-    
+-    std::string pass = line.substr(4);
+-   
+-    pass.erase(0, pass.find_first_not_of(" \t"));
+-    if (!pass.empty() && pass[0] == ':')
+-        pass.erase(0, 1);
+-    pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
+-    if (pass.empty()) { 
+-        std::string msg = fd + " PASS :Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
+-        send(fd, msg.c_str(), msg.length(), 0);
+-        return true;
+-    }
+-    if (pass != _password) {    // si le pass est differend de celui des parametre => error
+-        std::string txt = fd + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
+-        send(fd, txt.c_str(), txt.length(), 0);
+-        return true;
+-    }
+-   
+-    client->setAuthenticated(true);
+-    tryRegister(client);
+-   
+-    return true; 
+-}
+- 
+-//le cas pour channel n'est pas fait encore
+-void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
+-{
+-    int choice = 1;
+-
+-    if (choice == 1)
+-        ft_PRIVMSG_client(cmd, fd);
+-    else if (choice == 2)
+-        ft_PRIVMSG_channel(cmd, fd);
+-    else
+-        return ;
+-
+-}
+-
+-void    Dispatch::ft_PRIVMSG_channel(Command cmd, int fd)
+-{
+-    Client* client = getClientFd(fd);
+-    if (!client)
+-        return;
+-    if (!client->isRegistered()) {
+-        std::string err = "You are not registered\r\n";
+-        send(fd, err.c_str(), err.length(), 0);
+-        return;
+-    }
+-    if (cmd.getArgs().empty()) {
+-        std::string err = "Error: no recipient\r\n";
+-        send(fd, err.c_str(), err.length(), 0);
+-        return;
+-    }
+-    std::string channelName = cmd.getArgs();
+-    if (cmd.getTrailing().empty()) {
+-        std::string err = "Error: no text to send\r\n";
+-        send(fd, err.c_str(), err.length(), 0);
+-        return;
+-    }
+-
+-    Channel* channel = getChannel(channelName);
+-    if (!channel) {
+-        std::string err = "Error: no such channel\r\n";
+-        send(fd, err.c_str(), err.length(), 0);
+-        return;
+-    }
+-
+-    if (!channel->isUserInChannel(client)) { // Vérifier que le client est dans le channel
+-        std::string err = "Error: you're not on that channel\r\n";
+-        send(fd, err.c_str(), err.length(), 0);
+-        return;
+-    }
+-    std::string msg = ":" + client->GetNick() + " PRIVMSG " + channelName
+-        + " :" + cmd.getTrailing() + "\r\n";
+-    const std::vector<Client*>& members = channel->getUsers();
+-    for (size_t i = 0; i < members.size(); i++) {
+-        if (members[i]->GetFd() != fd) {
+-            send(members[i]->GetFd(), msg.c_str(), msg.length(), 0);
+-        }
+-    }
+-    return ;
+-}
+-
+-void    Dispatch::ft_PRIVMSG_client(Command cmd, int fd)
+-{
+-    Client* client = getClientFd(fd);
+-    if (cmd.getArgs().empty()) {
+-        std::string txt2 = "Error: no destinataire\r\n";
+-        send(fd, txt2.c_str(), txt2.length(), 0);
+-        return ;
+-    }
+-    std::string client2 = cmd.getArgs();
+-    if (!client)
+-        return ;
+-    if (!client->isRegistered()) {
+-        std::string txt2 = "You are not register\r\n";
+-        send(fd, txt2.c_str(), txt2.length(), 0);
+-        return ;
+-    }
+-    if (cmd.getTrailing().empty()) {
+-        std::string txt2 = "Error: texte missing\r\n";
+-        send(fd, txt2.c_str(), txt2.length(), 0);
+-        return ;
+-    }
+-    // mettre une protction pour savoir si il ya bien un message
+-    int fd2 = findClient(client2);
+-    if (fd2 < 0) {
+-        std::string txt2 = "Error: no such nick\r\n";
+-        send(fd, txt2.c_str(), txt2.length(), 0);
+-        return ;
+-    }
+-    std::string sendText = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + cmd.getTrailing() + "\r\n";
+-    send(fd2, sendText.c_str(), sendText.length(), 0); //Msg envoyer au deuxieme client
+-}
+\ No newline at end of file
+diff --git a/src/classes/Server.cpp b/src/classes/Server.cpp
+index f93d801..b2f179d 100644
+--- a/src/classes/Server.cpp
++++ b/src/classes/Server.cpp
+@@ -12,44 +12,18 @@ void Server::SignalHandler(int signum)
+ 	Server::Signal = true; //-> set the static boolean to true to stop the server
+ }
+ 
+-void Server::ClearClients(int fd, Dispatch &dispatch)
+-{
+-    Client* clientToRemove = NULL;
+-
+-	std::string quitMsg = "";
+-
+-    for(size_t i = 0; i < clients.size(); i++){
+-        if (clients[i]->GetFd() == fd) {
+-            clientToRemove = clients[i];
+-            quitMsg = clientToRemove->GetMsgQuit();
+-            clients.erase(clients.begin() + i);
+-            break;
+-        }
+-    }
+-
+-    if (!clientToRemove)
+-        return;
+-	std::string quitMsgCrtlC = ":" + clientToRemove->GetNick() + " QUIT :Client disconnected\r\n";
+-	if (quitMsg.empty())
+-		quitMsg = quitMsgCrtlC;
+-	for (size_t i = 0; i < dispatch._channels.size(); i++) {
+-		if (dispatch._channels[i]->isUserInChannel(clientToRemove)) {
+-			const std::vector<Client*>& channelUsers = dispatch._channels[i]->getUsers();
+-			for (size_t j = 0; j < channelUsers.size(); j++) {
+-				if (channelUsers[j]->GetFd() != fd)
+-					send(channelUsers[j]->GetFd(), quitMsg.c_str(), quitMsg.length(), 0);
+-			}
+-		}
++void Server::ClearClients(int fd){ //-> clear the clients
++	for(size_t i = 0; i < fds.size(); i++){ //-> remove the client from the pollfd
++		if (fds[i].fd == fd)
++			{fds.erase(fds.begin() + i); break;}
++	}
++	for(size_t i = 0; i < clients.size(); i++){ //-> remove the client from the vector of clients
++		if (clients[i]->GetFd() == fd)
++			{clients.erase(clients.begin() + i); break;}
+ 	}
+-	
+-    for (size_t i = 0; i < dispatch._channels.size(); i++) {
+-        dispatch._channels[i]->removeUser(clientToRemove);
+-    }
+ 
+-    delete clientToRemove;
+ }
+ 
+-
+ void Server::CloseFds(){
+ 	for(size_t i = 0; i < clients.size(); i++){ //-> close all the clients
+ 		std::cout << RED << "Client <" << clients[i]->GetFd() << "> Disconnected" << WHI << std::endl;
+@@ -101,32 +75,19 @@ void Server::ServerInit()
+ 		if((poll(&fds[0],fds.size(),-1) == -1) && Server::Signal == false) //-> wait for an event
+ 			throw(std::runtime_error("poll() faild"));
+ 
+-		for (size_t i = 0; i < fds.size(); i++)
++		for (size_t i = 0; i < fds.size(); i++) //-> check all file descriptors
+ 		{
+-			if (fds[i].revents & (POLLHUP | POLLERR | POLLNVAL))
+-			{
+-				int deadFd = fds[i].fd;
+-				std::cout << "FD " << deadFd << " closed (poll error)" << std::endl;
+-				close(deadFd);
+-				ClearClients(deadFd, dispatch);
+-				fds.erase(fds.begin() + i);
+-				i--; // important car erase décale le vector
+-				continue;
+-			}
+-
+-			if (fds[i].revents & POLLIN)
++			if (fds[i].revents & POLLIN)//-> check if there is data to read
+ 			{
+ 				if (fds[i].fd == SerSocketFd)
+-					AcceptNewClient();
++					AcceptNewClient(); //-> accept new client
+ 				else
+-					ReceiveNewData(fds[i].fd, dispatch);
++					ReceiveNewData(fds[i].fd, dispatch); //-> receive new data from a registered client
+ 			}
+ 		}
+-
+ 		std::cout << "loop server\n";
+-
+ 	}
+-	CloseFds();
++	CloseFds(); //-> close the file descriptors when the server stops
+ }
+ 
+ 
+@@ -162,26 +123,24 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
+ 
+ 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
+ 	
+-	if (bytes == 0)
+-	{
+-		ClearClients(fd, dispatch);
++	if (bytes == 0) {
++    // peer performed orderly shutdown
++    std::cout << RED << "Client <" << fd << "> Disconnected (peer closed)" << WHI << std::endl;
++    ClearClients(fd);
++    close(fd);
++    return;
++	} else if (bytes < 0) {
++		if (errno == EAGAIN || errno == EWOULDBLOCK) {
++			// no data available now, not an error
++			return;
++		}
++		// real error
++		perror("recv");
++		ClearClients(fd);
+ 		close(fd);
++    return;
++}
+ 
+-		for (size_t i = 0; i < fds.size(); i++)
+-		{
+-			if (fds[i].fd == fd)
+-			{
+-				fds.erase(fds.begin() + i);
+-				break;
+-			}
+-		}
+-		return;
+-	}
+-	else if (bytes == -1)
+-	{
+-		if (errno != EWOULDBLOCK && errno != EAGAIN) //-> check if the error is not EWOULDBLOCK or EAGAIN
+-			std::cout << "recv() failed" << std::endl;
+-	}
+ 	else{ //-> print the received data
+ 		buff[bytes] = '\0';
+ 		Command cmd;
+@@ -202,14 +161,4 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
+ 		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;
+ 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
+ 	}
+-}
+-
+-int	Server::findClient(std::string nick)
+-{
+-	for(size_t i = 0; i < clients.size(); i++){
+-		if (clients[i]->GetNick() == nick) {
+-                return (clients[i]->GetFd());
+-            }
+-	}
+-	return (-1);
+ }
+\ No newline at end of file
+diff --git a/src/classes/Topic.cpp b/src/classes/Topic.cpp
+deleted file mode 100644
+index a9c57cb..0000000
+--- a/src/classes/Topic.cpp
++++ /dev/null
+@@ -1,85 +0,0 @@
+-
+-#include "../../includes/Dispatch.hpp"
+-#include "../../includes/Command.hpp"
+-#include "../../includes/Client.hpp"
+-#include "../../includes/split.hpp"
+-#include "../../includes/Channel.hpp"
+-#include <string>
+-#include <sys/types.h>
+-#include <sys/socket.h>
+-
+-bool Dispatch::ft_topic(Command cmd, int fd)
+-{
+-    Client* client = getClientFd(fd);
+-    if (!client)
+-        return false;
+-    if (!client->isRegistered()) // si le client n'es pas register just return false
+-		return false;
+-    std::string line = cmd.getLine();
+-    std::vector<std::string> tokens = split(line, ' ');
+-    if (tokens.size() < 2) {
+-        std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
+-        send(fd, msg.c_str(), msg.length(), 0);
+-        return false;
+-    }
+-    std::string channelName = tokens[1];
+-    if (channelName.empty())
+-    {
+-        std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
+-        send(fd, msg.c_str(), msg.length(), 0);
+-        return false;
+-    }
+-    
+-    Channel* channel = nullptr;
+-    for (size_t i = 0; i < _channels.size(); i++) {
+-        if (_channels[i]->getName() == channelName) {
+-            channel = _channels[i];
+-            break;
+-        }
+-    }
+-
+-    if (!channel) {
+-        std::string errMsg = ":server 403 " + client->GetNick() + " " + channelName + " :No such channel\r\n";
+-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-        return false;
+-    }
+-
+-    if (!channel->isUserInChannel(client))
+-    {
+-        std::string errMsg = ":server 442 " + client->GetNick() + " " + channel->getName() + " :You're not on that channel\r\n";
+-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-        return false;
+-    }
+-
+-    if (cmd.getTrailing().empty())
+-    {
+-        if (channel->getTopic().empty())
+-        {
+-            std::string msg = ":server 331 " + client->GetNick() + " " + channelName + " :No topic is set\r\n";
+-            send(fd, msg.c_str(), msg.length(), 0);
+-        }
+-        else
+-        {
+-            std::string msg = ":server 332 " + client->GetNick() + " " + channelName + " :" + channel->getTopic() + "\r\n";
+-            send(fd, msg.c_str(), msg.length(), 0);
+-        }
+-        return true;
+-    }
+-
+-    if (channel->isTopicProtected() && !channel->isOperator(client)) {
+-        std::string errMsg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
+-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+-        return false;
+-    }
+-
+-    std::string newTopic = cmd.getTrailing();
+-    channel->setTopic(newTopic);
+-
+-    std::string topicMsg = ":" + client->GetNick() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
+-
+-    std::vector<Client*> users = channel->getUsers();
+-    for (size_t i = 0; i < users.size(); i++)
+-        send(users[i]->GetFd(), topicMsg.c_str(), topicMsg.length(), 0);
+-
+-    return true;
+-}
+diff --git a/src/readmi.txt b/src/readmi.txt
+deleted file mode 100644
+index 6a6a81f..0000000
+--- a/src/readmi.txt
++++ /dev/null
+@@ -1,171 +0,0 @@
+-Comment faire attention aux zombies (conceptuellement)
+-🧠 1. Le serveur ne fait jamais confiance au client
+-
+-Principe fondamental réseau :
+-
+-Un client peut mourir à tout moment, sans prévenir.
+-
+-👉 Donc :
+-
+-chaque socket doit être considérée comme potentiellement morte
+-
+-aucune action ne doit supposer que le client est encore vivant
+-
+-🧠 2. recv() est ta première ligne de défense
+-
+-Quand :
+-
+-recv() retourne 0
+-→ connexion fermée proprement
+-
+-recv() retourne -1
+-→ erreur → client probablement mort
+-
+-👉 À ce moment-là :
+-
+-supprimer le client
+-
+-le retirer de tous les channels
+-
+-libérer la mémoire
+-
+-🧠 3. Poll / select = détecteur de zombies
+-
+-Avec poll() ou select() :
+-
+-un fd devient :
+-
+-lisible
+-
+-ou en erreur
+-
+-mais recv() ne renvoie plus rien
+-
+-👉 Signal clair que le client est zombie.
+-
+-=====================================================================================
+-
+-une fois le client enregistrer, il n'a plus droit de modifier son user mais son nick oui.
+-Pour set USER :
+-    la commande doit etre ecrite comme ca =>  USER toto 0 * :Toto
+-    pas comme ca => USER Toto => erreur 461 enought parameter
+-
+-Pour NICK :
+-
+-===> Si le serveur n'accepte pas le nouveau pseudo fourni par le client (par exemple, s'il contient des caractères invalides), 
+-il doit renvoyer une erreur numérique ERR_ERRONEUSNICKNAME et ignorer la commande NICK. Les serveurs DOIVENT autoriser au moins
+- tous les caractères alphanumériques, les crochets et accolades ([]{}), les barres obliques inverses (\) et les barres verticales (|) 
+- dans les pseudos, et PEUVENT interdire les chiffres en premier caractère. Les serveurs PEUVENT autoriser des caractères supplémentaires, 
+- à condition qu'ils n'introduisent pas d'ambiguïté dans les autres commandes, notamment :
+-
+- pas de caractère # en début de commande ni d'autre caractère annoncé dans CHANTYPES
+-
+-pas de deux-points (:) en début de commande
+-
+-pas d'espace ASCII
+-
+-Si le serveur ne reçoit pas le paramètre <nickname> avec la commande NICK, 
+-il doit renvoyer une erreur numérique ERR_NONICKNAMEGIVEN et ignorer la commande NICK.
+-
+-Le message NICK peut être envoyé par le serveur aux clients pour confirmer la réussite de leur commande NICK et 
+-informer les autres clients du changement de pseudonyme. Dans ce cas, la source du message sera l'ancien 
+-pseudonyme [ [ "!" utilisateur ] "@" hôte ] de l'utilisateur qui change de pseudonyme.
+-
+-
+-===> erreur 436 pas besoin de gerer je pense puisque on aura qu'un seul serveur.
+-
+-=======================================================================================
+-
+-5️⃣ Comment ta classe sera utilisée dans JOIN
+-
+-Conceptuellement, JOIN fera :
+-
+-- client enregistré ?
+-- channel existe ?
+-    NON → créer Channel
+-    OUI → vérifier règles
+-- +i ? → invité ?
+-- +l ? → plein ?
+-- +k ? → clé valide ?
+-- addUser(client)
+-- si premier → addOperator(client)
+-
+-
+-👉 Toute cette logique vit dans Channel, pas dans JOIN.
+-
+-JOIN doit poser des questions, Channel doit répondre.
+-
+-=====================================================
+-Pour PRIVTMSG
+-
+-6️⃣.1 Vérifier qu’il y a un MESSAGE
+-❌ Cas incorrect (message manquant)
+-
+-Le client envoie :
+-
+-PRIVMSG bob
+-
+-
+-👉 Problème :
+-
+-il y a une cible (bob)
+-
+-mais aucun texte
+-
+-Réaction du serveur :
+-
+-NE PAS envoyer quoi que ce soit à bob
+-
+-envoyer une erreur au client expéditeur
+-
+-Message conceptuel :
+-
+-“Tu n’as pas fourni de texte à envoyer”
+-
+-❌ Autre cas incorrect
+-PRIVMSG bob :
+-
+-
+-👉 Le : est là, mais le message est vide
+-👉 Toujours une erreur
+-
+-✅ Cas correct
+-PRIVMSG bob :Salut Bob !
+-
+-
+-👉 Message valide
+-
+-🔴 6️⃣.2 Envoyer le message au client cible
+-🎯 Situation
+-
+-alice envoie :
+-
+-PRIVMSG bob :Salut Bob
+-
+-❌ Mauvais comportement serveur
+-
+-le serveur vérifie tout
+-
+-MAIS :
+-
+-n’envoie rien à bob
+-
+-ou envoie à alice
+-
+-👉 bob ne reçoit jamais le message ❌
+-
+-✅ Bon comportement serveur
+-
+-le serveur envoie UNIQUEMENT à bob
+-
+-avec l’identité d’alice
+-
+-Message reçu par bob (conceptuellement) :
+-
+-alice : Salut Bob
+-
+-👉 bob sait :
+-
+-qui parle
+-
+-quoi
+\ No newline at end of file
+diff --git a/test/test01/lunchertest.sh b/test/test01/lunchertest.sh
+new file mode 100755
+index 0000000..8defa9d
+--- /dev/null
++++ b/test/test01/lunchertest.sh
+@@ -0,0 +1,5 @@
++gnome-terminal -- bash -c "./test.sh; exec bash"
++
++gnome-terminal -- bash -c "./test01.sh; exec bash"
++
++gnome-terminal -- bash -c "./test02.sh; exec bash"
+\ No newline at end of file
+diff --git a/test/test01/readme.md b/test/test01/readme.md
+new file mode 100644
+index 0000000..b2559ba
+--- /dev/null
++++ b/test/test01/readme.md
+@@ -0,0 +1,3 @@
++#test 001 
++------------
++Verifie la commande join basique: on verifie si 3 personne peut rejoindre le meme channel et si les users et les messages sont bien distribuer a tous les membres du channel.
+\ No newline at end of file
+diff --git a/test/test01/test.sh b/test/test01/test.sh
+new file mode 100755
+index 0000000..ee99149
+--- /dev/null
++++ b/test/test01/test.sh
+@@ -0,0 +1,14 @@
++#!/usr/bin/expect -f
++set timeout 10
++
++set NICK   "girl"
++set SERVER "localhost"
++set PORT   4444
++set HOST   "host1"
++set PSD    "lol"
++
++spawn irssi -c $SERVER -w $PSD -p $PORT -n $NICK -h $HOST
++sleep 1
++
++send "/join #monchan\r"
++interact
+diff --git a/test/test01/test01.sh b/test/test01/test01.sh
+new file mode 100755
+index 0000000..db4b82a
+--- /dev/null
++++ b/test/test01/test01.sh
+@@ -0,0 +1,15 @@
++#!/usr/bin/expect -f
++set timeout 10
++
++set NICK "boy"
++set SERVER "localhost"
++set PORT 4444
++set HOST host2
++set PSD "lol"
++
++spawn irssi -c $SERVER -w $PSD -p $PORT -n $NICK -h $HOST
++sleep 1
++
++send "/join #monchan\r"
++
++interact
+\ No newline at end of file
+diff --git a/test/test01/test02.sh b/test/test01/test02.sh
+new file mode 100755
+index 0000000..dc97a3b
+--- /dev/null
++++ b/test/test01/test02.sh
+@@ -0,0 +1,15 @@
++#!/usr/bin/expect -f
++set timeout 10
++
++set NICK "troll"
++set SERVER "localhost"
++set PORT 4444
++set HOST "host3"
++set PSD "lol"
++
++spawn irssi -c $SERVER -w $PSD -p $PORT -n $NICK -h $HOST
++sleep 1
++
++send "/join #monchan\r"
++
++interact
+\ No newline at end of file
+diff --git a/test/test02/launchertest.sh b/test/test02/launchertest.sh
+new file mode 100755
+index 0000000..8defa9d
+--- /dev/null
++++ b/test/test02/launchertest.sh
+@@ -0,0 +1,5 @@
++gnome-terminal -- bash -c "./test.sh; exec bash"
++
++gnome-terminal -- bash -c "./test01.sh; exec bash"
++
++gnome-terminal -- bash -c "./test02.sh; exec bash"
+\ No newline at end of file
+diff --git a/test/test02/test.sh b/test/test02/test.sh
+new file mode 100755
+index 0000000..6e17090
+--- /dev/null
++++ b/test/test02/test.sh
+@@ -0,0 +1,16 @@
++#!/usr/bin/expect -f
++set timeout 10
++
++set NICK   "girl"
++set SERVER "localhost"
++set PORT   4444
++set HOST   "host1"
++set PSD    "lol"
++
++spawn irssi -c $SERVER -w $PSD -p $PORT -n $NICK -h $HOST
++sleep 1
++
++send "/join #monchan\r"
++sleep 10
++send "/kick #monchan boy,troll :ta mere pue\r"
++interact
+diff --git a/test/test02/test01.sh b/test/test02/test01.sh
+new file mode 100755
+index 0000000..db4b82a
+--- /dev/null
++++ b/test/test02/test01.sh
+@@ -0,0 +1,15 @@
++#!/usr/bin/expect -f
++set timeout 10
++
++set NICK "boy"
++set SERVER "localhost"
++set PORT 4444
++set HOST host2
++set PSD "lol"
++
++spawn irssi -c $SERVER -w $PSD -p $PORT -n $NICK -h $HOST
++sleep 1
++
++send "/join #monchan\r"
++
++interact
+\ No newline at end of file
+diff --git a/test/test02/test02.sh b/test/test02/test02.sh
+new file mode 100755
+index 0000000..dc97a3b
+--- /dev/null
++++ b/test/test02/test02.sh
+@@ -0,0 +1,15 @@
++#!/usr/bin/expect -f
++set timeout 10
++
++set NICK "troll"
++set SERVER "localhost"
++set PORT 4444
++set HOST "host3"
++set PSD "lol"
++
++spawn irssi -c $SERVER -w $PSD -p $PORT -n $NICK -h $HOST
++sleep 1
++
++send "/join #monchan\r"
++
++interact
+\ No newline at end of file
