@@ -18,10 +18,7 @@ bool Dispatch::ft_quit(Command cmd, int fd)
 
     std::string quitMsg = "";
     if (cmd.getTrailing() == "leaving" || cmd.getTrailing() == "")
-    {
         quitMsg = ":" + client->GetNick() + " QUIT :Client disconnected\r\n";
-        std::cout << "getTrailing: " << cmd.getTrailing() << "!\r\n" << "getCmd: " << cmd.getCmd() << "\r\n" << "getLine: " << cmd.getLine() << std::endl;
-    }
     else
         quitMsg = ":" + client->GetNick() + " QUIT :" + cmd.getTrailing() + "\r\n";
 
