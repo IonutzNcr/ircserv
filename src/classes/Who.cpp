@@ -45,8 +45,8 @@ bool Dispatch::ft_who(Command cmd, int fd)
 				whoMsg += "H"; // to fix the status of the user (away or not)
 				whoMsg += "\r\n";
 				send(fd, whoMsg.c_str(), whoMsg.length(), 0);
-				break;
 			}
 		}
 	}
+	return true;
 }
