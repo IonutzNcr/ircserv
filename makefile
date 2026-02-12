@@ -17,7 +17,8 @@ FILES=	Client.cpp \
 		Mode.cpp \
 		Invite.cpp \
 		Topic.cpp \
-		Quit.cpp
+		Quit.cpp \
+		Who.cpp
 
 FILES_UTILS=	split.cpp
 

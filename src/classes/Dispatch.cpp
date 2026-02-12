@@ -47,6 +47,8 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_ping(cmd, fd);
     if (cmd.getCmd() == "QUIT")
         ft_quit(cmd, fd);
+    if (cmd.getCmd() == "WHO")
+        ft_who(cmd, fd);
 
 }
 
