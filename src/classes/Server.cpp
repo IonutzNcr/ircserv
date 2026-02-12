@@ -12,17 +12,43 @@ void Server::SignalHandler(int signum)
 	Server::Signal = true; //-> set the static boolean to true to stop the server
 }
 
-void Server::ClearClients(int fd){ //-> clear the clients
-	for(size_t i = 0; i < fds.size(); i++){ //-> remove the client from the pollfd
-		if (fds[i].fd == fd)
-			{fds.erase(fds.begin() + i); break;}
-	}
-	for(size_t i = 0; i < clients.size(); i++){ //-> remove the client from the vector of clients
-		if (clients[i]->GetFd() == fd)
-			{clients.erase(clients.begin() + i); break;}
-	}
+void Server::ClearClients(int fd, Dispatch &dispatch)
+{
+    Client* clientToRemove = NULL;
 
+	std::string quitMsg = "";
+
+    for(size_t i = 0; i < clients.size(); i++){
+        if (clients[i]->GetFd() == fd) {
+            clientToRemove = clients[i];
+            quitMsg = clientToRemove->GetMsgQuit();
+            clients.erase(clients.begin() + i);
+            break;
+        }
+    }
+
+    if (!clientToRemove)
+        return;
+	std::string quitMsgCrtlC = ":" + clientToRemove->GetNick() + " QUIT :Client disconnected\r\n";
+	if (quitMsg.empty())
+		quitMsg = quitMsgCrtlC;
+	for (size_t i = 0; i < dispatch._channels.size(); i++) {
+		if (dispatch._channels[i]->isUserInChannel(clientToRemove)) {
+			const std::vector<Client*>& channelUsers = dispatch._channels[i]->getUsers();
+			for (size_t j = 0; j < channelUsers.size(); j++) {
+				if (channelUsers[j]->GetFd() != fd)
+					send(channelUsers[j]->GetFd(), quitMsg.c_str(), quitMsg.length(), 0);
+			}
+		}
+	}
+	
+    for (size_t i = 0; i < dispatch._channels.size(); i++) {
+        dispatch._channels[i]->removeUser(clientToRemove);
+    }
+
+    delete clientToRemove;
 }
+
 
 void Server::CloseFds(){
 	for(size_t i = 0; i < clients.size(); i++){ //-> close all the clients
@@ -75,19 +101,32 @@ void Server::ServerInit()
 		if((poll(&fds[0],fds.size(),-1) == -1) && Server::Signal == false) //-> wait for an event
 			throw(std::runtime_error("poll() faild"));
 
-		for (size_t i = 0; i < fds.size(); i++) //-> check all file descriptors
+		for (size_t i = 0; i < fds.size(); i++)
 		{
-			if (fds[i].revents & POLLIN)//-> check if there is data to read
+			if (fds[i].revents & (POLLHUP | POLLERR | POLLNVAL))
+			{
+				int deadFd = fds[i].fd;
+				std::cout << "FD " << deadFd << " closed (poll error)" << std::endl;
+				close(deadFd);
+				ClearClients(deadFd, dispatch);
+				fds.erase(fds.begin() + i);
+				i--; // important car erase décale le vector
+				continue;
+			}
+
+			if (fds[i].revents & POLLIN)
 			{
 				if (fds[i].fd == SerSocketFd)
-					AcceptNewClient(); //-> accept new client
+					AcceptNewClient();
 				else
-					ReceiveNewData(fds[i].fd, dispatch); //-> receive new data from a registered client
+					ReceiveNewData(fds[i].fd, dispatch);
 			}
 		}
+
 		std::cout << "loop server\n";
+
 	}
-	CloseFds(); //-> close the file descriptors when the server stops
+	CloseFds();
 }
 
 
@@ -123,24 +162,26 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
 	
-	if (bytes == 0) {
-    // peer performed orderly shutdown
-    std::cout << RED << "Client <" << fd << "> Disconnected (peer closed)" << WHI << std::endl;
-    ClearClients(fd);
-    close(fd);
-    return;
-	} else if (bytes < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			// no data available now, not an error
-			return;
-		}
-		// real error
-		perror("recv");
-		ClearClients(fd);
+	if (bytes == 0)
+	{
+		ClearClients(fd, dispatch);
 		close(fd);
-    return;
-}
 
+		for (size_t i = 0; i < fds.size(); i++)
+		{
+			if (fds[i].fd == fd)
+			{
+				fds.erase(fds.begin() + i);
+				break;
+			}
+		}
+		return;
+	}
+	else if (bytes == -1)
+	{
+		if (errno != EWOULDBLOCK && errno != EAGAIN) //-> check if the error is not EWOULDBLOCK or EAGAIN
+			std::cout << "recv() failed" << std::endl;
+	}
 	else{ //-> print the received data
 		buff[bytes] = '\0';
 		Command cmd;
@@ -161,4 +202,14 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 	}
+}
+
+int	Server::findClient(std::string nick)
+{
+	for(size_t i = 0; i < clients.size(); i++){
+		if (clients[i]->GetNick() == nick) {
+                return (clients[i]->GetFd());
+            }
+	}
+	return (-1);
 }

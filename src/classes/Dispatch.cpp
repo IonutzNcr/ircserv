@@ -9,29 +9,20 @@
 #include <sys/socket.h>
 
 
-
-Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients):_password(pass), _clients(clients)
+Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients): _password(pass), _clients(clients)
 {
-
+    return ;
 }
 
 Dispatch::~Dispatch()
 {
-
+    return ;
 }
 
 void Dispatch::dispatch(Command cmd, int fd)
 {
-    //print cmd for debug
-    std::cout << "----------------------------------------------------" << std::endl;
-                
-    std::cout << "Received command: " << cmd.getLine() << std::endl
-                << "Parsed command: " << cmd.getCmd() << std::endl
-                << "Arguments: " << cmd.getArgs() << std::endl
-                << "Trailing: " << cmd.getTrailing() << std::endl
-                << "Prefix: " << cmd.getPrefix() << std::endl;
-    std::cout << "----------------------------------------------------" << std::endl;
-    /* ----------------------------------------------------------- */
+    int choice = 0;
+
     if (cmd.getCmd() == "CAP")
         ft_cap(cmd, fd);
     if (cmd.getCmd() == "PASS")
@@ -46,8 +37,17 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_mode(cmd, fd);
     if (cmd.getCmd() == "KICK")
         ft_kick(cmd, fd);
-    /* if (cmd.getCmd() == "PING")
-        ft_ping(cmd, fd);  */
+    if (cmd.getCmd() == "INVITE")
+        ft_invite(cmd, fd);
+    if (cmd.getCmd() == "TOPIC")
+        ft_topic(cmd, fd);
+    if (cmd.getCmd() == "PRIVMSG")
+        ft_PRIVMSG(cmd, fd);
+    if (cmd.getCmd() == "PING")
+        ft_ping(cmd, fd);
+    if (cmd.getCmd() == "QUIT")
+        ft_quit(cmd, fd);
+
 }
 
 bool Dispatch::ft_cap(Command cmd, int fd)
@@ -67,120 +67,6 @@ bool Dispatch::ft_cap(Command cmd, int fd)
     }
     return true;
 }
-
-bool Dispatch::ft_pass(Command cmd, int fd)
-{
-   
-    Client* client = getClientFd(fd);
-   
-    if (!client)
-        return false;
-    if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt = ":server 462 :You may not reregister\r\n";
-        send(fd, txt.c_str(), txt.length(), 0);
-        return false;
-    }
-  
-    std::string line = cmd.getLine();
-    
-    std::string pass = line.substr(4);
-   
-    pass.erase(0, pass.find_first_not_of(" \t"));
-    if (!pass.empty() && pass[0] == ':')
-        pass.erase(0, 1);
-    
-    pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
-   
-    if (pass.empty()) { 
-        std::string msg = ":server 461 PASS :Not enough parameters\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
-        return false;
-    }
-    if (pass != _password) {    // si le pass est differend de celui des parametre => error
-        std::string txt = ":server 464 :Password incorrect\r\n";
-        send(fd, txt.c_str(), txt.length(), 0);
-        return false;
-    }
-   
-    client->setAuthenticated(true);
-    tryRegister(client);
-   
-    return true; 
-}
- 
- 
-bool Dispatch::ft_nick(Command cmd, int fd)
-{
-    Client* client = getClientFd(fd);
-    if (!client)
-        return false;
-    std::string line = cmd.getLine();
-    std::string nick = line.substr(4); // on stock la string apres le NICK
-    nick.erase(0, nick.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
-    if (!nick.empty() && nick[0] == ':') // a voir pour traiter un seul ou plusieur ':'
-        nick.erase(0, 1);
-    nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
-    if (nick.empty()) {     // si pas de new nick => erreur 
-        std::string msg = "431 :No nickname given\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
-        return false;
-    }
-    for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
-            if (_clients[i]->GetNick() == nick && _clients[i] != client) {
-                std::string msg = "serveur 433 * " + nick + " :Nickname is already in use\r\n";
-                send(fd, msg.c_str(), msg.length(), 0);
-                return false;
-            }
-    }
-    std::string oldNick = client->GetNick();
-    client->SetNick(nick);
-    // std::string mssg = "ft_Nick set a true " + nick + "\r\n";
-    // send(fd, mssg.c_str(), mssg.size(), 0);
-    tryRegister(client);
-
-    std::string ret;    //  affichage et envoie
-    if (!oldNick.empty())
-        ret = ":" + oldNick + " NICK :" + nick + "\r\n";
-    else
-        ret = ":" + nick + " NICK :" + nick + "\r\n";
-    send(fd, ret.c_str(), ret.length(), 0);
-    return true; 
-}
-bool Dispatch::ft_user(Command cmd, int fd)
-{   
-    Client* client = getClientFd(fd);
-    if (!client)
-        return false;
-    if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt = ":server 462 :You may not reregister\r\n";
-        send(fd, txt.c_str(), txt.length(), 0);
-        return false;
-    }
-    std::string line = cmd.getLine();
-    std::string user = line.substr(4); // on stock la string apres le NICK
-    user.erase(0, user.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
-    if (!user.empty() && user[0] == ':') // a voir pour traiter un seul ou plusieur ':'
-        user.erase(0, 1);
-    user.erase(user.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
-    if (user.empty()) {     // si pas de new nick => erreur 
-        std::string msg = "461 :No nickname given\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
-        return false;
-    }
-    std::string oldUser = client->GetUser();
-    client->SetUser(user);
-    // std::string mssg = "ft_User set a true " + user + "\r\n";
-    // send(fd, mssg.c_str(), mssg.size(), 0);
-    tryRegister(client);
-    std::string ret;    //  affichage et envoie
-    if (!oldUser.empty())
-        ret = ":" + oldUser + " USER :" + user + "\r\n";
-    else
-        ret = ":" + user + " USER :" + user + "\r\n";
-    send(fd, ret.c_str(), ret.length(), 0);
-    return true; 
-}
-
 
 //TODO::RPL_TOPIC
 //TODO::RPL_NAMREPLY
@@ -308,7 +194,6 @@ bool Dispatch::ft_join(Command cmd, int fd)
     return true;
 }
 
-
 Client *Dispatch::getClientFd(int fd_client)
 {
     for (size_t i = 0; i < _clients.size(); ++i) {
@@ -324,12 +209,13 @@ void    Dispatch::tryRegister(Client* client)
         return ;
     if (client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
         client->setRegistered(true);
-    //sendWelcome(client);  // fonction a buid et a renomer pour notifier que le client c'est bien enregistrer
         std::string msg = ":server 001 " + client->GetNick() + " :Welcome to the IRC server!\r\n";
         send(client->GetFd(), msg.c_str(), msg.length(), 0);
     }
     if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
-        
+        std::string msg2 = "464 * :Password incorrect\r\n";
+        send(client->GetFd(), msg2.c_str(), msg2.length(), 0);
+        // a voir si on deconnecte le client ou pas
     }
 }
 
@@ -343,7 +229,7 @@ bool Dispatch::isChannelExist(std::string chanName)
     return false;
 }
 
-/* bool Dispatch::ft_ping(Command cmd, int fd)
+bool Dispatch::ft_ping(Command cmd, int fd)
 {
     std::string line = cmd.getLine();
     std::string token;
@@ -361,92 +247,17 @@ bool Dispatch::isChannelExist(std::string chanName)
     std::string reply = ":server PONG server :" + token + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     return true;
-} */
-
-bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string msg, Client* client)
-{
-    for (size_t i = 1; i < modeChanges.size(); i++) 
-    {
-        char mode = modeChanges[i];
-        if (mode == 't') {
-            if (modeChanges[0] == '+')
-            {
-                channel->setProtectTopic(true);
-            }
-            else
-            {
-                channel->setProtectTopic(false);
-            }
-        } else if (mode == 'i') {
-            if (modeChanges[0] == '+')
-            {
-                channel->setInviteOnly(true);
-            }
-            else
-            {
-                channel->setInviteOnly(false);
-            }
-        }
-        else {
-            std::string msg = ":server 501 " + client->GetNick() + " :Unknown MODE flag\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        }
-    }
-    return true;
 }
 
-bool Dispatch::ft_mode(Command cmd, int fd)
+Channel*    Dispatch::getChannel(std::string target)
 {
-    Client* client = getClientFd(fd);
-    if (!client)
-        return false;
-    std::string line = cmd.getLine();
-    std::vector<std::string> tokens = split(line, ' ');
-    if (tokens.size() < 3) {
-        std::string msg = ":server 461 MODE :Not enough parameters\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
-        return false;
+    for (size_t i = 0; i < _channels.size(); i++) {
+        if (_channels[i]->getName() == target)
+            return (_channels[i]);
     }
-    std::string target = tokens[1];
-    std::string modeChanges = tokens[2];
-    
-    // For simplicity, we will only handle channel modes and ignore user modes for now
-    if (target[0] == '#') {
-        Channel* channel = nullptr;
-        for (size_t i = 0; i < _channels.size(); i++) {
-            if (_channels[i]->getName() == target) {
-                channel = _channels[i];
-                break;
-            }
-        }
-        if (!channel) {
-            std::string msg = ":server 403 " + client->GetNick() + " " + target + " :No such channel\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        }
-        if (!channel->isOperator(client)) {
-            std::string msg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        }
-        // Handle mode changes (for simplicity, we will only handle +t and -t for topic protection)
-        if (modeChanges[0] != '+' && modeChanges[0] != '-') {
-            std::string msg = ":server 501 " + client->GetNick() + " :Unknown MODE flag\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        }
-        if (setMode(channel, modeChanges, fd, target, line, client) == false) 
-            return false;
-    }
-    else {
-        std::string msg = ":server 501 " + client->GetNick() + " :Unknown MODE type\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
-        return false;
-    }
-
-    return true;
+    return (NULL);
 }
+
 //TODO:: <channel>{,<channel>} <user>{,<user>} [<comment>] 
 bool Dispatch::ft_kick(Command cmd, int fd)
 {
@@ -549,5 +360,15 @@ bool Dispatch::ft_kick(Command cmd, int fd)
 
 
         
-        return true;    
+        return true;
+}
+
+int	Dispatch::findClient(std::string nick)
+{
+	for(size_t i = 0; i < _clients.size(); i++){
+		if (_clients[i]->GetNick() == nick) {
+                return (_clients[i]->GetFd());
+            }
+	}
+	return (-1);
 }

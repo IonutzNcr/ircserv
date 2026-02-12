@@ -12,7 +12,12 @@ FILES=	Client.cpp \
 		Parser.cpp \
 		Data.cpp \
 		Dispatch.cpp\
-		Channel.cpp
+		Channel.cpp \
+		Register.cpp \
+		Mode.cpp \
+		Invite.cpp \
+		Topic.cpp \
+		Quit.cpp
 
 FILES_UTILS=	split.cpp
 
