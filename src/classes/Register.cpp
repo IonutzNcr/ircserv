@@ -166,11 +166,6 @@ void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
     Client* client = getClientFd(fd);
 
     std::vector<std::string>    params = SplitParams(cmd.getLine());
-    // for (int i = 0; !params[i].empty(); i++)
-    // {
-    //     std::string ttt = params[i] + "\r\n";
-    //     send(fd, ttt.c_str(), ttt.length(), 0);
-    // }
     if (!client->isRegistered()) {
         std::string err = ":server 451 * :You have not registered\r\n";
         send(fd, err.c_str(), err.length(), 0);
