@@ -227,8 +227,6 @@ void    Dispatch::ft_PRIVMSG_client(std::vector<std::string> params, int fd)
 {
     Client* client = getClientFd(fd);
     if (!client) {
-        std::string test =  "je suis dans client ici\r\n";
-        send(fd, test.c_str(), test.length(), 0);
         return;
     }
     std::string client2 = params[0];

@@ -163,7 +163,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     }
     if (tokens.size() == 2) {
         std::string target = tokens[1];
-        if (target[0] == '#') {
+        if (target[0] == '#' || target[0] == '&') {
             Channel* channel = nullptr;
             for (size_t i = 0; i < _channels.size(); i++) {
                 if (_channels[i]->getName() == target) {
@@ -200,7 +200,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     std::string target = tokens[1];
     std::string modeChanges = tokens[2];
     
-    if (target[0] == '#') {
+    if (target[0] == '#' || target[0] == '&') {
         Channel* channel = nullptr;
         for (size_t i = 0; i < _channels.size(); i++) {
             if (_channels[i]->getName() == target) {
