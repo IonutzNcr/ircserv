@@ -164,14 +164,20 @@ void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
 {
     
     Client* client = getClientFd(fd);
+
     std::vector<std::string>    params = SplitParams(cmd.getLine());
+    // for (int i = 0; !params[i].empty(); i++)
+    // {
+    //     std::string ttt = params[i] + "\r\n";
+    //     send(fd, ttt.c_str(), ttt.length(), 0);
+    // }
     if (!client->isRegistered()) {
         std::string err = ":server 451 * :You have not registered\r\n";
         send(fd, err.c_str(), err.length(), 0);
         return;
     }
-    if (params.size() < 3) {
-        std::string err = "Error: need params\r\n";
+    if (params.size() < 2) {
+        std::string err = "Error: need params " + cmd.getLine() + "\r\n";
         send(fd, err.c_str(), err.length(), 0);
         return;
     }
@@ -185,7 +191,7 @@ void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
         send(fd, txt2.c_str(), txt2.length(), 0);
         return ;
     }
-    int choice = ft_choice(params[1]);
+    int choice = ft_choice(params[0]);
     if (choice == 1)
         ft_PRIVMSG_client(params, fd);
     else if (choice == 2)
@@ -200,7 +206,7 @@ void    Dispatch::ft_PRIVMSG_channel(std::vector<std::string> params, int fd)
     Client* client = getClientFd(fd);
     if (!client)
         return;
-    std::string channelName = params[1];
+    std::string channelName = params[0];
     Channel* channel = getChannel(channelName);
     if (!channel) {
         std::string err = ":server 403 * :No such channel\r\n";
@@ -212,7 +218,7 @@ void    Dispatch::ft_PRIVMSG_channel(std::vector<std::string> params, int fd)
         send(fd, err.c_str(), err.length(), 0);
         return;
     }
-    std::string msg = ":" + client->GetNick() + " PRIVMSG " + channelName + " :" + params[2] + "\r\n";
+    std::string msg = ":" + client->GetNick() + " PRIVMSG " + channelName + " :" + params[1] + "\r\n";
     const std::vector<Client*>& members = channel->getUsers();
     for (size_t i = 0; i < members.size(); i++) {
         if (members[i]->GetFd() != fd) {
@@ -225,15 +231,18 @@ void    Dispatch::ft_PRIVMSG_channel(std::vector<std::string> params, int fd)
 void    Dispatch::ft_PRIVMSG_client(std::vector<std::string> params, int fd)
 {
     Client* client = getClientFd(fd);
-    if (!client)
+    if (!client) {
+        std::string test =  "je suis dans client ici\r\n";
+        send(fd, test.c_str(), test.length(), 0);
         return;
-    std::string client2 = params[1];
+    }
+    std::string client2 = params[0];
     int fd2 = findClient(client2);
     if (fd2 < 0) {
         std::string txt2 =  ":server 401 " + client->GetNick() + " " + client2 + " :No such nick\r\n";
         send(fd, txt2.c_str(), txt2.length(), 0);
         return ;
     }
-    std::string sendText = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + params[2] + "\r\n";
-    send(fd2, sendText.c_str(), sendText.length(), 0); //Msg envoyer au deuxieme client
+    std::string test5 = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + params[1] + "\r\n";
+    send(fd2, test5.c_str(), test5.length(), 0); //Msg envoyer au deuxieme client
 }
