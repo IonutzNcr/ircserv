@@ -126,7 +126,6 @@ void Server::ServerInit()
 		std::cout << "loop server\n";
 
 	}
-	CloseFds();
 }
 
 

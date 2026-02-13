@@ -17,9 +17,7 @@ int main(int argc, char **argv)
 		ser.ServerInit(); //-> initialize the server
 	}
 	catch(const std::exception& e){
-		ser.CloseFds(); //-> close the file descriptors
 		std::cerr << e.what() << std::endl;
 	}
-	std::cout << "The Server Closed!" << std::endl;
-	
+	return 0;
 }

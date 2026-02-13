@@ -38,10 +38,14 @@ public:
 	Server(int port, std::string password):Port(port), _password(password) {
 		/* dispatch = dispatch() */
 		SerSocketFd = -1;}
-	~Server() {
-	CloseFds();
-    for (size_t i = 0; i < clients.size(); i++)
-    delete clients[i];};
+	~Server() 
+	{
+		CloseFds();
+    	for (size_t i = 0; i < clients.size(); i++)
+   	 	delete clients[i];
+
+		std::cout << "The Server Closed!" << std::endl;
+	};
 	void ServerInit();
 	void SerSocket(); //-> server socket creation
 	void AcceptNewClient(); //-> accept new client
