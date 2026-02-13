@@ -17,6 +17,7 @@ class Dispatch
         Dispatch(std::string password, std::vector<Client *> &clients);
         ~Dispatch();
         void dispatch(Command cmd, int fd);
+        std::vector<std::string> SplitParams(std::string line) const;
 
         bool ft_cap(Command cmd, int fd);
         bool ft_pass(Command cmd, int fd);
@@ -25,9 +26,10 @@ class Dispatch
         bool ft_join(Command cmd, int fd);
         bool parseNick(std::string line);
         void ft_PRIVMSG(Command cmd, int fd);
-        void ft_PRIVMSG_client(Command cmd, int fd);
-        void ft_PRIVMSG_channel(Command cmd, int fd);
+        void ft_PRIVMSG_client(std::vector<std::string> params, int fd);
+        void ft_PRIVMSG_channel(std::vector<std::string> params, int fd);
         int	findClient(std::string nick);
+        int ft_choice(const std::string& target);
 
         bool ft_mode(Command cmd, int fd);
 
