@@ -5,6 +5,7 @@
 #include "../../includes/split.hpp"
 #include "../../includes/Channel.hpp"
 #include <string>
+#include <cctype>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -12,15 +13,19 @@
 bool Dispatch::parseNick(std::string line)
 {
     // build une fonction pour le parsing de nick (erreur 433)
-
-
-
-
-
-
-    return true;
+    if (line.empty())
+        return (false);
+    if (!std::isalpha(static_cast<unsigned char>(line[0])))
+        return (false);
+    for (size_t i = 0; i < line.size(); i++) {
+        if (line[i] == ' ' || line[i] == ',' || line[i] == '*'
+            || line[i] == '?' || line[i] == '!'
+            || line[i] == '@' || line[i] == '#')
+            return false;
+    }
+    return (true);
 }
-
+// a demander quand il ya un changement de nick, est ce que ca le prend en compte dans un channel
 bool Dispatch::ft_nick(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
@@ -33,13 +38,18 @@ bool Dispatch::ft_nick(Command cmd, int fd)
         nick.erase(0, 1);
     nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
     if (nick.empty()) {     // si pas de new nick => erreur 
-        std::string msg = fd + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
+        std::string msg = ":serveur 431 :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
         send(fd, msg.c_str(), msg.length(), 0);     
         return false;
     }
+    if (!parseNick(nick)) {
+        std::string msg = ":serveur 433 " + nick + ":Erroneus nickname\r\n";     // ERR_ERRONEUSNICKNAME (432)
+        send(fd, msg.c_str(), msg.length(), 0);     
+        return true;
+    }
     for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
             if (_clients[i]->GetNick() == nick && _clients[i] != client) {
-                std::string msg = fd + " " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
+                std::string msg = "serveur 433: " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
                 send(fd, msg.c_str(), msg.length(), 0);
                 return true;
             }
@@ -94,7 +104,7 @@ bool Dispatch::ft_user(Command cmd, int fd)
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt = fd + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
+        std::string txt = ":serveur 462 :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
         send(fd, txt.c_str(), txt.length(), 0);
         return true;
     }
@@ -119,7 +129,7 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt2 = fd + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
+        std::string txt2 = ":serveur 462 * :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
         send(fd, txt2.c_str(), txt2.length(), 0);
         return true;
     }
@@ -130,16 +140,13 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         pass.erase(0, 1);
     pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
     if (pass.empty()) { 
-        std::string msg = fd + " PASS :Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
+        std::string msg = ":serveur 461 * PASS :Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
         send(fd, msg.c_str(), msg.length(), 0);
         return true;
     }
     if (pass != _password) {    // si le pass est differend de celui des parametre => error
-        std::string txt = fd + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
-        send(fd, txt.c_str(), txt.length(), 0);
         return true;
     }
-   
     client->setAuthenticated(true);
     tryRegister(client);
    
@@ -227,8 +234,6 @@ void    Dispatch::ft_PRIVMSG_client(std::vector<std::string> params, int fd)
 {
     Client* client = getClientFd(fd);
     if (!client) {
-        std::string test =  "je suis dans client ici\r\n";
-        send(fd, test.c_str(), test.length(), 0);
         return;
     }
     std::string client2 = params[0];
