@@ -94,7 +94,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
     if (chanXkeys.size() > 1)
         isKey = true;
     std::string key;
-    if (isKey)
+    if (isKey)//sert a quoi sca un oublie ou je suis fou ...
         key = chanXkeys[1];
     std::vector<std::string> chanNamesSplit = split(chanNames, ',');
     std::vector<std::string>keysSplit;
@@ -144,16 +144,17 @@ bool Dispatch::ft_join(Command cmd, int fd)
                     std::string  msg;
                     if (_channels[j]->isUserInChannel(client))
                     {
-                       /*  msg = "User is already in the channel " + chanName + "\r\n";
-                        send(fd, msg.c_str(), msg.length(), 0); */
+                        std::string errMsg = ":server 443 " + client->GetNick() + " " + client->GetNick()+ " ";
+                        errMsg +=  " " +  chanName + " " + ":is already on channel\r\n";
+                        send(fd, errMsg.c_str(), msg.length(), 0);
                         continue; // a voir que faire si deja dans le channel et mauvais key
                     }
                     if (_channels[j]->isInviteOnly() && _channels[j]->isInvited(client))
                     {
-                        if (_channels[j]->getKey() != chanKey)
-                        {
-                            //je suis cidere trop de if ... omg... workign from here
-                        }
+                        //send error message
+                        std::string errMSG = ":server 473 " +  client->GetNick() + " " + chanName + " :Cannot join channel (+i)\r\n";
+                        send(fd, errMSG.c_str(), errMSG.length(), 0);
+                        continue;
                     }
                     if (_channels[j]->getKey() != chanKey)
                     {
