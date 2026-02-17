@@ -119,7 +119,8 @@ bool Dispatch::ft_join(Command cmd, int fd)
                 std::cout << _channels[j]->getName() << " ";
             }
             std::cout << std::endl;
-            
+            if (!chanKey.empty())
+                newChan->setKey(chanKey);
             _channels.push_back(newChan);
             newChan->addUser(client);
             newChan->addOperator(client);
@@ -146,6 +147,13 @@ bool Dispatch::ft_join(Command cmd, int fd)
                        /*  msg = "User is already in the channel " + chanName + "\r\n";
                         send(fd, msg.c_str(), msg.length(), 0); */
                         continue; // a voir que faire si deja dans le channel et mauvais key
+                    }
+                    if (_channels[j]->isInviteOnly() && _channels[j]->isInvited(client))
+                    {
+                        if (_channels[j]->getKey() != chanKey)
+                        {
+                            //je suis cidere trop de if ... omg... workign from here
+                        }
                     }
                     if (_channels[j]->getKey() != chanKey)
                     {
