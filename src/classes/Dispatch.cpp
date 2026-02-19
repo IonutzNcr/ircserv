@@ -94,7 +94,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
     if (chanXkeys.size() > 1)
         isKey = true;
     std::string key;
-    if (isKey)//sert a quoi sca un oublie ou je suis fou ...
+    if (isKey)
         key = chanXkeys[1];
     std::vector<std::string> chanNamesSplit = split(chanNames, ',');
     std::vector<std::string>keysSplit;
@@ -113,14 +113,13 @@ bool Dispatch::ft_join(Command cmd, int fd)
         if (!isChannelExist(chanName)) // TODO:: big problem why ?
         {
             //print les channels existants
-            std::cout << "Existing channels: ";
+           /*  std::cout << "Existing channels: ";
             for (size_t j = 0; j < _channels.size(); j++)
             {
                 std::cout << _channels[j]->getName() << " ";
             }
-            std::cout << std::endl;
-            if (!chanKey.empty())
-                newChan->setKey(chanKey);
+            std::cout << std::endl; */
+            newChan->setKey(chanKey);
             _channels.push_back(newChan);
             newChan->addUser(client);
             newChan->addOperator(client);
@@ -149,7 +148,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
                         send(fd, errMsg.c_str(), msg.length(), 0);
                         continue; // a voir que faire si deja dans le channel et mauvais key
                     }
-                    if (_channels[j]->isInviteOnly() && _channels[j]->isInvited(client))
+                    if (_channels[j]->isInviteOnly() && !_channels[j]->isInvited(client))
                     {
                         //send error message
                         std::string errMSG = ":server 473 " +  client->GetNick() + " " + chanName + " :Cannot join channel (+i)\r\n";
