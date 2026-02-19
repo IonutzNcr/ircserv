@@ -210,6 +210,7 @@ Channel *Dispatch::createChannel(std::string topic, std::string name,std::size_t
     _channels.push_back(newChan);
     newChan->addUser(client);
     newChan->addOperator(client);
+    return newChan;
 }
 
 
@@ -240,11 +241,11 @@ void Dispatch::broadcastJoin(Channel *channel, Client *client)
 }
 void Dispatch::sendList(Channel *channel, Client *client)
 {
-    std::string msg = ":server 353 " + client->GetNick() + " = " + _channels[j]->getName() + " :";
-    std::vector<Client *> channelUsers = _channels[j]->getUsers();
+    std::string msg = ":server 353 " + client->GetNick() + " = " + channel->getName() + " :";
+    std::vector<Client *> channelUsers = channel->getUsers();
     for (std::size_t k = 0; k < channelUsers.size(); k++)
     {
-        if (_channels[j]->isOperator(channelUsers[k]))
+        if (channel->isOperator(channelUsers[k]))
             msg += "@";
         msg += channelUsers[k]->GetNick();
         if (k < channelUsers.size() - 1)
@@ -253,7 +254,7 @@ void Dispatch::sendList(Channel *channel, Client *client)
     msg += "\r\n";
     send(client->GetFd(), msg.c_str(), msg.size(), 0);
     //RPL_ENDOFNAMES
-    msg = ":server 366 " + client->GetNick() + " " + _channels[j]->getName() + " :End of /NAMES list\r\n";
+    msg = ":server 366 " + client->GetNick() + " " + channel->getName() + " :End of /NAMES list\r\n";
     send(client->GetFd(), msg.c_str(), msg.size(), 0);
 }
 
