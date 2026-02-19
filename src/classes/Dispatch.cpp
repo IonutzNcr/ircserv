@@ -112,18 +112,11 @@ bool Dispatch::ft_join(Command cmd, int fd)
         Channel *newChan = new Channel("", chanName, i, chanKey); // to fix the id is not really unique
         if (!isChannelExist(chanName)) // TODO:: big problem why ?
         {
-            //print les channels existants
-           /*  std::cout << "Existing channels: ";
-            for (size_t j = 0; j < _channels.size(); j++)
-            {
-                std::cout << _channels[j]->getName() << " ";
-            }
-            std::cout << std::endl; */
-            newChan->setKey(chanKey);
-            _channels.push_back(newChan);
-            newChan->addUser(client);
-            newChan->addOperator(client);
-            std::string msg = ":" + client->GetNick() + " JOIN " + chanName + "\r\n";
+            Channel *newChan = createChannel("", chanName, i, chanKey, client);
+            broadcastJoin(newChan, client);
+            sendTopic(client, newChan);
+            sendList(newChan, client);
+          /*   std::string msg = ":" + client->GetNick() + " JOIN " + chanName + "\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
             //RPL_NOTOPIC
             msg = ":server 331 " + client->GetNick() + " " + newChan->getName() + " :No topic is set\r\n";
@@ -133,7 +126,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
             send(fd, msg.c_str(), msg.size(), 0);
             //RPL_ENDOFNAMES
             msg = ":server 366 " + client->GetNick() + " " + newChan->getName() + " :End of /NAMES list\r\n";
-            send(fd, msg.c_str(), msg.size(), 0);
+            send(fd, msg.c_str(), msg.size(), 0); */
         }else
         {
             for (size_t j = 0; j < _channels.size(); j++)
@@ -161,8 +154,12 @@ bool Dispatch::ft_join(Command cmd, int fd)
                         send(fd, errMsg.c_str(), errMsg.length(), 0);
                         continue;
                     }
-
+                    _channels[j]->addUser(client);
+                    broadcastJoin(_channels[j], client);
+                    sendTopic(client, _channels[j]);
+                    sendList(_channels[j], client);
                     // Broadcast JOIN to all existing members
+                 /*    broadcastJoin(_channels[j], client);
                     std::string joinMsg = ":" + client->GetNick() + " JOIN " + chanName + "\r\n";
                     std::vector<Client *> existingUsers = _channels[j]->getUsers();
                     for (std::size_t k = 0; k < existingUsers.size(); k++)
@@ -170,9 +167,9 @@ bool Dispatch::ft_join(Command cmd, int fd)
                         send(existingUsers[k]->GetFd(), joinMsg.c_str(), joinMsg.length(), 0);
                     }
                     // Also send JOIN confirmation to the joining client
-                    send(fd, joinMsg.c_str(), joinMsg.length(), 0);
-                    _channels[j]->addUser(client);
-                    if(_channels[j]->getTopic().empty())
+                    send(fd, joinMsg.c_str(), joinMsg.length(), 0); */
+                    
+                    /* if(_channels[j]->getTopic().empty())
                     {
                         msg = ":server 331 " + client->GetNick() + " " + _channels[j]->getName() + " :No topic is set\r\n";
                         send(fd, msg.c_str(), msg.size(), 0);
@@ -196,12 +193,68 @@ bool Dispatch::ft_join(Command cmd, int fd)
                     send(fd, msg.c_str(), msg.size(), 0);
                     //RPL_ENDOFNAMES
                     msg = ":server 366 " + client->GetNick() + " " + _channels[j]->getName() + " :End of /NAMES list\r\n";
-                    send(fd, msg.c_str(), msg.size(), 0);
+                    send(fd, msg.c_str(), msg.size(), 0); */
                 }
             }
         }        
     }
     return true;
+}
+
+
+
+Channel *Dispatch::createChannel(std::string topic, std::string name,std::size_t id, std::string key, Client *client)
+{
+    Channel *newChan = new Channel(topic, name, id, key); 
+    newChan->setKey(key);
+    _channels.push_back(newChan);
+    newChan->addUser(client);
+    newChan->addOperator(client);
+}
+
+
+void Dispatch::sendTopic(Client *client, Channel *channel)
+{
+    if (channel->getTopic().empty())
+    {
+        //RPL_NOTOPIC
+        std::string msg = ":server 331 " + client->GetNick() + " " + channel->getName() + " :No topic is set\r\n";
+        send(client->GetFd(), msg.c_str(), msg.size(), 0);
+    }
+    else
+    {
+        //RPL_TOPIC
+        std::string msg = ":server 332 " + client->GetNick() + " " + channel->getName() + " :" + channel->getTopic() + "\r\n"; 
+        send(client->GetFd(), msg.c_str(), msg.size(), 0);
+    }
+}
+
+void Dispatch::broadcastJoin(Channel *channel, Client *client)
+{
+    std::string joinMsg = ":" + client->GetNick() + " JOIN " + channel->getName() + "\r\n";
+    std::vector<Client *> existingUsers = channel->getUsers();
+    for (std::size_t k = 0; k < existingUsers.size(); k++)
+    {
+        send(existingUsers[k]->GetFd(), joinMsg.c_str(), joinMsg.length(), 0);
+    }
+}
+void Dispatch::sendList(Channel *channel, Client *client)
+{
+    std::string msg = ":server 353 " + client->GetNick() + " = " + _channels[j]->getName() + " :";
+    std::vector<Client *> channelUsers = _channels[j]->getUsers();
+    for (std::size_t k = 0; k < channelUsers.size(); k++)
+    {
+        if (_channels[j]->isOperator(channelUsers[k]))
+            msg += "@";
+        msg += channelUsers[k]->GetNick();
+        if (k < channelUsers.size() - 1)
+            msg += " ";
+    }
+    msg += "\r\n";
+    send(client->GetFd(), msg.c_str(), msg.size(), 0);
+    //RPL_ENDOFNAMES
+    msg = ":server 366 " + client->GetNick() + " " + _channels[j]->getName() + " :End of /NAMES list\r\n";
+    send(client->GetFd(), msg.c_str(), msg.size(), 0);
 }
 
 Client *Dispatch::getClientFd(int fd_client)

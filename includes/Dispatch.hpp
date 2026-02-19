@@ -46,5 +46,11 @@ class Dispatch
         Channel*    getChannel(std::string target);
         Client *getClientFd(int fd_client);
         void tryRegister(Client* client);
+    private:
+        Channel *createChannel(std::string topic, std::string name, std::size_t id, std::string key, Client *client);
+        void sendTopic(Client *client, Channel *channel);
+        void broadcastJoin(Channel *channel, Client *client);
+        void sendList(Channel *channel, Client *client);
+
 };
 
