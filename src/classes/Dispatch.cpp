@@ -4,6 +4,7 @@
 #include "../../includes/Client.hpp"
 #include "../../includes/split.hpp"
 #include "../../includes/Channel.hpp"
+#include "../../includes/RplReply.hpp"
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -75,6 +76,7 @@ bool Dispatch::ft_cap(Command cmd, int fd)
 bool Dispatch::ft_join(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
+    RplReply replies;
     if (!client)
         return false;
      if (!client->isRegistered()) // si le client n'es pas register just return false
@@ -85,8 +87,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
 
     if (chanXkeys.empty())
     {
-        std::string msg = ":server 461 JOIN :Not enough parameters\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
+        replies.ERR_NEEDMOREPARAMS(*client, "JOIN", fd);
         return false;
     }
     std::string chanNames = chanXkeys[0];
@@ -124,29 +125,23 @@ bool Dispatch::ft_join(Command cmd, int fd)
             std::string  msg;
             if (channel->isUserInChannel(client))
             {
-                std::string errMsg = ":server 443 " + client->GetNick() + " " + client->GetNick()+ " ";
-                errMsg +=  " " +  chanName + " " + ":is already on channel\r\n";
-                send(fd, errMsg.c_str(), msg.length(), 0);
+                replies.ERR_USERONCHANNEL(*client, client->GetNick(), *channel, fd);
                 continue; // a voir que faire si deja dans le channel et mauvais key
             }
             if (channel->isInviteOnly() && !channel->isInvited(client))
             {
-                //send error message
-                std::string errMSG = ":server 473 " +  client->GetNick() + " " + chanName + " :Cannot join channel (+i)\r\n";
-                send(fd, errMSG.c_str(), errMSG.length(), 0);
+                replies.ERR_INVITEONLYCHAN(*client, *channel, fd);
                 continue;
             }
             if (channel->getKey() != chanKey)
             {
-                std::string errMsg = ":server 475 " + client->GetNick() + " " + chanName + " :Cannot join channel (+k)\r\n";
-                send(fd, errMsg.c_str(), errMsg.length(), 0);
+                replies.ERR_BADCHANNELKEY(*client, *channel, fd);
                 continue;
             }
             channel->addUser(client);
             broadcastJoin(channel, client);
             sendTopic(client, channel);
             sendList(channel, client);
-            
         }        
     }
     return true;
@@ -167,17 +162,14 @@ Channel *Dispatch::createChannel(std::string topic, std::string name,std::size_t
 
 void Dispatch::sendTopic(Client *client, Channel *channel)
 {
+    RplReply replies;
     if (channel->getTopic().empty())
     {
-        //RPL_NOTOPIC
-        std::string msg = ":server 331 " + client->GetNick() + " " + channel->getName() + " :No topic is set\r\n";
-        send(client->GetFd(), msg.c_str(), msg.size(), 0);
+        replies.RPL_NOTOPIC(*client, *channel, client->GetFd());
     }
     else
     {
-        //RPL_TOPIC
-        std::string msg = ":server 332 " + client->GetNick() + " " + channel->getName() + " :" + channel->getTopic() + "\r\n"; 
-        send(client->GetFd(), msg.c_str(), msg.size(), 0);
+        replies.RPL_TOPIC(*client, *channel, client->GetFd());
     }
 }
 
@@ -192,21 +184,9 @@ void Dispatch::broadcastJoin(Channel *channel, Client *client)
 }
 void Dispatch::sendList(Channel *channel, Client *client)
 {
-    std::string msg = ":server 353 " + client->GetNick() + " = " + channel->getName() + " :";
-    std::vector<Client *> channelUsers = channel->getUsers();
-    for (std::size_t k = 0; k < channelUsers.size(); k++)
-    {
-        if (channel->isOperator(channelUsers[k]))
-            msg += "@";
-        msg += channelUsers[k]->GetNick();
-        if (k < channelUsers.size() - 1)
-            msg += " ";
-    }
-    msg += "\r\n";
-    send(client->GetFd(), msg.c_str(), msg.size(), 0);
-    //RPL_ENDOFNAMES
-    msg = ":server 366 " + client->GetNick() + " " + channel->getName() + " :End of /NAMES list\r\n";
-    send(client->GetFd(), msg.c_str(), msg.size(), 0);
+    RplReply replies;
+    replies.RPL_NAMREPLY(*client, *channel, client->GetFd());
+    replies.RPL_ENDOFNAMES(*client, *channel, client->GetFd());
 }
 
 Client *Dispatch::getClientFd(int fd_client)
@@ -277,45 +257,30 @@ Channel*    Dispatch::getChannel(std::string target)
 bool Dispatch::ft_kick(Command cmd, int fd)
 {
         Client* client = getClientFd(fd);
+        RplReply replies;
         if (!client)
             return false;
-        if (!client->isRegistered()) // si le client n'es pas register just return false
+        if (!client->isRegistered())
             return false;
-        std::cout << "FT_KICK" << std::endl;
         std::string line = cmd.getArgs();
         std::vector<std::string> tokens = split(line, ' ');
         
         if (tokens.size() < 2) {
-             std::cout << "FT_KICK bis 2" << std::endl;
-            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
+            replies.ERR_NEEDMOREPARAMS(*client, "KICK", fd);
             return false;
         }
         //pb ici 1000%
         std::vector <std::string> split_channels = split(tokens[0], ',');
         std::vector <std::string> split_target = split(tokens[1], ','); // 1 element
 
-
-        
-        /* std::string chanName = tokens[0];
-        std::string targetNick = tokens[1]; */
         std::string reason = (cmd.getTrailing().empty() ? "No reason" : cmd.getTrailing());
-        //INUTILE ...
-       /*  if (chanName.empty() || targetNick.empty()) {
-            std::cout << "FT_KICK 2 bis" << std::endl;
-            std::string msg = ":server 461 KICK :Not enough parameters\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            return false;
-        } */
-       
+        
         //TODO:: il reconnait pas le channel pk?
         for(size_t i = 0; i < split_channels.size(); i++)
         {
             Channel* channel = nullptr;
-            for (size_t k = 0; i < _channels.size(); k++)
+            for (size_t k = 0; k < _channels.size(); k++)
             {
-                std::cout << "FT_KICK 3 bis 0 "<< ":";
-                std::cout << _channels[i]->getName() << std::endl;
                 if (_channels[k]->getName() == split_channels[i])
                 {
                     channel = _channels[k];
@@ -325,20 +290,15 @@ bool Dispatch::ft_kick(Command cmd, int fd)
 
             if (!channel)
             {
-                std::cout << "FT_KICK 3 bis 1" << std::endl;
-                std::string msg = ":server 403 " + client->GetNick() + " " + split_channels[i] + " :No such channel\r\n";
-                send(fd, msg.c_str(), msg.length(), 0);
+                replies.ERR_NOSUCHCHANNEL(*client, split_channels[i], fd);
                 return false;
             }
 
             if (!channel->isOperator(client))
             {
-                std::cout << "FT_KICK 3 bis 2" << std::endl;
-                std::string msg = ":server 482 " + client->GetNick() + " " + split_channels[i] + " :You're not channel operator\r\n";
-                send(fd, msg.c_str(), msg.length(), 0);
+                replies.ERR_CHANOPRIVSNEEDED(*client, *channel, fd);
                 return false;
             }
-              std::cout << "FT_KICK 4" << std::endl;
             Client* targetClient = nullptr;
             for (size_t i = 0; i < _clients.size(); i++) {
                 if (_clients[i]->GetNick() == split_target[0]) {
@@ -348,8 +308,7 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             }
 
             if (!targetClient || !channel->isUserInChannel(targetClient)) {
-                std::string msg = ":server 441 " + client->GetNick() + " " + split_target[0] + " " + split_channels[i] + " :They aren't on that channel\r\n";
-                send(fd, msg.c_str(), msg.length(), 0);
+                replies.ERR_USERNOTINCHANNEL(*client, split_target[0], *channel, fd);
                 return false;
             }
             

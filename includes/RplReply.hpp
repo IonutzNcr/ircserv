@@ -1,15 +1,29 @@
 
 
+#pragma once
 
-/* class RplReply
+#include <string>
+
+class Client;
+class Channel;
+
+class RplReply
 {
     public:
-        RPL_NOTOPIC(Client &cleint, Channel &chan, int fd)
-        {
-            std::string msg = ":server 331 " + client->GetNick() + " " + chan->getName() + " :No topic is set\r\n";
-            send(fd, msg.c_str(), msg.size(), 0);
-        }
-        RPL_NAMREPLY();
-        RPL_ENDOFNAMES();
+        void RPL_NOTOPIC(Client &client, Channel &chan, int fd);
+        void RPL_TOPIC(Client &client, Channel &chan, int fd);
+        void RPL_NAMREPLY(Client &client, Channel &chan, int fd);
+        void RPL_ENDOFNAMES(Client &client, Channel &chan, int fd);
+
+        void ERR_NEEDMOREPARAMS(Client &client, const std::string &command, int fd);
+        void ERR_USERONCHANNEL(Client &client, const std::string &targetNick, Channel &chan, int fd);
+        void ERR_INVITEONLYCHAN(Client &client, Channel &chan, int fd);
+        void ERR_BADCHANNELKEY(Client &client, Channel &chan, int fd);
+        void ERR_NOSUCHCHANNEL(Client &client, const std::string &channelName, int fd);
+        void ERR_CHANOPRIVSNEEDED(Client &client, Channel &chan, int fd);
+        void ERR_USERNOTINCHANNEL(Client &client, const std::string &targetNick, Channel &chan, int fd);
         
-} */
+
+        //rpl 461, 443, 473, 475, 331, 332, 353, 366,
+        //rpl 403, 482, 441
+};

@@ -12,6 +12,7 @@ FILES=	Client.cpp \
 		Parser.cpp \
 		Data.cpp \
 		Dispatch.cpp\
+		RplReply.cpp \
 		Channel.cpp \
 		Register.cpp \
 		Mode.cpp \
@@ -33,6 +34,7 @@ HEADERS = Client.hpp \
 		Parser.hpp \
 		Data.hpp \
 		Dispatch.hpp \
+		RplReply.hpp \
 		Channel.hpp \
 		split.hpp
 
