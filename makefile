@@ -12,6 +12,8 @@ FILES=	Client.cpp \
 		Parser.cpp \
 		Data.cpp \
 		Dispatch.cpp\
+		Join.cpp \
+		Kick.cpp \
 		RplReply.cpp \
 		Channel.cpp \
 		Register.cpp \
