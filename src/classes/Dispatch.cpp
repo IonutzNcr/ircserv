@@ -116,86 +116,37 @@ bool Dispatch::ft_join(Command cmd, int fd)
             broadcastJoin(newChan, client);
             sendTopic(client, newChan);
             sendList(newChan, client);
-          /*   std::string msg = ":" + client->GetNick() + " JOIN " + chanName + "\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
-            //RPL_NOTOPIC
-            msg = ":server 331 " + client->GetNick() + " " + newChan->getName() + " :No topic is set\r\n";
-            send(fd, msg.c_str(), msg.size(), 0);
-            //RPL_NAMREPLY
-            msg = ":server 353 " + client->GetNick() + " = " + newChan->getName() + " :@" + client->GetNick() + "\r\n";
-            send(fd, msg.c_str(), msg.size(), 0);
-            //RPL_ENDOFNAMES
-            msg = ":server 366 " + client->GetNick() + " " + newChan->getName() + " :End of /NAMES list\r\n";
-            send(fd, msg.c_str(), msg.size(), 0); */
-        }else
+        }
+        else
         {
-            for (size_t j = 0; j < _channels.size(); j++)
+            //get channel
+            Channel *channel = getChannel(chanName);
+            std::string  msg;
+            if (channel->isUserInChannel(client))
             {
-                if (_channels[j]->getName() == chanName)
-                {
-                    std::string  msg;
-                    if (_channels[j]->isUserInChannel(client))
-                    {
-                        std::string errMsg = ":server 443 " + client->GetNick() + " " + client->GetNick()+ " ";
-                        errMsg +=  " " +  chanName + " " + ":is already on channel\r\n";
-                        send(fd, errMsg.c_str(), msg.length(), 0);
-                        continue; // a voir que faire si deja dans le channel et mauvais key
-                    }
-                    if (_channels[j]->isInviteOnly() && !_channels[j]->isInvited(client))
-                    {
-                        //send error message
-                        std::string errMSG = ":server 473 " +  client->GetNick() + " " + chanName + " :Cannot join channel (+i)\r\n";
-                        send(fd, errMSG.c_str(), errMSG.length(), 0);
-                        continue;
-                    }
-                    if (_channels[j]->getKey() != chanKey)
-                    {
-                        std::string errMsg = ":server 475 " + client->GetNick() + " " + chanName + " :Cannot join channel (+k)\r\n";
-                        send(fd, errMsg.c_str(), errMsg.length(), 0);
-                        continue;
-                    }
-                    _channels[j]->addUser(client);
-                    broadcastJoin(_channels[j], client);
-                    sendTopic(client, _channels[j]);
-                    sendList(_channels[j], client);
-                    // Broadcast JOIN to all existing members
-                 /*    broadcastJoin(_channels[j], client);
-                    std::string joinMsg = ":" + client->GetNick() + " JOIN " + chanName + "\r\n";
-                    std::vector<Client *> existingUsers = _channels[j]->getUsers();
-                    for (std::size_t k = 0; k < existingUsers.size(); k++)
-                    {
-                        send(existingUsers[k]->GetFd(), joinMsg.c_str(), joinMsg.length(), 0);
-                    }
-                    // Also send JOIN confirmation to the joining client
-                    send(fd, joinMsg.c_str(), joinMsg.length(), 0); */
-                    
-                    /* if(_channels[j]->getTopic().empty())
-                    {
-                        msg = ":server 331 " + client->GetNick() + " " + _channels[j]->getName() + " :No topic is set\r\n";
-                        send(fd, msg.c_str(), msg.size(), 0);
-                    } else
-                    {
-                        msg = ":server 332 " + client->GetNick() + " " + _channels[j]->getName() + " :" + _channels[j]->getTopic() + "\r\n"; 
-                        send(fd, msg.c_str(), msg.size(), 0);
-                    }
-                    //RPL_NAMREPLY - list all users with @ prefix for operators
-                    msg = ":server 353 " + client->GetNick() + " = " + _channels[j]->getName() + " :";
-                    std::vector<Client *> channelUsers = _channels[j]->getUsers();
-                    for (std::size_t k = 0; k < channelUsers.size(); k++)
-                    {
-                        if (_channels[j]->isOperator(channelUsers[k]))
-                            msg += "@";
-                        msg += channelUsers[k]->GetNick();
-                        if (k < channelUsers.size() - 1)
-                            msg += " ";
-                    }
-                    msg += "\r\n";
-                    send(fd, msg.c_str(), msg.size(), 0);
-                    //RPL_ENDOFNAMES
-                    msg = ":server 366 " + client->GetNick() + " " + _channels[j]->getName() + " :End of /NAMES list\r\n";
-                    send(fd, msg.c_str(), msg.size(), 0); */
-                }
+                std::string errMsg = ":server 443 " + client->GetNick() + " " + client->GetNick()+ " ";
+                errMsg +=  " " +  chanName + " " + ":is already on channel\r\n";
+                send(fd, errMsg.c_str(), msg.length(), 0);
+                continue; // a voir que faire si deja dans le channel et mauvais key
             }
+            if (channel->isInviteOnly() && !channel->isInvited(client))
+            {
+                //send error message
+                std::string errMSG = ":server 473 " +  client->GetNick() + " " + chanName + " :Cannot join channel (+i)\r\n";
+                send(fd, errMSG.c_str(), errMSG.length(), 0);
+                continue;
+            }
+            if (channel->getKey() != chanKey)
+            {
+                std::string errMsg = ":server 475 " + client->GetNick() + " " + chanName + " :Cannot join channel (+k)\r\n";
+                send(fd, errMsg.c_str(), errMsg.length(), 0);
+                continue;
+            }
+            channel->addUser(client);
+            broadcastJoin(channel, client);
+            sendTopic(client, channel);
+            sendList(channel, client);
+            
         }        
     }
     return true;
