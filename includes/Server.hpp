@@ -42,7 +42,7 @@ public:
 	{
 		CloseFds();
     	for (size_t i = 0; i < clients.size(); i++)
-   	 	delete clients[i];
+   	 		delete clients[i];
 
 		std::cout << "The Server Closed!" << std::endl;
 	};

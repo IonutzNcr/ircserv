@@ -10,9 +10,9 @@ class Dispatch
 {
 
     public:
+        std::string _password;
         std::vector<Client *> &_clients;
         std::vector<Channel *> _channels;
-        std::string _password;
        /*  Dispatch(); */
         Dispatch(std::string password, std::vector<Client *> &clients);
         ~Dispatch();

@@ -6,6 +6,9 @@ DIRO_UTILS=	./obj/utils/
 DIR=	./src/classes/
 DIRO=	./obj/classes/
 
+CXX= c++
+CXXFLAGS=
+
 FILES=	Client.cpp \
 		Command.cpp \
 		Server.cpp \
@@ -48,19 +51,19 @@ all: $(NAME)
 
 $(NAME): $(OBJ) ./obj/main.o
 	echo "Linking..."
-	g++ $(OBJ) ./obj/main.o -o ircserv2
+	$(CXX) $(CXXFLAGS) $(OBJ) ./obj/main.o -o ircserv2
 
 $(DIRO)%.o: $(DIR)%.cpp $(INCLUDES)
 	if [ ! -d "./obj/classes" ]; then mkdir -p ./obj/classes; fi
-	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 	
 $(DIRO_UTILS)%.o: $(DIR_UTILS)%.cpp $(INCLUDES)
 	if [ ! -d "./obj/utils" ]; then mkdir -p ./obj/utils; fi
-	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 ./obj/main.o: ./src/main.cpp $(INCLUDES)
 	if [ ! -d "./obj" ]; then mkdir -p ./obj; fi
-	g++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 
 fclean:

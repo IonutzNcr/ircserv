@@ -34,7 +34,7 @@ bool Dispatch::ft_kick(Command cmd, int fd)
         //TODO:: il reconnait pas le channel pk?
         for(size_t i = 0; i < split_channels.size(); i++)
         {
-            Channel* channel = nullptr;
+            Channel* channel = NULL;
             for (size_t k = 0; k < _channels.size(); k++)
             {
                 if (_channels[k]->getName() == split_channels[i])
@@ -55,7 +55,7 @@ bool Dispatch::ft_kick(Command cmd, int fd)
                 replies.ERR_CHANOPRIVSNEEDED(*client, *channel, fd);
                 return false;
             }
-            Client* targetClient = nullptr;
+            Client* targetClient = NULL;
             for (size_t i = 0; i < _clients.size(); i++) {
                 if (_clients[i]->GetNick() == split_target[0]) {
                     targetClient = _clients[i];

@@ -12,7 +12,7 @@
 bool Dispatch::parseNick(std::string line)
 {
     // build une fonction pour le parsing de nick (erreur 433)
-
+    (void)line;
 
 
 
@@ -33,13 +33,13 @@ bool Dispatch::ft_nick(Command cmd, int fd)
         nick.erase(0, 1);
     nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
     if (nick.empty()) {     // si pas de new nick => erreur 
-        std::string msg = fd + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
+        std::string msg = intToString(fd) + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
         send(fd, msg.c_str(), msg.length(), 0);     
         return false;
     }
     for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
             if (_clients[i]->GetNick() == nick && _clients[i] != client) {
-                std::string msg = fd + " " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
+                std::string msg = intToString(fd) + " " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
                 send(fd, msg.c_str(), msg.length(), 0);
                 return true;
             }
@@ -94,7 +94,7 @@ bool Dispatch::ft_user(Command cmd, int fd)
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt = fd + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
+        std::string txt = intToString(fd) + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
         send(fd, txt.c_str(), txt.length(), 0);
         return true;
     }
@@ -119,7 +119,7 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt2 = fd + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
+        std::string txt2 = intToString(fd) + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
         send(fd, txt2.c_str(), txt2.length(), 0);
         return true;
     }
@@ -130,12 +130,12 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         pass.erase(0, 1);
     pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
     if (pass.empty()) { 
-        std::string msg = fd + " PASS :Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
+        std::string msg = intToString(fd) + " PASS :Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
         send(fd, msg.c_str(), msg.length(), 0);
         return true;
     }
     if (pass != _password) {    // si le pass est differend de celui des parametre => error
-        std::string txt = fd + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
+        std::string txt = intToString(fd) + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
         send(fd, txt.c_str(), txt.length(), 0);
         return true;
     }

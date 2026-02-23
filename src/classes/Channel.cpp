@@ -140,7 +140,7 @@ bool Channel::removeOperator(Client* user)
     return false;
 }
 
-int Channel::getMaxUsers() const
+unsigned long Channel::getMaxUsers() const
 {
     return _maxUsers;
 }

@@ -21,8 +21,6 @@ Dispatch::~Dispatch()
 
 void Dispatch::dispatch(Command cmd, int fd)
 {
-    int choice = 0;
-
     if (cmd.getCmd() == "CAP")
         ft_cap(cmd, fd);
     if (cmd.getCmd() == "PASS")
@@ -49,7 +47,6 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_quit(cmd, fd);
     if (cmd.getCmd() == "WHO")
         ft_who(cmd, fd);
-
 }
 
 bool Dispatch::ft_cap(Command cmd, int fd)

@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <sstream>
 
 
 std::vector<std::string> split(const std::string& str, char delimiter)
@@ -26,4 +27,11 @@ std::vector<std::string> split(const std::string& str, char delimiter)
         tokens.push_back(str.substr(start));
     
     return tokens;
+}
+
+std::string intToString(int value)
+{
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
 }

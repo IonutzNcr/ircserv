@@ -28,7 +28,9 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
     }
 
     if (!clientToRemove)
+	{
         return;
+	}
 	std::string quitMsgCrtlC = ":" + clientToRemove->GetNick() + " QUIT :Client disconnected\r\n";
 	if (quitMsg.empty())
 		quitMsg = quitMsgCrtlC;
@@ -122,7 +124,7 @@ void Server::ServerInit()
 					ReceiveNewData(fds[i].fd, dispatch);
 			}
 		}
-
+        
 		std::cout << "loop server\n";
 
 	}
