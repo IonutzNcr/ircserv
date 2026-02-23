@@ -10,7 +10,7 @@ set PSD "lol"
 spawn irssi -c $SERVER -w $PSD -p $PORT -n $NICK -h $HOST
 sleep 1
 
-send "/join #monchan\r"
-send "/mode +i\r"
+send "/join #monchan,&lol\r"
+
 
 interact
