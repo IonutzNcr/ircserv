@@ -22,6 +22,7 @@ class RplReply
         void ERR_NOSUCHCHANNEL(Client &client, const std::string &channelName, int fd);
         void ERR_CHANOPRIVSNEEDED(Client &client, Channel &chan, int fd);
         void ERR_USERNOTINCHANNEL(Client &client, const std::string &targetNick, Channel &chan, int fd);
+        void ERR_CHANNELISFULL(Client &client, Channel &chan, int fd);
         
 
         //rpl 461, 443, 473, 475, 331, 332, 353, 366,

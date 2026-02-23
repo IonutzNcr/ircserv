@@ -83,3 +83,9 @@ void RplReply::ERR_USERNOTINCHANNEL(Client &client, const std::string &targetNic
     std::string msg = ":server 441 " + client.GetNick() + " " + targetNick + " " + chan.getName() + " :They aren't on that channel\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
 }
+
+void RplReply::ERR_CHANNELISFULL(Client &client, Channel &chan, int fd)
+{
+    std::string msg_err = ":server 471" +  client.GetNick() + " " +  chan.getName()  + " " + " :Cannot join channel (+l)\r\n";
+    send(fd, msg_err.c_str(), msg_err.size(), 0);
+}

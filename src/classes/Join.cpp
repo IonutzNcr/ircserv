@@ -46,7 +46,6 @@ bool Dispatch::ft_join(Command cmd, int fd)
         else
             chanKey = "";
         //creation channel si n'existe pas et ajout user au channel
-        Channel *newChan = new Channel("", chanName, i, chanKey); // to fix the id is not really unique
         if (!isChannelExist(chanName)) // TODO:: big problem why ?
         {
             Channel *newChan = createChannel("", chanName, i, chanKey, client);
@@ -63,6 +62,11 @@ bool Dispatch::ft_join(Command cmd, int fd)
             {
                 replies.ERR_USERONCHANNEL(*client, client->GetNick(), *channel, fd);
                 continue; // a voir que faire si deja dans le channel et mauvais key
+            }
+            if (channel->getMaxUsers() > 0 && channel->getUsers().size() >= channel->getMaxUsers())
+            {
+                replies.ERR_CHANNELISFULL(*client, *channel, fd);
+                continue;
             }
             if (channel->isInviteOnly() && !channel->isInvited(client))
             {
