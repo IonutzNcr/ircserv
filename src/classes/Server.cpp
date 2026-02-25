@@ -3,13 +3,13 @@
 #include <errno.h>
 
 
-bool Server::Signal = false; //-> initialize the static boolean
+bool Server::Signal = false;
 
 void Server::SignalHandler(int signum)
 {
 	(void)signum;
 	std::cout << std::endl << "Signal Received!" << std::endl;
-	Server::Signal = true; //-> set the static boolean to true to stop the server
+	Server::Signal = true;
 }
 
 void Server::ClearClients(int fd, Dispatch &dispatch)
@@ -53,11 +53,11 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 
 
 void Server::CloseFds(){
-	for(size_t i = 0; i < clients.size(); i++){ //-> close all the clients
+	for(size_t i = 0; i < clients.size(); i++){
 		std::cout << RED << "Client <" << clients[i]->GetFd() << "> Disconnected" << WHI << std::endl;
 		close(clients[i]->GetFd());
 	}
-	if (SerSocketFd != -1){ //-> close the server socket
+	if (SerSocketFd != -1){
 		std::cout << RED << "Server <" << SerSocketFd << "> Disconnected" << WHI << std::endl;
 		close(SerSocketFd);
 	}
@@ -93,7 +93,7 @@ void Server::SerSocket()
 
 void Server::ServerInit()
 {
-	SerSocket(); //-> create the server socket
+	SerSocket();
 
 	std::cout << GRE << "Server <" << SerSocketFd << "> Connected" << WHI << std::endl;
 	std::cout << "Waiting to accept a connection...\n";
@@ -124,9 +124,6 @@ void Server::ServerInit()
 					ReceiveNewData(fds[i].fd, dispatch);
 			}
 		}
-        
-		std::cout << "loop server\n";
-
 	}
 }
 
@@ -158,8 +155,8 @@ void Server::AcceptNewClient()
 
 void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 {
-	char buff[1024]; //-> buffer for the received data
-	memset(buff, 0, sizeof(buff)); //-> clear the buffer
+	char buff[1024];
+	memset(buff, 0, sizeof(buff));
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
 	
@@ -188,20 +185,16 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 		Command cmd;
 		parse.fill(buff, fd);
 		buff[0] = '\0';
-		std::cout << "In receive new data, about to get command " << parse.getCmdtwo(fd) << std::endl;
 		std::string line = parse.getCmdtwo(fd);
 		cmd = parse.get(fd);
 		cmd.setLine(line);
 		while (!cmd.getCmd().empty())
 		{
-			std::cout << "Dispatching command: " << cmd.getLine() << std::endl;
 			dispatch.dispatch(cmd, fd);
 			line = parse.getCmdtwo(fd);
 			cmd = parse.get(fd);
 			cmd.setLine(line);
 		}
-		//std::cout << YEL << "Client <" << fd << "> Data: " << WHI << buff;
-		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 	}
 }
 
