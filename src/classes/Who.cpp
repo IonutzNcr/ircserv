@@ -17,36 +17,31 @@ bool Dispatch::ft_who(Command cmd, int fd)
 		return false;
 	std::string line = cmd.getLine();
 	std::vector<std::string> tokens = split(line, ' ');
-	std::string whoMsg = ":" + client->GetNick() + " WHO :";
-	if (tokens.size() < 2) {
-		std::vector<Client*> allClients = _clients;
-		for (size_t i = 0; i < allClients.size(); i++) {
-			int skip = 0;
-			for (size_t j = 0; j < _channels.size(); j++) {
-				if (_channels[j]->isUserInChannel(allClients[i]) && _channels[j]->isUserInChannel(client)) {
-					skip = 1;
-					break;
-				}
-			}
-			if (skip)
-				continue;
-			whoMsg += allClients[i]->GetNick() + " ";
-		}
-		whoMsg += "\r\n";
-		send(fd, whoMsg.c_str(), whoMsg.length(), 0);
-	}
-	else {
-		std::string target = tokens[1];
-		for (size_t j = 0; j < _clients.size(); j++) {
-			if (_clients[j]->GetNick() == target) {
-				whoMsg += _clients[j]->GetNick() + " ";
-				whoMsg += _clients[j]->GetUser() + " ";
-				whoMsg += _clients[j]->GetIpAdd() + " ";
-				whoMsg += "H"; // to fix the status of the user (away or not)
-				whoMsg += "\r\n";
-				send(fd, whoMsg.c_str(), whoMsg.length(), 0);
+	std::string target = "*";
+	if (tokens.size() >= 2)
+		target = tokens[1];
+
+	for (size_t j = 0; j < _clients.size(); j++) {
+		Client *entry = _clients[j];
+		if (target != "*" && entry->GetNick() != target)
+			continue;
+
+		std::string user = entry->GetUser().empty() ? "user" : entry->GetUser();
+		std::string host = entry->GetIpAdd().empty() ? "localhost" : entry->GetIpAdd();
+		std::string real = entry->GetRealName().empty() ? entry->GetNick() : entry->GetRealName();
+		std::string channel = "*";
+		for (size_t i = 0; i < _channels.size(); i++) {
+			if (_channels[i]->isUserInChannel(entry) && _channels[i]->isUserInChannel(client)) {
+				channel = _channels[i]->getName();
+				break;
 			}
 		}
+
+		std::string whoReply = ":server 352 " + client->GetNick() + " " + channel + " " + user + " " + host + " server " + entry->GetNick() + " H :0 " + real + "\r\n";
+		send(fd, whoReply.c_str(), whoReply.length(), 0);
 	}
+
+	std::string endWho = ":server 315 " + client->GetNick() + " " + target + " :End of /WHO list\r\n";
+	send(fd, endWho.c_str(), endWho.length(), 0);
 	return true;
 }

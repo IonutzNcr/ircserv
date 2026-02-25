@@ -15,12 +15,15 @@ bool Dispatch::ft_quit(Command cmd, int fd)
     if (!client)
         return false;
 
+    std::string user = client->GetUser().empty() ? "user" : client->GetUser();
+    std::string host = client->GetIpAdd().empty() ? "localhost" : client->GetIpAdd();
+    std::string prefix = ":" + client->GetNick() + "!" + user + "@" + host;
 
     std::string quitMsg = "";
     if (cmd.getTrailing() == "leaving" || cmd.getTrailing() == "")
-        quitMsg = ":" + client->GetNick() + " QUIT :Client disconnected\r\n";
+        quitMsg = prefix + " QUIT :Client disconnected\r\n";
     else
-        quitMsg = ":" + client->GetNick() + " QUIT :" + cmd.getTrailing() + "\r\n";
+        quitMsg = prefix + " QUIT :" + cmd.getTrailing() + "\r\n";
     std::cout << "\e[1;31m" << "Client <" << client->GetFd() << "> Disconnected" << "\e[0;37m" << std::endl;
     client->SetMsgQuit(quitMsg);
     return true;

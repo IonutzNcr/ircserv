@@ -109,7 +109,9 @@ void Dispatch::sendTopic(Client *client, Channel *channel)
 
 void Dispatch::broadcastJoin(Channel *channel, Client *client)
 {
-    std::string joinMsg = ":" + client->GetNick() + " JOIN " + channel->getName() + "\r\n";
+    std::string user = client->GetUser().empty() ? "user" : client->GetUser();
+    std::string host = client->GetIpAdd().empty() ? "localhost" : client->GetIpAdd();
+    std::string joinMsg = ":" + client->GetNick() + "!" + user + "@" + host + " JOIN " + channel->getName() + "\r\n";
     std::vector<Client *> existingUsers = channel->getUsers();
     for (std::size_t k = 0; k < existingUsers.size(); k++)
     {

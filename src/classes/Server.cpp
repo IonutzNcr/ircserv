@@ -32,7 +32,9 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 	{
         return;
 	}
-	std::string quitMsgCrtlC = ":" + clientToRemove->GetNick() + " QUIT :Client disconnected\r\n";
+	std::string user = clientToRemove->GetUser().empty() ? "user" : clientToRemove->GetUser();
+	std::string host = clientToRemove->GetIpAdd().empty() ? "localhost" : clientToRemove->GetIpAdd();
+	std::string quitMsgCrtlC = ":" + clientToRemove->GetNick() + "!" + user + "@" + host + " QUIT :Client disconnected\r\n";
 	if (quitMsg.empty())
 		quitMsg = quitMsgCrtlC;
 	for (size_t i = 0; i < dispatch._channels.size(); i++) {
