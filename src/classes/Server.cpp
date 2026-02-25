@@ -1,6 +1,7 @@
 #include "../../includes/Server.hpp"
 #include "../../includes/Command.hpp"
 #include <errno.h>
+#include "../../includes/Debugger.hpp"
 
 
 bool Server::Signal = false;
@@ -65,6 +66,7 @@ void Server::CloseFds(){
 
 void Server::SerSocket()
 {
+	Debugger::createLogFile();
 	struct sockaddr_in add;
 	struct pollfd NewPoll;
 	add.sin_family = AF_INET; //-> set the address family to ipv4

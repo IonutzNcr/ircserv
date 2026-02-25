@@ -5,6 +5,7 @@
 #include "../../includes/split.hpp"
 #include "../../includes/Channel.hpp"
 #include "../../includes/RplReply.hpp"
+#include "../../includes/Debugger.hpp"
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -100,11 +101,7 @@ Channel *Dispatch::createChannel(std::string topic, std::string name,std::size_t
 void Dispatch::sendTopic(Client *client, Channel *channel)
 {
     RplReply replies;
-    if (channel->getTopic().empty())
-    {
-        replies.RPL_NOTOPIC(*client, *channel, client->GetFd());
-    }
-    else
+    if (!channel->getTopic().empty())
     {
         replies.RPL_TOPIC(*client, *channel, client->GetFd());
     }
@@ -116,6 +113,7 @@ void Dispatch::broadcastJoin(Channel *channel, Client *client)
     std::vector<Client *> existingUsers = channel->getUsers();
     for (std::size_t k = 0; k < existingUsers.size(); k++)
     {
+        Debugger::storeLog(2,joinMsg + " to " + existingUsers[k]->GetNick());
         send(existingUsers[k]->GetFd(), joinMsg.c_str(), joinMsg.length(), 0);
     }
 }
