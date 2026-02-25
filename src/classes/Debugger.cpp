@@ -12,7 +12,7 @@ void Debugger::createLogFile()
     if (!Debugger::fd)
     {
         Debugger::fd = new int;
-        *Debugger::fd = open(".log.md", O_CREAT | O_WRONLY, 0644);
+        *Debugger::fd = open(".log.md", O_CREAT | O_WRONLY | O_TRUNC, 0644);
     }
 }
 

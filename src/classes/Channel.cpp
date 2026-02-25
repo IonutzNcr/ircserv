@@ -1,7 +1,7 @@
 #include "../../includes/Channel.hpp"
 
 Channel::Channel(std::string topic, std::string name, std::size_t id, std::string key)
-:_topic(topic), _name(name), _id(id), _key(key)
+: _inviteOnly(false), _topic(topic), _name(name), _id(id), _key(key), _protectTopic(false), _maxUsers(0)
 {
     return ;
 }

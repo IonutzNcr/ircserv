@@ -186,9 +186,10 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 	}
 	else{ //-> print the received data
 		buff[bytes] = '\0';
+		std::string received(buff, bytes);
 		Command cmd;
-		parse.fill(buff, fd);
-		buff[0] = '\0';
+		parse.fill(received, fd);
+		Debugger::storeLog(3, received);
 		std::string line = parse.getCmdtwo(fd);
 		cmd = parse.get(fd);
 		cmd.setLine(line);
