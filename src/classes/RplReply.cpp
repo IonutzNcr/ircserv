@@ -48,8 +48,7 @@ void RplReply::RPL_ENDOFNAMES(Client &client, Channel &chan, int fd)
 
 void RplReply::ERR_NEEDMOREPARAMS(Client &client, const std::string &command, int fd)
 {
-    (void)client;
-    std::string msg = ":server 461 " + command + " :Not enough parameters\r\n";
+    std::string msg = ":server 461 " + client.GetNick() + " " + command + " :Not enough parameters\r\n";
     send(fd, msg.c_str(), msg.size(), 0);
     Debugger::storeLog(2, msg);
 }

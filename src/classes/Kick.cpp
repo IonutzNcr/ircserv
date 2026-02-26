@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-//TODO:: <channel>{,<channel>} <user>{,<user>} [<comment>] 
+//KICK <channel>{,<channel>} <user> [<comment>] 
 bool Dispatch::ft_kick(Command cmd, int fd)
 {
         Client* client = getClientFd(fd);
@@ -25,13 +25,20 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             replies.ERR_NEEDMOREPARAMS(*client, "KICK", fd);
             return false;
         }
-        //pb ici 1000%
         std::vector <std::string> split_channels = split(tokens[0], ',');
-        std::vector <std::string> split_target = split(tokens[1], ','); // 1 element
+        std::string targetNick = tokens[1];
 
         std::string reason = (cmd.getTrailing().empty() ? "No reason" : cmd.getTrailing());
         
-        //TODO:: il reconnait pas le channel pk?
+        // Trouver le client cible une seule fois
+        Client* targetClient = NULL;
+        for (size_t k = 0; k < _clients.size(); k++) {
+            if (_clients[k]->GetNick() == targetNick) {
+                targetClient = _clients[k];
+                break;
+            }
+        }
+
         for(size_t i = 0; i < split_channels.size(); i++)
         {
             Channel* channel = NULL;
@@ -47,33 +54,27 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             if (!channel)
             {
                 replies.ERR_NOSUCHCHANNEL(*client, split_channels[i], fd);
-                return false;
+                continue;
             }
 
             if (!channel->isOperator(client))
             {
                 replies.ERR_CHANOPRIVSNEEDED(*client, *channel, fd);
-                return false;
-            }
-            Client* targetClient = NULL;
-            for (size_t i = 0; i < _clients.size(); i++) {
-                if (_clients[i]->GetNick() == split_target[0]) {
-                    targetClient = _clients[i];
-                    break;
-                }
+                continue;
             }
 
             if (!targetClient || !channel->isUserInChannel(targetClient)) {
-                replies.ERR_USERNOTINCHANNEL(*client, split_target[0], *channel, fd);
-                return false;
+                replies.ERR_USERNOTINCHANNEL(*client, targetNick, *channel, fd);
+                continue;
             }
             
             // Broadcast KICK message to all channel members
-            std::string kickMsg = ":" + client->GetNick() + " KICK " + split_channels[i] + " " + split_target[0] + " :" + reason + "\r\n";
+            std::string user = client->GetUser();
+            std::string kickMsg = ":" + client->GetNick() + "!" + user + "@localhost" + " KICK " + split_channels[i] + " " + targetNick + " :" + reason + "\r\n";
             std::vector<Client *> channelUsers = channel->getUsers();
-            for (std::size_t i = 0; i < channelUsers.size(); i++)
+            for (std::size_t j = 0; j < channelUsers.size(); j++)
             {
-                send(channelUsers[i]->GetFd(), kickMsg.c_str(), kickMsg.length(), 0);
+                send(channelUsers[j]->GetFd(), kickMsg.c_str(), kickMsg.length(), 0);
             }
 
             // Remove target client from channel
