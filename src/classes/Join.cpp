@@ -95,6 +95,7 @@ Channel *Dispatch::createChannel(std::string topic, std::string name,std::size_t
     _channels.push_back(newChan);
     newChan->addUser(client);
     newChan->addOperator(client);
+    
     return newChan;
 }
 

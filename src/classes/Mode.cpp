@@ -3,6 +3,7 @@
 #include "../../includes/Client.hpp"
 #include "../../includes/split.hpp"
 #include "../../includes/Channel.hpp"
+#include "../../includes/Debugger.hpp"
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -154,6 +155,8 @@ bool Dispatch::ft_mode(Command cmd, int fd)
 	if (!client->isRegistered()) // si le client n'es pas register just return false
 		return false;
     std::string line = cmd.getLine();
+     Debugger::storeLog(3, "PREMIERE PARTIE\n");
+    Debugger::storeLog(3, std::string(line) + " dbg");
     std::vector<std::string> tokens = split(line, ' ');
     if (tokens.size() < 2) {
         std::string msg = ":server 461 " + client->GetNick() + " MODE :Not enough parameters\r\n";
@@ -185,8 +188,10 @@ bool Dispatch::ft_mode(Command cmd, int fd)
             if (channel->getMaxUsers() > 0)
                 options += "l";
             std::string msg = ":server 324 " + client->GetNick() + " " + channel->getName() + " +" + options + "\r\n";
+            Debugger::storeLog(3, msg);
             send(fd, msg.c_str(), msg.length(), 0);
             std::string msg2 = ":server 329 " + client->GetNick() + " " + channel->getName() + " " + std::to_string(channel->getId()) + "\r\n";
+            Debugger::storeLog(3, msg2);
             send(fd, msg2.c_str(), msg2.length(), 0);
         }
         else {
@@ -198,7 +203,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     }
     std::string target = tokens[1];
     std::string modeChanges = tokens[2];
-    
+    Debugger::storeLog(3, "DEUXIEME PARTIE\n");
     if (target[0] == '#' || target[0] == '&') {
         Channel* channel = nullptr;
         for (size_t i = 0; i < _channels.size(); i++) {
@@ -209,19 +214,23 @@ bool Dispatch::ft_mode(Command cmd, int fd)
         }
         if (!channel) {
             std::string msg = ":server 403 " + client->GetNick() + " " + target + " :No such channel\r\n";
+            Debugger::storeLog(3, msg);
             send(fd, msg.c_str(), msg.length(), 0);
             return false;
         }
         if (!channel->isOperator(client)) {
             std::string msg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
+            Debugger::storeLog(3, msg);
             send(fd, msg.c_str(), msg.length(), 0);
             return false;
         }
+        Debugger::storeLog(3, "PAS POSSIBLE\n");
         if (setMode(channel, modeChanges, fd, target, line, client, tokens) == false) 
             return false;
     }
     else {
         std::string msg = ":server 472 " + client->GetNick() + " " + target + " :is unknown mode char to me\r\n";
+        Debugger::storeLog(3, msg);
         send(fd, msg.c_str(), msg.length(), 0);
         return false;
     }
