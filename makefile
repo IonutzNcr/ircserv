@@ -1,5 +1,5 @@
 
-NAME=	ircserv2
+NAME=	ircserv
 
 DIR_UTILS=	./src/utils/
 DIRO_UTILS=	./obj/utils/
@@ -53,7 +53,7 @@ all: $(NAME)
 
 $(NAME): $(OBJ) ./obj/main.o
 	echo "Linking..."
-	$(CXX) $(CXXFLAGS) $(OBJ) ./obj/main.o -o ircserv2
+	$(CXX) $(CXXFLAGS) $(OBJ) ./obj/main.o -o $(NAME)
 
 $(DIRO)%.o: $(DIR)%.cpp $(INCLUDES)
 	if [ ! -d "./obj/classes" ]; then mkdir -p ./obj/classes; fi
@@ -68,11 +68,12 @@ $(DIRO_UTILS)%.o: $(DIR_UTILS)%.cpp $(INCLUDES)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 
-fclean:
-	rm -rf ./obj/classes/*.o ./obj/main.o ircserv2
+clean:
+	rm -rf ./obj/classes/*.o ./obj/utils/*.o ./obj/main.o
+
+fclean: clean
+	rm -rf $(NAME)
 
 re: fclean all
 
-.PHONY: all fclean re
-
-.PHONY: all
+.PHONY: all clean fclean re
