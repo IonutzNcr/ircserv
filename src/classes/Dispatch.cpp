@@ -82,7 +82,7 @@ void    Dispatch::tryRegister(Client* client)
         return ;
     if (client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
         client->setRegistered(true);
-        std::string msg = ":server 001 " + client->GetNick() + " :Welcome to the IRC server!\r\n";
+        std::string msg = ":server 001 " + client->GetNick() + " :Welcome to the IRC Network, " + client->GetNick() + "\r\n";
         send(client->GetFd(), msg.c_str(), msg.length(), 0);
     }
     if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {

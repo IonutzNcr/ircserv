@@ -221,8 +221,8 @@ bool Dispatch::ft_mode(Command cmd, int fd)
             return false;
     }
     else {
-        std::string msg = ":server 472 " + client->GetNick() + " " + target + " :is unknown mode char to me\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
+        // std::string msg = ":server 472 " + client->GetNick() + " " + modeChanges + " :is unknown mode char to me\r\n";
+        // send(fd, msg.c_str(), msg.length(), 0);
         return false;
     }
     return true;
