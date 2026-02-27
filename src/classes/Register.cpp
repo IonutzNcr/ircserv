@@ -155,8 +155,8 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         return true;
     }
     if (pass != _password) {    // si le pass est differend de celui des parametre => error
-        std::string txt = ":serveur 464 " + choice + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
-        send(fd, txt.c_str(), txt.length(), 0);
+        // std::string txt = ":serveur 464 " + choice + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
+        // send(fd, txt.c_str(), txt.length(), 0);
         return false;
     }
     client->setAuthenticated(true);
