@@ -198,9 +198,6 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 		{
 			if (!dispatch.dispatch(cmd, fd)) {
 				std::cout << "\e[1;31m" << "Client <" << fd << "> Disconnected" << "\e[0;37m" << std::endl;
-				// ClearClients(fd, dispatch);
-				// close (fd);
-				// break;
 			}
 				
 			line = parse.getCmdtwo(fd);

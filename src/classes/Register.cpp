@@ -86,8 +86,6 @@ std::vector<std::string> Dispatch::SplitParams(std::string line) const
             params.push_back(line.substr(1));
             break;
         }
-
-        // paramètre normal
         size_t space = line.find(' ');
         if (space == std::string::npos)
         {
@@ -122,7 +120,6 @@ bool Dispatch::ft_user(Command cmd, int fd)
         send(fd, msg.c_str(), msg.length(), 0);
         return true;
     }
-    //std::string oldUser = client->GetUser();
     client->SetUser(params[0]);
     client->SetRealName(params[3]);
     tryRegister(client);
@@ -176,9 +173,6 @@ int Dispatch::ft_choice(const std::string& target)
     return (1);
 }
 
-//":server 433 " + choice + " " + nick + " :Nickname is already in use\r\n"
-
-// revoir les message d'erreur
 void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
 {
     
