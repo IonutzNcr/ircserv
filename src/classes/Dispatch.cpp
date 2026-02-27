@@ -88,7 +88,13 @@ void    Dispatch::tryRegister(Client* client)
     if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
         std::string msg2 = "464 * :Password incorrect\r\n";
         send(client->GetFd(), msg2.c_str(), msg2.length(), 0);
-        // a voir si on deconnecte le client ou pas
+        for (size_t i = 0; i < _clients.size(); ++i) {
+            if (_clients[i]->GetFd() == client->GetFd()) {
+                _clients.erase(_clients.begin() + i);
+                break;
+            }
+        }
+        delete client;
     }
 }
 

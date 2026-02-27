@@ -8,16 +8,21 @@
 #include "../../includes/Debugger.hpp"
 #include <string>
 #include <sys/types.h>
+#include "../../includes/Server.hpp"
 #include <sys/socket.h>
 
 bool Dispatch::ft_join(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
+    Server*  server;
     RplReply replies;
+    Dispatch* dispatch = NULL;
     if (!client)
         return false;
      if (!client->isRegistered()) // si le client n'es pas register just return false
-        return false;
+    {
+        return (false);
+    }
     std::string line = cmd.getLine();
     std::string channelName = line.substr(5); // on stock la string apres le JOIN
     std::vector<std::string> chanXkeys = split(channelName, ' ');

@@ -47,10 +47,9 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 		}
 	}
 	
-    for (size_t i = 0; i < dispatch._channels.size(); i++) {
-        dispatch._channels[i]->removeUser(clientToRemove);
-    }
-
+	for (size_t i = 0; i < dispatch._channels.size(); i++) {
+		dispatch._channels[i]->removeUser(clientToRemove);
+	}
     parse.clearData(fd); // Clean up parser buffer for this fd
     delete clientToRemove;
 }

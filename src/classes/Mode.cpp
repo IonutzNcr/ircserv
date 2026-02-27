@@ -35,7 +35,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
         case 'k':
             if (modeChanges[0] == '+') {
                 if (tokens.size() <= paramIndex) {
-                    std::string errMsg = ":server 461 MODE :Not enough parameters\r\n";
+                    std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " MODE :Not enough parameters\r\n";
                     send(fd, errMsg.c_str(), errMsg.length(), 0);
                     return false;
                 }

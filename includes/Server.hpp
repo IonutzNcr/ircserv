@@ -35,6 +35,7 @@ private:
 	std::vector<Client *> clients;
 	std::vector<struct pollfd> fds; 
 public:
+	Server() {return ;}
 	Server(int port, std::string password):Port(port), _password(password) {
 		/* dispatch = dispatch() */
 		SerSocketFd = -1;}
