@@ -19,14 +19,16 @@ Dispatch::~Dispatch()
     return ;
 }
 
-void Dispatch::dispatch(Command cmd, int fd)
+bool Dispatch::dispatch(Command cmd, int fd)
 {
     if (cmd.getCmd() == "CAP")
         ft_cap(cmd, fd);
     if (cmd.getCmd() == "PASS")
-        ft_pass(cmd, fd);
+        if (!ft_pass(cmd, fd))
+            return false;
     if (cmd.getCmd() == "NICK")
-        ft_nick(cmd, fd);
+        if (!ft_nick(cmd, fd))
+            return false;
     if (cmd.getCmd() == "USER")
         ft_user(cmd, fd);
     if (cmd.getCmd() == "JOIN")
@@ -47,6 +49,7 @@ void Dispatch::dispatch(Command cmd, int fd)
         ft_quit(cmd, fd);
     if (cmd.getCmd() == "WHO")
         ft_who(cmd, fd);
+    return true;
 }
 
 bool Dispatch::ft_cap(Command cmd, int fd)

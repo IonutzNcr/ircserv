@@ -6,7 +6,7 @@ DIRO_UTILS=	./obj/utils/
 DIR=	./src/classes/
 DIRO=	./obj/classes/
 
-CXX= c++
+CXX= c++ -g3
 CXXFLAGS=
 
 FILES=	Client.cpp \

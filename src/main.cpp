@@ -1,5 +1,13 @@
 #include "../includes/Server.hpp"
 
+bool    ft_one(std::string line)
+{
+    for (int i = 0; i < line.size(); i++) {
+        if (!std::isdigit(line[i]))
+            return (false);
+    }
+    return (true);
+}
 
 int main(int argc, char **argv)
 {
@@ -7,7 +15,18 @@ int main(int argc, char **argv)
 		std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
 		return 1;
 	}
-
+	if (!ft_one(argv[1])) {
+		std::cout << "argv[1] is not digit" << std::endl;
+		return (0);
+	}
+	int n = std::stoi(argv[1]);
+	if (n < 1024 || n > 65535) {		// manque la valeur la plus grande ?
+		if (n < 0)
+			std::cout << "argv[1] is negative" << std::endl;
+		else
+			std::cout << "wrong format for argv[1]" << std::endl;
+		return (0);
+	}
 	Server ser(std::atoi(argv[1]), argv[2]);
 	std::cout << "---- SERVER ----" << std::endl;
 	
