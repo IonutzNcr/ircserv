@@ -62,6 +62,7 @@ bool Dispatch::ft_nick(Command cmd, int fd)
         send(fd, ret.c_str(), ret.length(), 0);
     }    
     tryRegister(client);
+    
     return true; 
 }
 
@@ -148,7 +149,7 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     if (pass != _password) {    // si le pass est differend de celui des parametre => error
         std::string txt = intToString(fd) + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
         send(fd, txt.c_str(), txt.length(), 0);
-        return true;
+        return false;
     }
     client->setAuthenticated(true);
     tryRegister(client);

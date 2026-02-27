@@ -51,6 +51,7 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
         dispatch._channels[i]->removeUser(clientToRemove);
     }
 
+    parse.clearData(fd); // Clean up parser buffer for this fd
     delete clientToRemove;
 }
 
@@ -135,35 +136,43 @@ void Server::ServerInit()
 
 void Server::AcceptNewClient()
 {
-	struct sockaddr_in cliadd;
-	struct pollfd NewPoll;
-	socklen_t len = sizeof(cliadd);
+    while (true)
+    {
+        sockaddr_in cliadd;
+        socklen_t len = sizeof(cliadd);
 
-	int incofd = accept(SerSocketFd, (sockaddr *)&(cliadd), &len); //-> accept the new client
-	if (incofd == -1)
-		{std::cout << "accept() failed" << std::endl; return;}
+        int incofd = accept(SerSocketFd, (sockaddr *)&cliadd, &len);
+        if (incofd == -1)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break; // plus de clients en attente
+            std::cout << "accept() failed\n";
+            break;
+        }
 
-	//Find another way to set non-blocking
-	if (fcntl(incofd, F_SETFL, O_NONBLOCK) == -1) //-> set the socket option (O_NONBLOCK) for non-blocking socket
-		{std::cout << "fcntl() failed" << std::endl; return;}
-	NewPoll.fd = incofd; //-> add the client socket to the pollfd
-	NewPoll.events = POLLIN; //-> set the event to POLLIN for reading data
-	NewPoll.revents = 0; //-> set the revents to 0
-	Client *cli = new Client(incofd);
-	cli->SetIpAdd(inet_ntoa((cliadd.sin_addr))); //-> convert the ip address to string and set it
-	clients.push_back(cli); //-> add the client to the vector of clients
-	fds.push_back(NewPoll); //-> add the client socket to the pollfd
-	//send(incofd, "Welcome to the server!\n", 23, 0); //-> send a welcome message to the client
-	std::cout << GRE << "Client <" << incofd << "> Connected" << WHI << std::endl;
+        fcntl(incofd, F_SETFL, O_NONBLOCK);
+
+        pollfd p;
+        p.fd = incofd;
+        p.events = POLLIN;
+        p.revents = 0;
+        fds.push_back(p);
+
+        Client *cli = new Client(incofd);
+        cli->SetIpAdd(inet_ntoa(cliadd.sin_addr));
+        clients.push_back(cli);
+
+        std::cout << GRE << "Client <" << incofd << "> Connected" << WHI << "\n";
+    }
 }
 
 void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 {
-	char buff[1024];
+	char buff[5024];
 	memset(buff, 0, sizeof(buff));
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0); //-> receive the data
-	
+	std::cout << buff << std::endl;
 	if (bytes == 0)
 	{
 		ClearClients(fd, dispatch);
