@@ -1,0 +1,86 @@
+ionut@ionut-Latitude-E5470:~/work$ ./test02.sh irc.localhost 4444 lol
+Running two clients against irc.localhost:4444 on channel #modetest
+Logs: alice_4444.log, bob_4444.log
+Connection to irc.localhost (::1) 4444 port [tcp/*] succeeded!
+Connection to irc.localhost (::1) 4444 port [tcp/*] succeeded!
+A<< :irc.localhost 001 alice :Welcome to the Internet Relay Network alice!~alice@ip6-localhost
+A<< :irc.localhost 002 alice :Your host is irc.localhost, running version ngircd-26.1 (x86_64/pc/linux-gnu)
+A<< :irc.localhost 003 alice :This server has been started Fri Feb 27 2026 at 13:30:28 (CET)
+A<< :irc.localhost 004 alice irc.localhost ngircd-26.1 abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz
+A<< :irc.localhost 005 alice RFC2812 IRCD=ngIRCd CHARSET=UTF-8 CASEMAPPING=ascii PREFIX=(qaohv)~&@%+ CHANTYPES=#&+ CHANMODES=beI,k,l,imMnOPQRstVz CHANLIMIT=#&+:10 :are supported on this server
+A<< :irc.localhost 005 alice CHANNELLEN=50 NICKLEN=9 TOPICLEN=490 AWAYLEN=127 KICKLEN=400 MODES=5 MAXLIST=beI:50 EXCEPTS=e INVEX=I PENALTY FNC :are supported on this server
+A<< :irc.localhost 251 alice :There are 1 users and 0 services on 1 servers
+A<< :irc.localhost 253 alice 1 :unknown connection(s)
+A<< :irc.localhost 254 alice 1 :channels formed
+A<< :irc.localhost 255 alice :I have 1 users, 0 services and 0 servers
+A<< :irc.localhost 265 alice 1 2 :Current local users: 1, Max: 2
+A<< :irc.localhost 266 alice 1 2 :Current global users: 1, Max: 2
+A<< :irc.localhost 250 alice :Highest connection count: 2 (4 connections received)
+A<< :irc.localhost 375 alice :- irc.localhost message of the day
+A<< :irc.localhost 372 alice :- **************************************************
+A<< :irc.localhost 372 alice :- *             H    E    L    L    O              *
+A<< :irc.localhost 372 alice :- *  This is a private irc server. Please contact  *
+A<< :irc.localhost 372 alice :- *  the admin of the server for any questions or  *
+A<< :irc.localhost 372 alice :- *  issues.                                       *
+A<< :irc.localhost 372 alice :- **************************************************
+A<< :irc.localhost 372 alice :- *  The software was provided as a package of     *
+A<< :irc.localhost 372 alice :- *  Debian GNU/Linux <https://www.debian.org/>.   *
+A<< :irc.localhost 372 alice :- *  However, Debian has no control over this      *
+A<< :irc.localhost 372 alice :- *  server.                                       *
+A<< :irc.localhost 372 alice :- **************************************************
+A<< :irc.localhost 376 alice :End of MOTD command
+A<< :alice!~alice@ip6-localhost JOIN :#modetest
+A<< :irc.localhost 353 alice = #modetest :@alice
+A<< :irc.localhost 366 alice #modetest :End of NAMES list
+A<< :bob!~bob@ip6-localhost JOIN :#modetest
+A<< :alice!~alice@ip6-localhost MODE #modetest +t
+A<< :alice!~alice@ip6-localhost TOPIC #modetest :topic-set-by-alice
+A<< :alice!~alice@ip6-localhost MODE #modetest +i
+A<< :alice!~alice@ip6-localhost MODE #modetest +kl secret 1
+A<< :irc.localhost 443 alice bob #modetest :is already on channel
+A<< :alice!~alice@ip6-localhost MODE #modetest +o bob
+A<< :alice!~alice@ip6-localhost MODE #modetest -l
+A<< :bob!~bob@ip6-localhost TOPIC #modetest :bob-now-can-set-topic
+A<< :irc.localhost NOTICE alice :Connection statistics: client 0.3 kb, server 2.7 kb.
+A<< ERROR :"alice done"
+B<< :irc.localhost 001 bob :Welcome to the Internet Relay Network bob!~bob@ip6-localhost
+B<< :irc.localhost 002 bob :Your host is irc.localhost, running version ngircd-26.1 (x86_64/pc/linux-gnu)
+B<< :irc.localhost 003 bob :This server has been started Fri Feb 27 2026 at 13:30:28 (CET)
+B<< :irc.localhost 004 bob irc.localhost ngircd-26.1 abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz
+B<< :irc.localhost 005 bob RFC2812 IRCD=ngIRCd CHARSET=UTF-8 CASEMAPPING=ascii PREFIX=(qaohv)~&@%+ CHANTYPES=#&+ CHANMODES=beI,k,l,imMnOPQRstVz CHANLIMIT=#&+:10 :are supported on this server
+B<< :irc.localhost 005 bob CHANNELLEN=50 NICKLEN=9 TOPICLEN=490 AWAYLEN=127 KICKLEN=400 MODES=5 MAXLIST=beI:50 EXCEPTS=e INVEX=I PENALTY FNC :are supported on this server
+B<< :irc.localhost 251 bob :There are 2 users and 0 services on 1 servers
+B<< :irc.localhost 254 bob 1 :channels formed
+B<< :irc.localhost 255 bob :I have 2 users, 0 services and 0 servers
+B<< :irc.localhost 265 bob 2 2 :Current local users: 2, Max: 2
+B<< :irc.localhost 266 bob 2 2 :Current global users: 2, Max: 2
+B<< :irc.localhost 250 bob :Highest connection count: 2 (4 connections received)
+B<< :irc.localhost 375 bob :- irc.localhost message of the day
+B<< :irc.localhost 372 bob :- **************************************************
+B<< :irc.localhost 372 bob :- *             H    E    L    L    O              *
+B<< :irc.localhost 372 bob :- *  This is a private irc server. Please contact  *
+B<< :irc.localhost 372 bob :- *  the admin of the server for any questions or  *
+B<< :irc.localhost 372 bob :- *  issues.                                       *
+B<< :irc.localhost 372 bob :- **************************************************
+B<< :irc.localhost 372 bob :- *  The software was provided as a package of     *
+B<< :irc.localhost 372 bob :- *  Debian GNU/Linux <https://www.debian.org/>.   *
+B<< :irc.localhost 372 bob :- *  However, Debian has no control over this      *
+B<< :irc.localhost 372 bob :- *  server.                                       *
+B<< :irc.localhost 372 bob :- **************************************************
+B<< :irc.localhost 376 bob :End of MOTD command
+B<< :bob!~bob@ip6-localhost JOIN :#modetest
+B<< :irc.localhost 353 bob = #modetest :bob @alice
+B<< :irc.localhost 366 bob #modetest :End of NAMES list
+B<< :alice!~alice@ip6-localhost MODE #modetest +t
+B<< :alice!~alice@ip6-localhost TOPIC #modetest :topic-set-by-alice
+B<< :alice!~alice@ip6-localhost MODE #modetest +i
+B<< :alice!~alice@ip6-localhost MODE #modetest +kl secret 1
+B<< :irc.localhost 482 bob #modetest :You are not channel operator
+B<< :alice!~alice@ip6-localhost MODE #modetest +o bob
+B<< :alice!~alice@ip6-localhost MODE #modetest -l
+B<< :bob!~bob@ip6-localhost TOPIC #modetest :bob-now-can-set-topic
+B<< :alice!~alice@ip6-localhost PRIVMSG #modetest :alice says hi
+B<< :alice!~alice@ip6-localhost QUIT :"alice done"
+B<< :irc.localhost NOTICE bob :Connection statistics: client 0.2 kb, server 2.7 kb.
+B<< ERROR :"bob done"
+Done.

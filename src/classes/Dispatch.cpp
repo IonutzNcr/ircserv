@@ -117,6 +117,10 @@ bool Dispatch::ft_ping(Command cmd, int fd)
     if (start != std::string::npos && end != std::string::npos)
         token = token.substr(start, end - start + 1);
     
+    // Remove leading colon if present
+    if (!token.empty() && token[0] == ':')
+        token = token.substr(1);
+    
     std::string reply = ":server PONG server :" + token + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     return true;

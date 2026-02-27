@@ -74,7 +74,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
                 replies.ERR_INVITEONLYCHAN(*client, *channel, fd);
                 continue;
             }
-            if (channel->getKey() != chanKey)
+            if (!channel->getKey().empty() && channel->getKey() != chanKey)
             {
                 replies.ERR_BADCHANNELKEY(*client, *channel, fd);
                 continue;
@@ -111,7 +111,7 @@ void Dispatch::broadcastJoin(Channel *channel, Client *client)
 {
     std::string user = client->GetUser().empty() ? "user" : client->GetUser();
     std::string host = client->GetIpAdd().empty() ? "localhost" : client->GetIpAdd();
-    std::string joinMsg = ":" + client->GetNick() + "!" + user + "@" + host + " JOIN " + channel->getName() + "\r\n";
+    std::string joinMsg = ":" + client->GetNick() + "!" + user + "@" + host + " JOIN :" + channel->getName() + "\r\n";
     std::vector<Client *> existingUsers = channel->getUsers();
     for (std::size_t k = 0; k < existingUsers.size(); k++)
     {

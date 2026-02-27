@@ -140,3 +140,15 @@ void Parser::fill(std::string buff, int fd)
 {
 	concatData(buff, fd);
 }
+
+void Parser::clearData(int fd)
+{
+	for (std::vector<Data>::iterator it = rawsData.begin(); it != rawsData.end(); ++it)
+	{
+		if (it->fd == fd)
+		{
+			rawsData.erase(it);
+			return;
+		}
+	}
+}
