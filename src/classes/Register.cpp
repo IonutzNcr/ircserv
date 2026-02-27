@@ -47,7 +47,7 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     if (!parseNick(nick)) {
         std::string msg = ":serveur 432 " + choice + " " + nick + " :Erroneus nickname\r\n";     // ERR_ERRONEUSNICKNAME (432)
         send(fd, msg.c_str(), msg.length(), 0);     
-        return true;
+        return false;
     }
     for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
             if (_clients[i]->GetNick() == nick && _clients[i] != client) {

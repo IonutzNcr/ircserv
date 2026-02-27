@@ -16,7 +16,7 @@ class Dispatch
        /*  Dispatch(); */
         Dispatch(std::string password, std::vector<Client *> &clients);
         ~Dispatch();
-        void dispatch(Command cmd, int fd);
+        bool dispatch(Command cmd, int fd);
         std::vector<std::string> SplitParams(std::string line) const;
 
         bool ft_cap(Command cmd, int fd);

@@ -16,25 +16,24 @@ void Server::SignalHandler(int signum)
 void Server::ClearClients(int fd, Dispatch &dispatch)
 {
     Client* clientToRemove = NULL;
-
+	std::string choiceNick;
 	std::string quitMsg = "";
-
     for(size_t i = 0; i < clients.size(); i++){
         if (clients[i]->GetFd() == fd) {
             clientToRemove = clients[i];
+			choiceNick = clientToRemove->GetNick().empty() ? "*" : clientToRemove->GetNick();
             quitMsg = clientToRemove->GetMsgQuit();
             clients.erase(clients.begin() + i);
             break;
         }
     }
-
     if (!clientToRemove)
 	{
         return;
 	}
 	std::string user = clientToRemove->GetUser().empty() ? "user" : clientToRemove->GetUser();
 	std::string host = clientToRemove->GetIpAdd().empty() ? "localhost" : clientToRemove->GetIpAdd();
-	std::string quitMsgCrtlC = ":" + clientToRemove->GetNick() + "!" + user + "@" + host + " QUIT :Client disconnected\r\n";
+	std::string quitMsgCrtlC = ":" + choiceNick + "!" + user + "@" + host + " QUIT :Client disconnected\r\n";
 	if (quitMsg.empty())
 		quitMsg = quitMsgCrtlC;
 	for (size_t i = 0; i < dispatch._channels.size(); i++) {
@@ -46,7 +45,6 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 			}
 		}
 	}
-	
     for (size_t i = 0; i < dispatch._channels.size(); i++) {
         dispatch._channels[i]->removeUser(clientToRemove);
     }
@@ -112,7 +110,10 @@ void Server::ServerInit()
 			if (fds[i].revents & (POLLHUP | POLLERR | POLLNVAL))
 			{
 				int deadFd = fds[i].fd;
-				std::cout << "FD " << deadFd << " closed (poll error)" << std::endl;
+				if (fds[i].revents & POLLNVAL)
+					std::cout << "Client <" << deadFd << "> Disconnected" << std::endl;
+				else
+					std::cout << "FD " << deadFd << " closed (poll error)" << std::endl;
 				close(deadFd);
 				ClearClients(deadFd, dispatch);
 				fds.erase(fds.begin() + i);
@@ -195,7 +196,13 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 		cmd.setLine(line);
 		while (!cmd.getCmd().empty())
 		{
-			dispatch.dispatch(cmd, fd);
+			if (!dispatch.dispatch(cmd, fd)) {
+				std::cout << "\e[1;31m" << "Client <" << fd << "> Disconnected" << "\e[0;37m" << std::endl;
+				// ClearClients(fd, dispatch);
+				// close (fd);
+				// break;
+			}
+				
 			line = parse.getCmdtwo(fd);
 			cmd = parse.get(fd);
 			cmd.setLine(line);

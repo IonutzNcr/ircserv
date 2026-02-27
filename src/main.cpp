@@ -20,11 +20,11 @@ int main(int argc, char **argv)
 		return (0);
 	}
 	int n = std::stoi(argv[1]);
-	if (n < 1024) {		// manque la valeur la plus grande ?
+	if (n < 1024 || n > 65535) {		// manque la valeur la plus grande ?
 		if (n < 0)
 			std::cout << "argv[1] is negative" << std::endl;
 		else
-			std::cout << "argv[1] is less to 1024" << std::endl;
+			std::cout << "wrong format for argv[1]" << std::endl;
 		return (0);
 	}
 	Server ser(std::atoi(argv[1]), argv[2]);
