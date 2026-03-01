@@ -29,10 +29,9 @@ bool Dispatch::parseNick(std::string line)
 bool Dispatch::ft_nick(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
-    std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
-
     if (!client)
         return false;
+    std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
     std::string line = cmd.getLine();
     std::string nick = line.substr(4); // on stock la string apres le NICK
     nick.erase(0, nick.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca

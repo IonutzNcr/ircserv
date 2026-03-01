@@ -7,6 +7,7 @@
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 
 Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients): _password(pass), _clients(clients)
@@ -93,6 +94,7 @@ void    Dispatch::tryRegister(Client* client)
         send(client->GetFd(), msg2.c_str(), msg2.length(), 0);
         for (size_t i = 0; i < _clients.size(); ++i) {
             if (_clients[i]->GetFd() == client->GetFd()) {
+                close(_clients[i]->GetFd());
                 _clients.erase(_clients.begin() + i);
                 break;
             }
