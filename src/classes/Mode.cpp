@@ -133,7 +133,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
             break;
         
         default:
-            std::string errMsg = ":server 472 " + client->GetNick() + " " + modeChanges.substr(1, 1) + " :is unknown mode char to me\r\n";
+            std::string errMsg = ":server 472 " + client->GetNick() + " " + std::string(1, mode) + " :is unknown mode char to me\r\n";
             send(fd, errMsg.c_str(), errMsg.length(), 0);
             return false;
         }
@@ -190,7 +190,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
                 options += "l";
             std::string msg = ":server 324 " + client->GetNick() + " " + channel->getName() + " +" + options + "\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
-            std::string msg2 = ":server 329 " + client->GetNick() + " " + channel->getName() + " " + std::to_string(channel->getId()) + "\r\n";
+            std::string msg2 = ":server 329 " + client->GetNick() + " " + channel->getName() + " " + std::to_string(channel->getCreationTime()) + "\r\n";
             send(fd, msg2.c_str(), msg2.length(), 0);
         }
         else {

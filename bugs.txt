@@ -91,7 +91,7 @@ PRIORITÉ BASSE - INATTENTIONS / CODE SMELL
        Dispatch* dispatch = NULL;
     Impact: Avertissements compilation, confusion
     Solution: Supprimer ces lignes
-
+//
 11. DISPATCH - if au lieu de else if
     Fichier: Dispatch.cpp (lignes 24-52)
     Problème: Chaque commande est vérifiée même si une précédente a matché
@@ -101,14 +101,7 @@ PRIORITÉ BASSE - INATTENTIONS / CODE SMELL
     Impact: Performance (mineur)
     Solution: Utiliser else if ou switch/map
 
-12. MODE +o/-o PAS DE CONFIRMATION
-    Fichier: Mode.cpp
-    Problème: Quand un utilisateur reçoit ou perd +o, il ne reçoit pas de
-              notification personnelle (seulement le broadcast channel)
-    Impact: L'utilisateur ne sait pas qu'il est maintenant op
-    Solution: Envoyer un message RPL_YOUREOPER ou similaire
-
-13. INVITED JAMAIS RETIRÉ APRÈS JOIN
+12. INVITED JAMAIS RETIRÉ APRÈS JOIN
     Fichier: Join.cpp
     Problème: Après un JOIN réussi, l'utilisateur reste dans invited[]
     Lié au bug #5

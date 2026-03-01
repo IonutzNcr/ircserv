@@ -1,9 +1,14 @@
 #include "../../includes/Channel.hpp"
 
-Channel::Channel(std::string topic, std::string name, std::size_t id, std::string key)
-: _inviteOnly(false), _topic(topic), _name(name), _id(id), _key(key), _protectTopic(false), _maxUsers(0)
+Channel::Channel(std::string topic, std::string name, std::string key)
+: _inviteOnly(false), _topic(topic), _name(name), _key(key), _protectTopic(false), _maxUsers(0), _creationTime(std::time(NULL))
 {
     return ;
+}
+
+time_t Channel::getCreationTime() const
+{
+    return _creationTime;
 }
 Channel::~Channel()
 {
@@ -18,10 +23,6 @@ std::string Channel::getTopic() const
 std::string Channel::getName() const
 {
     return _name;
-}
-std::size_t Channel::getId() const
-{
-    return _id;
 }
 
 std::vector<Client *> Channel::getUsers() const

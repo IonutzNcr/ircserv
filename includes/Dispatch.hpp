@@ -48,7 +48,7 @@ class Dispatch
         void tryRegister(Client* client);
         void removeChannel(Channel *channel);
     private:
-        Channel *createChannel(std::string topic, std::string name, std::size_t id, std::string key, Client *client);
+        Channel *createChannel(std::string topic, std::string name, std::string key, Client *client);
         void sendTopic(Client *client, Channel *channel);
         void broadcastJoin(Channel *channel, Client *client);
         void sendList(Channel *channel, Client *client);

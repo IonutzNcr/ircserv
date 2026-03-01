@@ -14,9 +14,7 @@
 bool Dispatch::ft_join(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
-    Server*  server;
     RplReply replies;
-    Dispatch* dispatch = NULL;
     if (!client)
         return false;
      if (!client->isRegistered()) // si le client n'es pas register just return false
@@ -54,7 +52,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
         //creation channel si n'existe pas et ajout user au channel
         if (!isChannelExist(chanName)) // TODO:: big problem why ?
         {
-            Channel *newChan = createChannel("", chanName, i, chanKey, client);
+            Channel *newChan = createChannel("", chanName, chanKey, client);
             broadcastJoin(newChan, client);
             sendTopic(client, newChan);
             sendList(newChan, client);
@@ -94,9 +92,9 @@ bool Dispatch::ft_join(Command cmd, int fd)
     return true;
 }
 
-Channel *Dispatch::createChannel(std::string topic, std::string name,std::size_t id, std::string key, Client *client)
+Channel *Dispatch::createChannel(std::string topic, std::string name, std::string key, Client *client)
 {
-    Channel *newChan = new Channel(topic, name, id, key); 
+    Channel *newChan = new Channel(topic, name, key); 
     newChan->setKey(key);
     _channels.push_back(newChan);
     newChan->addUser(client);

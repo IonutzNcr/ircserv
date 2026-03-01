@@ -24,31 +24,35 @@ bool Dispatch::dispatch(Command cmd, int fd)
 {
     if (cmd.getCmd() == "CAP")
         ft_cap(cmd, fd);
-    if (cmd.getCmd() == "PASS")
+    else if (cmd.getCmd() == "PASS")
+    {
         if (!ft_pass(cmd, fd))
             return false;
-    if (cmd.getCmd() == "NICK")
+    }
+    else if (cmd.getCmd() == "NICK")
+    {
         if (!ft_nick(cmd, fd))
             return false;
-    if (cmd.getCmd() == "USER")
+    }
+    else if (cmd.getCmd() == "USER")
         ft_user(cmd, fd);
-    if (cmd.getCmd() == "JOIN")
+    else if (cmd.getCmd() == "JOIN")
         ft_join(cmd, fd);
-    if (cmd.getCmd() == "MODE")
+    else if (cmd.getCmd() == "MODE")
         ft_mode(cmd, fd);
-    if (cmd.getCmd() == "KICK")
+    else if (cmd.getCmd() == "KICK")
         ft_kick(cmd, fd);
-    if (cmd.getCmd() == "INVITE")
+    else if (cmd.getCmd() == "INVITE")
         ft_invite(cmd, fd);
-    if (cmd.getCmd() == "TOPIC")
+    else if (cmd.getCmd() == "TOPIC")
         ft_topic(cmd, fd);
-    if (cmd.getCmd() == "PRIVMSG")
+    else if (cmd.getCmd() == "PRIVMSG")
         ft_PRIVMSG(cmd, fd);
-    if (cmd.getCmd() == "PING")
+    else if (cmd.getCmd() == "PING")
         ft_ping(cmd, fd);
-    if (cmd.getCmd() == "QUIT")
+    else if (cmd.getCmd() == "QUIT")
         ft_quit(cmd, fd);
-    if (cmd.getCmd() == "WHO")
+    else if (cmd.getCmd() == "WHO")
         ft_who(cmd, fd);
     return true;
 }

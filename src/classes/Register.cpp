@@ -39,12 +39,12 @@ bool Dispatch::ft_nick(Command cmd, int fd)
         nick.erase(0, 1);
     nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
     if (nick.empty()) {     // si pas de new nick => erreur 
-        std::string msg = ":serveur 431 " + choice + " " + nick + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
+        std::string msg = ":server 431 " + choice + " " + nick + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
         send(fd, msg.c_str(), msg.length(), 0);     
         return true;
     }
     if (!parseNick(nick)) {
-        std::string msg = ":serveur 432 " + choice + " " + nick + " :Erroneus nickname\r\n";     // ERR_ERRONEUSNICKNAME (432)
+        std::string msg = ":server 432 " + choice + " " + nick + " :Erroneus nickname\r\n";     // ERR_ERRONEUSNICKNAME (432)
         send(fd, msg.c_str(), msg.length(), 0);     
         return false;
     }
@@ -110,7 +110,7 @@ bool Dispatch::ft_user(Command cmd, int fd)
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt = ":serveur 462 " + choice + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
+        std::string txt = ":server 462 " + choice + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
         send(fd, txt.c_str(), txt.length(), 0);
         return true;
     }
@@ -118,7 +118,7 @@ bool Dispatch::ft_user(Command cmd, int fd)
     std::vector<std::string> params = SplitParams(line);
     if (params.size() < 4 || params[0].empty() || params[1].empty() || params[2].empty() || params[3].empty())
     {
-        std::string msg = "serveur 461 " + choice + " :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
+        std::string msg = ":server 461 " + choice + " :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
         send(fd, msg.c_str(), msg.length(), 0);
         return true;
     }
@@ -138,7 +138,7 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     if (!client)
         return false;
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt2 = ":serveur 462 " + choice + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
+        std::string txt2 = ":server 462 " + choice + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
         send(fd, txt2.c_str(), txt2.length(), 0);
         return true;
     }
@@ -149,12 +149,12 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         pass.erase(0, 1);
     pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
     if (pass.empty()) { 
-        std::string msg = ":serveur 461 " + choice + " :PASS Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
+        std::string msg = ":server 461 " + choice + " :PASS Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
         send(fd, msg.c_str(), msg.length(), 0);
         return true;
     }
     if (pass != _password) {    // si le pass est differend de celui des parametre => error
-        // std::string txt = ":serveur 464 " + choice + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
+        // std::string txt = ":server 464 " + choice + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
         // send(fd, txt.c_str(), txt.length(), 0);
         return false;
     }

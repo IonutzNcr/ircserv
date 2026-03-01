@@ -1,17 +1,17 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <ctime>
 
 class Client;  // Forward declaration
 
 class Channel
 {
     public:
-        Channel(std::string topic, std::string name, std::size_t id, std::string key);
+        Channel(std::string topic, std::string name, std::string key);
         ~Channel();
         std::string getTopic() const;
         std::string getName() const;
-        std::size_t getId() const;
         std::string getKey() const;
 
         void setTopic(std::string topic);
@@ -37,6 +37,7 @@ class Channel
         bool addInvited(Client* user);
         bool isInvited(Client* user) const;
         void removeInvitedAll();
+        time_t getCreationTime() const;
        
     private:
         bool _inviteOnly;   // +i
@@ -47,10 +48,10 @@ class Channel
         
         std::string _topic;
         std::string _name;
-        std::size_t _id;
         std::string _key;
         std::vector <Client *> users;
         std::vector <Client *> operators;
         bool _protectTopic;
         unsigned long _maxUsers;
+        time_t _creationTime;
 };
