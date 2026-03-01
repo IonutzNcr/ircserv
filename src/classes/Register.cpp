@@ -201,7 +201,8 @@ void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
         send(fd, err.c_str(), err.length(), 0);
         return;
     }
-    if (params[2].empty()) {
+    
+    if (params.size() >= 3 && params[2].empty()) {
         std::string txt2 = ":server 412 " + client->GetNick() + " :No text to send\r\n";
         send(fd, txt2.c_str(), txt2.length(), 0);
         return ;

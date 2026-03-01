@@ -336,3 +336,19 @@ RÉSUMÉ DES FICHIERS À MODIFIER:
 ================================================================================
 Date: Mars 2026
 ================================================================================
+
+
+Bug toFix:::
+Truc c que :
+""""
+
+
+MAIS il y a une confusion logique dans le code : dans privatmsg
+
+if (params[1].empty()) {           // Vérifie params[1]
+    // "No recipient given" (411)  // Mais le recipient c'est params[0] !
+}
+if (params.size() >= 3 && params[2].empty()) {  // Vérifie params[2]
+    // "No text to send" (412)     // Mais le message c'est params[1] !
+}
+""""
