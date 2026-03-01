@@ -1,0 +1,43 @@
+BUGS CORRIGÉS - IRC Server
+===========================
+
+1. JOIN - Format incorrect
+   Fichier: src/classes/Join.cpp (ligne 114)
+   Problème: Le message JOIN était envoyé sans ":" avant le channel
+   Avant: :nick!user@host JOIN #chan
+   Après: :nick!user@host JOIN :#chan
+   Status: CORRIGÉ
+
+2. PONG - Double deux-points
+   Fichier: src/classes/Dispatch.cpp (ligne 120)
+   Problème: Le token PING commençant par ":" créait "::token" dans PONG
+   Avant: :server PONG server ::hello
+   Après: :server PONG server :hello
+   Status: CORRIGÉ
+
+3. AcceptNewClient - Freeze connexions simultanées
+   Fichier: src/classes/Server.cpp (ligne 137)
+   Problème: Quand 2+ clients se connectaient en même temps, seul 1 était
+             accepté par cycle poll(), les autres restaient bloqués
+   Solution: AcceptNewClient boucle maintenant jusqu'à EAGAIN/EWOULDBLOCK
+             pour accepter tous les clients en attente
+   Status: CORRIGÉ
+
+4. Parser - Buffer non nettoyé
+   Fichiers: src/classes/Parser.cpp, includes/Parser.hpp
+   Problème: Quand un client se déconnectait, son buffer dans rawsData
+             n'était pas supprimé. Si Linux réutilisait le même fd pour
+             un nouveau client, celui-ci héritait de données corrompues
+   Solution: Ajout de clearData(int fd) appelé dans ClearClients()
+   Status: CORRIGÉ
+
+5. MODE +kl - Paramètres multiples
+   Fichier: src/classes/Mode.cpp
+   Problème: MODE #chan +kl secret 1 échoue car +k et +l utilisent tous
+             deux tokens[3]. Donc +l tente stoi("secret") au lieu de "1"
+   Solution: Utiliser un index paramIndex qui s'incrémente pour chaque
+             mode nécessitant un paramètre
+   Status: NON CORRIGÉ (correction annulée par l'utilisateur)
+
+===========================
+Date: Mars 2026

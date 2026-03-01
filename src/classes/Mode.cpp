@@ -14,7 +14,6 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
         send(fd, msg.c_str(), msg.length(), 0);
         return false;
     }
-    size_t paramIndex = 3; // Index for mode parameters (starts after MODE #chan +modes)
     for (size_t i = 1; i < modeChanges.size(); i++) 
     {
         char mode = modeChanges[i];
@@ -34,7 +33,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
             break;
         case 'k':
             if (modeChanges[0] == '+') {
-                if (tokens.size() <= paramIndex) {
+                if (tokens.size() < 4) {
                     std::string errMsg = ":server 461 MODE :Not enough parameters\r\n";
                     send(fd, errMsg.c_str(), errMsg.length(), 0);
                     return false;
@@ -44,7 +43,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
                     send(fd, errMsg.c_str(), errMsg.length(), 0);
                     return false;
                 }
-                std::string newKey = tokens[paramIndex++];
+                std::string newKey = tokens[3];
                 channel->setKey(newKey);
             }
             else {
@@ -53,14 +52,14 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
             break;
         case 'l':
             if (modeChanges[0] == '+') {
-                if (tokens.size() <= paramIndex) {
+                if (tokens.size() < 4) {
                     std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
                     send(fd, errMsg.c_str(), errMsg.length(), 0);
                     return false;
                 }
                 try
                 {
-                    int maxUsers = std::stoi(tokens[paramIndex++]);
+                    int maxUsers = std::stoi(tokens[3]);
                     if (maxUsers <= 0) {
                         std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
                         send(fd, errMsg.c_str(), errMsg.length(), 0);
@@ -80,13 +79,13 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
             }
             break;
         case 'o':
-            if (tokens.size() <= paramIndex) {
+            if (tokens.size() < 4) {
                 std::string errMsg = ":server 401 " + client->GetNick() + " " + target + " :No such nick/channel\r\n";
                 send(fd, errMsg.c_str(), errMsg.length(), 0);
                 return false;
             }
             if (modeChanges[0] == '+') {
-                std::string targetNick = tokens[paramIndex++];
+                std::string targetNick = tokens[3];
                 Client* targetClient = nullptr;
                 for (size_t j = 0; j < _clients.size(); j++) {
                     if (_clients[j]->GetNick() == targetNick) {
@@ -107,7 +106,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
                 channel->addOperator(targetClient);
             }
             else {
-                std::string targetNick = tokens[paramIndex++];
+                std::string targetNick = tokens[3];
                 Client* targetClient = nullptr;
                 for (size_t j = 0; j < _clients.size(); j++) {
                     if (_clients[j]->GetNick() == targetNick) {
