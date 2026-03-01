@@ -27,7 +27,6 @@ This project was developed as part of the 42 Paris curriculum.
   - NICK
   - USER
   - JOIN
-  - PART
   - PRIVMSG
   - QUIT
   - TOPIC
@@ -53,7 +52,7 @@ git clone repo name_repo
 cd name_repo
 ```
 
-Build Porject
+Build Project
 ```
 make
 ```
@@ -66,6 +65,11 @@ Run server exemple
 Run client exemple
 ```
 irssi --connect=localhost --password=lol --port=4444 -n arnaud -h localhost
+or
+irssi
+then
+/connect localhost 4444 lol
+(which will take your nickname from the config file)
 ```
 
 ### Compilation

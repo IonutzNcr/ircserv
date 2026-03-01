@@ -88,6 +88,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
             broadcastJoin(channel, client);
             sendTopic(client, channel);
             sendList(channel, client);
+            channel->removeInvited(client);
         }        
     }
     return true;

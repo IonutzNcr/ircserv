@@ -140,6 +140,26 @@ bool Channel::removeOperator(Client* user)
     return false;
 }
 
+void Channel::removeInvited(Client* user)
+{
+    for(int i = 0; invited.size() > 0; i++)
+    {
+        if (invited[i] == user)
+        {
+            invited.erase(invited.begin() + i);
+            break;
+        }
+        i++;
+    }
+    return ;
+}
+
+void Channel::removeInvitedAll()
+{
+    invited.erase(invited.begin(), invited.end());
+    return ;
+}
+
 unsigned long Channel::getMaxUsers() const
 {
     return _maxUsers;

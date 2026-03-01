@@ -352,3 +352,7 @@ if (params.size() >= 3 && params[2].empty()) {  // Vérifie params[2]
     // "No text to send" (412)     // Mais le message c'est params[1] !
 }
 """"
+
+
+=======
+Regarder ou on free le channel car potentiel leak...

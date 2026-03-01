@@ -8,8 +8,7 @@
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
-
-//KICK <channel>{,<channel>} <user> [<comment>] 
+ 
 bool Dispatch::ft_kick(Command cmd, int fd)
 {
         Client* client = getClientFd(fd);
@@ -85,10 +84,14 @@ bool Dispatch::ft_kick(Command cmd, int fd)
                     users.erase(it);
                     //check if channel is empy
                     if (users.empty())
+                    {
+                        channel->removeInvitedAll();
                         removeChannel(channel);
+                    }
                     break;
                 }
             }
+            channel->removeOperator(targetClient);
         }
         
         return true;

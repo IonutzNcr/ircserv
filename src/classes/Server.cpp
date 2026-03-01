@@ -48,8 +48,12 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 	
 	for (size_t i = 0; i < dispatch._channels.size(); i++) {
 		dispatch._channels[i]->removeUser(clientToRemove);
+		dispatch._channels[i]->removeOperator(clientToRemove);
 		if (dispatch._channels[i]->getUserRefs().empty())
+		{
+			dispatch._channels[i]->removeInvitedAll();
 			dispatch.removeChannel(dispatch._channels[i]);
+		}
 	}
     parse.clearData(fd); // Clean up parser buffer for this fd
     delete clientToRemove;

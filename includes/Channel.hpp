@@ -30,11 +30,13 @@ class Channel
         void setKey(std::string key);
         bool checkKey(std::string key) const;
         bool removeUser(Client* user);
+        void removeInvited(Client* user);
         void setMaxUsers(int maxUsers);
         bool removeOperator(Client* user);
         unsigned long getMaxUsers() const;
         bool addInvited(Client* user);
         bool isInvited(Client* user) const;
+        void removeInvitedAll();
        
     private:
         bool _inviteOnly;   // +i
