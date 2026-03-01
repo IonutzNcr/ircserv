@@ -26,5 +26,6 @@ bool Dispatch::ft_quit(Command cmd, int fd)
         quitMsg = prefix + " QUIT :" + cmd.getTrailing() + "\r\n";
     std::cout << "\e[1;31m" << "Client <" << client->GetFd() << "> Disconnected" << "\e[0;37m" << std::endl;
     client->SetMsgQuit(quitMsg);
+    
     return true;
 }

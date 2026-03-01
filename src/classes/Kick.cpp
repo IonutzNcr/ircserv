@@ -83,6 +83,9 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             {
                 if (*it == targetClient) {
                     users.erase(it);
+                    //check if channel is empy
+                    if (users.empty())
+                        removeChannel(channel);
                     break;
                 }
             }
