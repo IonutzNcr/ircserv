@@ -11,6 +11,21 @@
 #include "../../includes/Server.hpp"
 #include <sys/socket.h>
 
+static bool isValidChannelName(const std::string& name)
+{
+    if (name.empty() || name.size() > 50)
+        return false;
+    if (name[0] != '#' && name[0] != '&')
+        return false;
+    for (size_t i = 1; i < name.size(); i++)
+    {
+        char c = name[i];
+        if (c == ' ' || c == '\x07' || c == ',' || c == '\0')
+            return false;
+    }
+    return true;
+}
+
 bool Dispatch::ft_join(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
@@ -49,6 +64,12 @@ bool Dispatch::ft_join(Command cmd, int fd)
             chanKey = keysSplit[i];
         else
             chanKey = "";
+        // Validation du nom de channel (RFC 2812)
+        if (!isValidChannelName(chanName))
+        {
+            replies.ERR_NOSUCHCHANNEL(*client, chanName, fd);
+            continue;
+        }
         //creation channel si n'existe pas et ajout user au channel
         if (!isChannelExist(chanName)) // TODO:: big problem why ?
         {
