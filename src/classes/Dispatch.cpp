@@ -169,5 +169,6 @@ void Dispatch::removeChannel(Channel *channel)
         if (channel == _channels[i])
             _channels.erase(_channels.begin() + i);
     }
+    delete channel;
     return ;
 }

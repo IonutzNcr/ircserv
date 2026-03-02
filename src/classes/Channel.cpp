@@ -143,14 +143,13 @@ bool Channel::removeOperator(Client* user)
 
 void Channel::removeInvited(Client* user)
 {
-    for(int i = 0; invited.size() > 0; i++)
+    for(size_t i = 0; invited.size() > i; i++)
     {
         if (invited[i] == user)
         {
             invited.erase(invited.begin() + i);
             break;
         }
-        i++;
     }
     return ;
 }

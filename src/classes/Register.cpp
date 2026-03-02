@@ -105,10 +105,10 @@ std::vector<std::string> Dispatch::SplitParams(std::string line) const
 bool Dispatch::ft_user(Command cmd, int fd)
 {   
     Client* client = getClientFd(fd);
-    std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
-
     if (!client)
         return false;
+    std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
+
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
         std::string txt = ":server 462 " + choice + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
         send(fd, txt.c_str(), txt.length(), 0);
@@ -133,10 +133,9 @@ bool Dispatch::ft_user(Command cmd, int fd)
 bool Dispatch::ft_pass(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
-    std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
-
     if (!client)
         return false;
+    std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
         std::string txt2 = ":server 462 " + choice + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
         send(fd, txt2.c_str(), txt2.length(), 0);
