@@ -112,6 +112,10 @@ std::string Parser::extractcmd(int fd)
 		return std::string("");
 	std::string cmdline = data.data.substr(0, index);
 
+	// RFC 2812: limite de 512 octets par message (510 + \r\n)
+	if (cmdline.size() > 510)
+		cmdline = cmdline.substr(0, 510);
+
 	std::string newData = data.data.substr(index + 2);
 	data.data = newData;
 
@@ -125,6 +129,9 @@ std::string Parser::getCmdtwo(int fd)
 	if (index == std::string::npos)
 		return std::string("");
 	std::string cmdline = data.data.substr(0, index);
+	// RFC 2812: limite de 512 octets par message (510 + \r\n)
+	if (cmdline.size() > 510)
+		cmdline = cmdline.substr(0, 510);
 	return (cmdline);
 }
 
