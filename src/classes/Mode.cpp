@@ -133,7 +133,8 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
             return true;
         }
     }
-    std::string modeMsg = ":" + client->GetNick() + " MODE " + target + " " + modeChanges;
+
+    std::string modeMsg = ":" + client->GetNick() + "!" + client->GetUser() + "@" + client->GetIpAdd() + " MODE " + target + " " + modeChanges;
     for (size_t i = 3; i < tokens.size(); i++) {
         modeMsg += " " + tokens[i];
     }

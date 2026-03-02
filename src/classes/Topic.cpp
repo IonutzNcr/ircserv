@@ -75,7 +75,7 @@ bool Dispatch::ft_topic(Command cmd, int fd)
     std::string newTopic = cmd.getTrailing();
     channel->setTopic(newTopic);
 
-    std::string topicMsg = ":" + client->GetNick() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
+    std::string topicMsg = ":" + client->GetNick() + "!" + client->GetUser() + "@" + client->GetIpAdd() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
 
     std::vector<Client*> users = channel->getUsers();
     for (size_t i = 0; i < users.size(); i++)
