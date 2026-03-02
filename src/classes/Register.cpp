@@ -89,7 +89,7 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     return true; 
 }
 
-std::vector<std::string> Dispatch::SplitParams(std::string line) const
+std::vector<std::string> Dispatch::splitParams(std::string line) const
 {
     std::vector<std::string> params;
     size_t pos = 0;
@@ -138,7 +138,7 @@ bool Dispatch::ft_user(Command cmd, int fd)
         return true;
     }
     std::string line = cmd.getLine();
-    std::vector<std::string> params = SplitParams(line);
+    std::vector<std::string> params = splitParams(line);
     if (params.size() < 4 || params[0].empty() || params[1].empty() || params[2].empty() || params[3].empty())
     {
         std::string msg = ":server 461 " + choice + " :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
@@ -201,13 +201,13 @@ int Dispatch::ft_choice(const std::string& target)
 //":server 433 " + choice + " " + nick + " :Nickname is already in use\r\n"
 
 // revoir les message d'erreur
-void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
+void    Dispatch::ft_privmsg(Command cmd, int fd)
 {
     
     Client* client = getClientFd(fd);
     if (!client)
         return;
-    std::vector<std::string>    params = SplitParams(cmd.getLine());
+    std::vector<std::string>    params = splitParams(cmd.getLine());
 
     if (!client->isRegistered()) {
         std::string err = ":server 451 " + client->GetNick() + " :You have not registered\r\n";
@@ -232,15 +232,15 @@ void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
     }
     int choice = ft_choice(params[0]);
     if (choice == 1)
-        ft_PRIVMSG_client(params, fd);
+        ft_privmsg_client(params, fd);
     else if (choice == 2)
-        ft_PRIVMSG_channel(params, fd);
+        ft_privmsg_channel(params, fd);
     else
         return ;
 
 }
 
-void    Dispatch::ft_PRIVMSG_channel(std::vector<std::string> params, int fd)
+void    Dispatch::ft_privmsg_channel(std::vector<std::string> params, int fd)
 {
     Client* client = getClientFd(fd);
     if (!client)
@@ -267,7 +267,7 @@ void    Dispatch::ft_PRIVMSG_channel(std::vector<std::string> params, int fd)
     return ;
 }
 
-void    Dispatch::ft_PRIVMSG_client(std::vector<std::string> params, int fd)
+void    Dispatch::ft_privmsg_client(std::vector<std::string> params, int fd)
 {
     Client* client = getClientFd(fd);
     if (!client) {

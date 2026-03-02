@@ -48,7 +48,7 @@ bool Dispatch::dispatch(Command cmd, int fd)
     else if (cmd.getCmd() == "TOPIC")
         ft_topic(cmd, fd);
     else if (cmd.getCmd() == "PRIVMSG")
-        ft_PRIVMSG(cmd, fd);
+        ft_privmsg(cmd, fd);
     else if (cmd.getCmd() == "PING")
         ft_ping(cmd, fd);
     else if (cmd.getCmd() == "QUIT")
