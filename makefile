@@ -24,7 +24,6 @@ FILES=	Client.cpp \
 		Invite.cpp \
 		Topic.cpp \
 		Quit.cpp \
-		Who.cpp \
 		Debugger.cpp
 
 FILES_UTILS=	split.cpp

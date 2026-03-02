@@ -39,7 +39,6 @@ class Dispatch
         bool ft_invite(Command cmd, int fd);
         bool ft_topic(Command cmd, int fd);
         bool ft_quit(Command cmd, int fd);
-        bool ft_who(Command cmd, int fd);
         
 
         bool isChannelExist(std::string chanName);

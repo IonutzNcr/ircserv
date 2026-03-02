@@ -17,7 +17,8 @@ Dispatch::Dispatch(std::string pass, std::vector<Client *>&clients): _password(p
 
 Dispatch::~Dispatch()
 {
-    return ;
+    for (size_t i = 0; i < _channels.size(); i++)
+        delete _channels[i];
 }
 
 bool Dispatch::dispatch(Command cmd, int fd)
@@ -52,8 +53,6 @@ bool Dispatch::dispatch(Command cmd, int fd)
         ft_ping(cmd, fd);
     else if (cmd.getCmd() == "QUIT")
         ft_quit(cmd, fd);
-    else if (cmd.getCmd() == "WHO")
-        ft_who(cmd, fd);
     return true;
 }
 

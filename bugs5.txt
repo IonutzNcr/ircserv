@@ -1,0 +1,154 @@
+================================================================================
+                    AUDIT IRC Server - Mars 2026 (bugs5.txt)
+================================================================================
+
+================================================================================
+PRIORITÉ HAUTE
+================================================================================
+
+1. sendAll() - BOUCLE INFINIE POTENTIELLE sur EAGAIN
+   Fichier: src/utils/split.cpp (lignes 68-87)
+   Code actuel:
+      while (sent < total)
+      {
+          ssize_t n = send(fd, data + sent, total - sent, MSG_NOSIGNAL);
+          if (n < 0)
+          {
+              if (errno == EAGAIN || errno == EWOULDBLOCK)
+                  continue;  // ⚠️ Boucle infinie si socket toujours plein
+   Problème: Si le socket est congestionné indéfiniment, la fonction boucle
+             à l'infini sans jamais retourner.
+   Solution: Ajouter un compteur de retry maximum ou utiliser poll() pour
+             attendre que le socket soit prêt avant de réessayer.
+
+2. ft_nick() - DÉCONNECTE LE CLIENT SUR NICKNAME INVALIDE
+   Fichier: src/classes/Register.cpp (lignes 53-57)
+   Code actuel:
+      if (!parseNick(nick)) {
+          std::string msg = ":server 432 " + choice + " " + nick + " :Erroneus nickname\r\n";
+          sendAll(fd, msg);     
+          return false;  // ⚠️ Déconnecte le client!
+      }
+   Problème: Retourner false cause la déconnexion du client via dispatch().
+             Un nickname invalide ne devrait que renvoyer l'erreur 432,
+             pas déconnecter le client.
+   Solution: Changer "return false" en "return true"
+
+================================================================================
+PRIORITÉ MOYENNE
+================================================================================
+
+3. Mode.cpp - atoi() NE LANCE PAS D'EXCEPTION
+   Fichier: src/classes/Mode.cpp (lignes 66-82)
+   Code actuel:
+      try
+      {
+          int maxUsers = std::atoi(tokens[paramIndex++].c_str());
+          // ...
+      }
+      catch(const std::exception& e)  // ⚠️ JAMAIS appelé!
+   Problème: std::atoi() retourne 0 en cas d'erreur, il ne lance JAMAIS
+             d'exception. Le try-catch est complètement inutile.
+   Solution: Utiliser strtol() avec vérification d'erreur, ou valider que
+             la string est numérique avant d'appeler atoi().
+
+4. WHO - PAS DE SUPPORT POUR LES CHANNELS
+   Fichier: src/classes/Who.cpp (lignes 18-45)
+   Code actuel:
+      std::string target = "*";
+      if (tokens.size() >= 2)
+          target = tokens[1];
+      for (size_t j = 0; j < _clients.size(); j++) {
+          Client *entry = _clients[j];
+          if (target != "*" && entry->GetNick() != target)
+              continue;
+   Problème: Si target est un channel (commence par #), le code compare
+             le nom du channel avec les nicknames des clients, ce qui
+             ne marchera jamais.
+   Impact: La commande "WHO #channel" ne retourne rien au lieu de lister
+           les membres du channel.
+   Solution: Ajouter une branche pour détecter si target commence par #
+             et parcourir les membres du channel correspondant.
+//on va le supprimer
+5. Mode.cpp - setMode() NE GÈRE PAS LES MODES MIXTES (+t-i)
+   Fichier: src/classes/Mode.cpp (lignes 12-15 et boucle)
+   Code actuel:
+      if (modeChanges[0] != '+' && modeChanges[0] != '-') {
+          // ...
+      }
+      // Dans la boucle:
+      if (modeChanges[0] == '+')  // ⚠️ Utilise toujours [0]
+   Problème: La fonction utilise modeChanges[0] pour déterminer +/-
+             pour TOUS les modes. Les commandes comme "MODE #chan +t-i"
+             ou "MODE #chan +o-o user1 user2" ne fonctionneront pas.
+   Solution: Tracker le signe courant et le changer quand on rencontre
+             '+' ou '-' dans la chaîne de modes.
+
+================================================================================
+PRIORITÉ BASSE
+================================================================================
+
+6. Server.hpp - #include NON-PORTABLE
+   Fichier: includes/Server.hpp (ligne 12)
+   Code actuel:
+      #include <bits/stdc++.h>  // ⚠️ Header interne GCC
+   Problème: Ce header est spécifique à GCC et n'existe pas sur macOS/clang.
+             Le code ne compilera pas sur d'autres plateformes.
+   Solution: Remplacer par les headers standards nécessaires
+             (<iostream>, <algorithm>, <string>, etc.)
+
+7. main.cpp - MOT DE PASSE VIDE ACCEPTÉ
+   Fichier: src/main.cpp (lignes 13-30)
+   Code actuel:
+      // Vérifie argc == 3 et port valide
+      // Mais pas de vérification si argv[2] (password) est vide
+   Problème: Le serveur accepte un mot de passe vide: ./ircserv 6667 ""
+   Solution: Ajouter une vérification strlen(argv[2]) > 0
+
+8. ft_kick() - RETOUR IGNORÉ PAR dispatch()
+   Fichier: src/classes/Kick.cpp (lignes 20-24) + src/classes/Dispatch.cpp
+   Code actuel dans Kick.cpp:
+      if (tokens.size() < 2) {
+          replies.ERR_NEEDMOREPARAMS(*client, "KICK", fd);
+          return false;  // ⚠️ Ignoré
+      }
+   Code dans dispatch():
+      else if (cmd.getCmd() == "KICK")
+          ft_kick(cmd, fd);  // Retour non vérifié
+   Problème: dispatch() n'utilise pas le retour de ft_kick(), donc les
+             "return false" n'ont aucun effet. Incohérence dans le design.
+   Note: Ce n'est pas un bug grave, juste une incohérence de style.
+   //on s'en fout.
+
+9. tryRegister() - CODE SUPERFLU AVANT DELETE
+   Fichier: src/classes/Dispatch.cpp (lignes 104-115)
+   Code actuel:
+      close(_clients[i]->GetFd());
+      _clients[i]->SetFd(-1);  // ⚠️ Modification inutile
+      _clients.erase(_clients.begin() + i);
+      break;
+      }
+      delete client;
+   Problème mineur: SetFd(-1) est appelé sur un objet qui va être
+                    immédiatement supprimé. Code superflu.
+    //on s'en fout...
+
+================================================================================
+RÉSUMÉ
+================================================================================
+
+| Priorité | # | Description                        | Fichier          |
+|----------|---|-----------------------------------|------------------|
+| HAUTE    | 1 | sendAll() boucle infinie          | split.cpp        |
+| HAUTE    | 2 | ft_nick() déconnecte sur bad nick | Register.cpp     |
+| MOYENNE  | 3 | atoi try-catch inutile            | Mode.cpp         |
+| MOYENNE  | 4 | WHO ne supporte pas #channels     | Who.cpp          |
+| MOYENNE  | 5 | setMode() ignore +t-i             | Mode.cpp         |
+| BASSE    | 6 | #include non-portable             | Server.hpp       |
+| BASSE    | 7 | Password vide accepté             | main.cpp         |
+| BASSE    | 8 | ft_kick() return ignoré           | Kick.cpp         |
+| BASSE    | 9 | Code superflu avant delete        | Dispatch.cpp     |
+
+================================================================================
+Date: Mars 2026
+================================================================================

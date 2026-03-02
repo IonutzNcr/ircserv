@@ -54,7 +54,7 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     if (!parseNick(nick)) {
         std::string msg = ":server 432 " + choice + " " + nick + " :Erroneus nickname\r\n";     // ERR_ERRONEUSNICKNAME (432)
         sendAll(fd, msg);     
-        return false;
+        return true;
     }
     for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
             if (ircCaseEqual(_clients[i]->GetNick(), nick) && _clients[i] != client) {
@@ -205,6 +205,8 @@ void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
 {
     
     Client* client = getClientFd(fd);
+    if (!client)
+        return;
     std::vector<std::string>    params = SplitParams(cmd.getLine());
 
     if (!client->isRegistered()) {

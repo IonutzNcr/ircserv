@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <poll.h>
 
 
 std::vector<std::string> split(const std::string& str, char delimiter)
@@ -76,7 +77,15 @@ bool sendAll(int fd, const std::string& msg)
         if (n < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
-                continue;  // Retry
+            {
+                // Wait for socket to be ready (max 5 sec)
+                struct pollfd pfd;
+                pfd.fd = fd;
+                pfd.events = POLLOUT;
+                if (poll(&pfd, 1, 5000) <= 0)
+                    return false;  // Timeout or error
+                continue;
+            }
             return false;  // Error (EPIPE, etc.)
         }
         if (n == 0)

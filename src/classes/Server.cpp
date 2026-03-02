@@ -62,6 +62,7 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 	for (size_t i = 0; i < dispatch._channels.size(); i++) {
 		dispatch._channels[i]->removeUser(clientToRemove);
 		dispatch._channels[i]->removeOperator(clientToRemove);
+		dispatch._channels[i]->removeInvited(clientToRemove);
 		if (dispatch._channels[i]->getUserRefs().empty())
 		{
 			dispatch._channels[i]->removeInvitedAll();
@@ -228,6 +229,15 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 		{
 			if (!dispatch.dispatch(cmd, fd)) {
 				std::cout << "\e[1;31m" << "Client <" << fd << "> Disconnected" << "\e[0;37m" << std::endl;
+				ClearClients(fd, dispatch);
+				close(fd);
+				for (size_t j = 0; j < fds.size(); j++) {
+					if (fds[j].fd == fd) {
+						fds.erase(fds.begin() + j);
+						break;
+					}
+				}
+				return;
 			}
 				
 			line = parse.getCmdtwo(fd);

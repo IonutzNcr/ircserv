@@ -9,7 +9,9 @@
 #include <arpa/inet.h> //-> for inet_ntoa()
 #include <poll.h> //-> for poll()
 #include <csignal> //-> for signal()
-#include <bits/stdc++.h>
+#include <iostream> //-> for std::cout, std::cerr
+#include <cstring> //-> for memset
+#include <cstdlib> //-> for std::atoi
 #include <stdexcept>
 #include <string>
 

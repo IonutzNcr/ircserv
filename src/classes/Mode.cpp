@@ -16,25 +16,28 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
         return false;
     }
     size_t paramIndex = 3; // Index for mode parameters (starts after MODE #chan +modes)
+    bool adding = (modeChanges[0] == '+');
     for (size_t i = 1; i < modeChanges.size(); i++) 
     {
         char mode = modeChanges[i];
+        if (mode == '+') { adding = true; continue; }
+        if (mode == '-') { adding = false; continue; }
         switch (mode)
         {
         case 't':
-            if (modeChanges[0] == '+')
+            if (adding)
                 channel->setProtectTopic(true);
             else
                 channel->setProtectTopic(false);
             break;
         case 'i':
-            if (modeChanges[0] == '+')
+            if (adding)
                 channel->setInviteOnly(true);
             else
                 channel->setInviteOnly(false);
             break;
         case 'k':
-            if (modeChanges[0] == '+') {
+            if (adding) {
                 if (tokens.size() <= paramIndex) {
                     std::string errMsg =
                         ":server 461 " + client->GetNick() +
@@ -56,28 +59,19 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
             }
             break;
         case 'l':
-            if (modeChanges[0] == '+') {
+            if (adding) {
                 if (tokens.size() <= paramIndex) {
                     std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
                     sendAll(fd, errMsg);
                     return false;
                 }
-                try
-                {
-                    int maxUsers = std::atoi(tokens[paramIndex++].c_str());
-                    if (maxUsers <= 0) {
-                        std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
-                        sendAll(fd, errMsg);
-                        return false;
-                    }
-                    channel->setMaxUsers(maxUsers);
-                }
-                catch(const std::exception& e)
-                {
+                int maxUsers = std::atoi(tokens[paramIndex++].c_str());
+                if (maxUsers <= 0) {
                     std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
                     sendAll(fd, errMsg);
                     return false;
                 }
+                channel->setMaxUsers(maxUsers);
             }
             else {
                 channel->setMaxUsers(0);
@@ -89,7 +83,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
                 sendAll(fd, errMsg);
                 return false;
             }
-            if (modeChanges[0] == '+') {
+            if (adding) {
                 std::string targetNick = tokens[paramIndex++];
                 Client* targetClient = NULL;
                 for (size_t j = 0; j < _clients.size(); j++) {
