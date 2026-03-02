@@ -53,6 +53,8 @@ bool Dispatch::dispatch(Command cmd, int fd)
         ft_ping(cmd, fd);
     else if (cmd.getCmd() == "QUIT")
         ft_quit(cmd, fd);
+    else if (cmd.getCmd() == "PART")
+        ft_part(cmd, fd);
     return true;
 }
 
