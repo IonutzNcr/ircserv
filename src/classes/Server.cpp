@@ -1,8 +1,6 @@
 #include "../../includes/Server.hpp"
 #include "../../includes/Command.hpp"
 #include "../../includes/split.hpp"
-#include <errno.h>
-
 
 bool Server::Signal = false;
 
@@ -219,8 +217,7 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 	}
 	else if (bytes == -1)
 	{
-		if (errno != EWOULDBLOCK && errno != EAGAIN) 
-			std::cout << "recv() failed" << std::endl;
+		std::cout << "recv() failed" << std::endl;
 	}
 	else{ 
 		buff[bytes] = '\0';

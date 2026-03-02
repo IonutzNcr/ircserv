@@ -72,20 +72,7 @@ bool sendAll(int fd, const std::string& msg)
     while (sent < total)
     {
         ssize_t n = send(fd, data + sent, total - sent, MSG_NOSIGNAL);
-        if (n < 0)
-        {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-            {
-                struct pollfd pfd;
-                pfd.fd = fd;
-                pfd.events = POLLOUT;
-                if (poll(&pfd, 1, 5000) <= 0)
-                    return false;
-                continue;
-            }
-            return false;
-        }
-        if (n == 0)
+        if (n <= 0)
             return false;
         sent += n;
     }
