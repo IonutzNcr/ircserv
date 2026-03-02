@@ -35,8 +35,12 @@ bool Dispatch::ft_join(Command cmd, int fd)
     {
         return (false);
     }
-    std::string line = cmd.getLine();
-    std::string channelName = line.substr(5); // on stock la string apres le JOIN
+    std::string channelName = cmd.getArgs();
+    if (channelName.empty())
+    {
+        replies.err_needmoreparams(*client, "JOIN", fd);
+        return true;
+    }
     std::vector<std::string> chanXkeys = split(channelName, ' ');
 
     if (chanXkeys.empty())

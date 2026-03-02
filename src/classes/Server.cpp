@@ -23,6 +23,16 @@ void Server::removeFdPoll()
 			i--;
 		}
 	}
+	// Nettoyer aussi les clients marqués pour suppression (fd = -1)
+	for (size_t i = 0; i < clients.size(); i++)
+	{
+		if (clients[i]->GetFd() == -1)
+		{
+			delete clients[i];
+			clients.erase(clients.begin() + i);
+			i--;
+		}
+	}
 }
 
 void Server::ClearClients(int fd, Dispatch &dispatch)
@@ -76,8 +86,10 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 
 void Server::CloseFds(){
 	for(size_t i = 0; i < clients.size(); i++){
-		std::cout << RED << "Client <" << clients[i]->GetFd() << "> Disconnected" << WHI << std::endl;
-		close(clients[i]->GetFd());
+		if (clients[i]->GetFd() >= 0) {
+			std::cout << RED << "Client <" << clients[i]->GetFd() << "> Disconnected" << WHI << std::endl;
+			close(clients[i]->GetFd());
+		}
 	}
 	if (SerSocketFd != -1){
 		std::cout << RED << "Server <" << SerSocketFd << "> Disconnected" << WHI << std::endl;
@@ -134,7 +146,8 @@ void Server::ServerInit()
 					std::cout << "Client <" << deadFd << "> Disconnected" << std::endl;
 				else
 					std::cout << "FD " << deadFd << " closed (poll error)" << std::endl;
-				close(deadFd);
+				if (deadFd >= 0)
+					close(deadFd);
 				ClearClients(deadFd, dispatch);
 				fds.erase(fds.begin() + i);
 				i--;
@@ -197,7 +210,8 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 	if (bytes == 0)
 	{
 		ClearClients(fd, dispatch);
-		close(fd);
+		if (fd >= 0)
+			close(fd);
 
 		for (size_t i = 0; i < fds.size(); i++)
 		{
@@ -227,7 +241,8 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 			if (!dispatch.dispatch(cmd, fd)) {
 				std::cout << "\e[1;31m" << "Client <" << fd << "> Disconnected" << "\e[0;37m" << std::endl;
 				ClearClients(fd, dispatch);
-				close(fd);
+				if (fd >= 0)
+					close(fd);
 				for (size_t j = 0; j < fds.size(); j++) {
 					if (fds[j].fd == fd) {
 						fds.erase(fds.begin() + j);

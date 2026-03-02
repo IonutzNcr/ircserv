@@ -16,13 +16,13 @@ bool Dispatch::ft_kick(Command cmd, int fd)
         if (!client)
             return false;
         if (!client->isRegistered())
-            return false;
+            return true;
         std::string line = cmd.getArgs();
         std::vector<std::string> tokens = split(line, ' ');
         
         if (tokens.size() < 2) {
             replies.err_needmoreparams(*client, "KICK", fd);
-            return false;
+            return true;
         }
         std::vector <std::string> split_channels = split(tokens[0], ',');
         std::string targetNick = tokens[1];

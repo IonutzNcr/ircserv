@@ -40,14 +40,15 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     if (!client)
         return false;
     std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
-    std::string line = cmd.getLine();
-    std::string nick = line.substr(4); // on stock la string apres le NICK
+    std::string nick = cmd.getArgs();
+    if (nick.empty() && !cmd.getTrailing().empty())
+        nick = cmd.getTrailing();
     nick.erase(0, nick.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
     if (!nick.empty() && nick[0] == ':') // a voir pour traiter un seul ou plusieur ':'
         nick.erase(0, 1);
     nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
     if (nick.empty()) {     // si pas de new nick => erreur 
-        std::string msg = ":server 431 " + choice + " " + nick + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
+        std::string msg = ":server 431 " + choice + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
         sendAll(fd, msg);     
         return true;
     }
@@ -164,8 +165,9 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         sendAll(fd, txt2);
         return true;
     }
-    std::string line = cmd.getLine();
-    std::string pass = line.substr(4);
+    std::string pass = cmd.getArgs();
+    if (pass.empty() && !cmd.getTrailing().empty())
+        pass = cmd.getTrailing();
     pass.erase(0, pass.find_first_not_of(" \t"));
     if (!pass.empty() && pass[0] == ':')
         pass.erase(0, 1);
@@ -176,8 +178,8 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         return true;
     }
     if (pass != _password) {    // si le pass est differend de celui des parametre => error
-        // std::string txt = ":server 464 " + choice + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
-        // sendAll(fd, txt);
+        std::string txt = ":server 464 " + choice + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
+        sendAll(fd, txt);
         return false;
     }
     client->setAuthenticated(true);
@@ -215,7 +217,7 @@ void    Dispatch::ft_privmsg(Command cmd, int fd)
         return;
     }
     if (params.size() < 2) {
-        std::string err = "Error: need params " + cmd.getLine() + "\r\n";       //a voir si c'est pertinant de le laisser
+        std::string err = ":server 461 " + client->GetNick() + " PRIVMSG :Not enough parameters\r\n";
         sendAll(fd, err);
         return;
     }

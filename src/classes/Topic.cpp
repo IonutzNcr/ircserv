@@ -13,21 +13,21 @@ bool Dispatch::ft_topic(Command cmd, int fd)
     Client* client = getClientFd(fd);
     if (!client)
         return false;
-    if (!client->isRegistered()) // si le client n'es pas register just return false
-		return false;
+    if (!client->isRegistered())
+		return true;
     std::string line = cmd.getLine();
     std::vector<std::string> tokens = split(line, ' ');
     if (tokens.size() < 2) {
         std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
         sendAll(fd, msg);
-        return false;
+        return true;
     }
     std::string channelName = tokens[1];
     if (channelName.empty())
     {
         std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
         sendAll(fd, msg);
-        return false;
+        return true;
     }
     
     Channel* channel = NULL;
@@ -41,14 +41,14 @@ bool Dispatch::ft_topic(Command cmd, int fd)
     if (!channel) {
         std::string errMsg = ":server 403 " + client->GetNick() + " " + channelName + " :No such channel\r\n";
         sendAll(fd, errMsg);
-        return false;
+        return true;
     }
 
     if (!channel->isUserInChannel(client))
     {
         std::string errMsg = ":server 442 " + client->GetNick() + " " + channel->getName() + " :You're not on that channel\r\n";
         sendAll(fd, errMsg);
-        return false;
+        return true;
     }
 
     if (cmd.getTrailing().empty())
@@ -69,7 +69,7 @@ bool Dispatch::ft_topic(Command cmd, int fd)
     if (channel->isTopicProtected() && !channel->isOperator(client)) {
         std::string errMsg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
         sendAll(fd, errMsg);
-        return false;
+        return true;
     }
 
     std::string newTopic = cmd.getTrailing();

@@ -14,7 +14,7 @@ bool Dispatch::ft_part(Command cmd, int fd)
     if (!client)
         return false;
     if (!client->isRegistered())
-        return false;
+        return true;
 
     // PART #chan1,#chan2 :reason
     // Extraire les channels et la raison
