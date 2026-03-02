@@ -19,14 +19,14 @@ bool Dispatch::ft_topic(Command cmd, int fd)
     std::vector<std::string> tokens = split(line, ' ');
     if (tokens.size() < 2) {
         std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
+        sendAll(fd, msg);
         return false;
     }
     std::string channelName = tokens[1];
     if (channelName.empty())
     {
         std::string msg = ":server 461 " + client->GetNick() + " TOPIC :Not enough parameters\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
+        sendAll(fd, msg);
         return false;
     }
     
@@ -40,14 +40,14 @@ bool Dispatch::ft_topic(Command cmd, int fd)
 
     if (!channel) {
         std::string errMsg = ":server 403 " + client->GetNick() + " " + channelName + " :No such channel\r\n";
-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+        sendAll(fd, errMsg);
         return false;
     }
 
     if (!channel->isUserInChannel(client))
     {
         std::string errMsg = ":server 442 " + client->GetNick() + " " + channel->getName() + " :You're not on that channel\r\n";
-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+        sendAll(fd, errMsg);
         return false;
     }
 
@@ -56,19 +56,19 @@ bool Dispatch::ft_topic(Command cmd, int fd)
         if (channel->getTopic().empty())
         {
             std::string msg = ":server 331 " + client->GetNick() + " " + channelName + " :No topic is set\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
+            sendAll(fd, msg);
         }
         else
         {
             std::string msg = ":server 332 " + client->GetNick() + " " + channelName + " :" + channel->getTopic() + "\r\n";
-            send(fd, msg.c_str(), msg.length(), 0);
+            sendAll(fd, msg);
         }
         return true;
     }
 
     if (channel->isTopicProtected() && !channel->isOperator(client)) {
         std::string errMsg = ":server 482 " + client->GetNick() + " " + channel->getName() + " :You're not channel operator\r\n";
-        send(fd, errMsg.c_str(), errMsg.length(), 0);
+        sendAll(fd, errMsg);
         return false;
     }
 
@@ -79,7 +79,7 @@ bool Dispatch::ft_topic(Command cmd, int fd)
 
     std::vector<Client*> users = channel->getUsers();
     for (size_t i = 0; i < users.size(); i++)
-        send(users[i]->GetFd(), topicMsg.c_str(), topicMsg.length(), 0);
+        sendAll(users[i]->GetFd(), topicMsg);
 
     return true;
 }

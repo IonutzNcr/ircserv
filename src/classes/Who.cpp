@@ -38,10 +38,10 @@ bool Dispatch::ft_who(Command cmd, int fd)
 		}
 
 		std::string whoReply = ":server 352 " + client->GetNick() + " " + channel + " " + user + " " + host + " server " + entry->GetNick() + " H :0 " + real + "\r\n";
-		send(fd, whoReply.c_str(), whoReply.length(), 0);
+		sendAll(fd, whoReply);
 	}
 
 	std::string endWho = ":server 315 " + client->GetNick() + " " + target + " :End of /WHO list\r\n";
-	send(fd, endWho.c_str(), endWho.length(), 0);
+	sendAll(fd, endWho);
 	return true;
 }

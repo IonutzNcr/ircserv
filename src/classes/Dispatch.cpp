@@ -63,11 +63,11 @@ bool Dispatch::ft_cap(Command cmd, int fd)
     // respond minimally so clients finish capability negotiation
     if (line.find("LS") != std::string::npos) {
         std::string msg = "CAP * LS :\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
+        sendAll(fd, msg);
     }
     else if (line.find("REQ") != std::string::npos) {
         std::string msg = "CAP * NAK :\r\n";
-        send(fd, msg.c_str(), msg.length(), 0);
+        sendAll(fd, msg);
     }
     else if (line.find("END") != std::string::npos) {
         // nothing needed, client ends negotiation
@@ -91,11 +91,11 @@ void    Dispatch::tryRegister(Client* client)
     if (client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
         client->setRegistered(true);
         std::string msg = ":server 001 " + client->GetNick() + " :Welcome to the IRC Network, " + client->GetNick() + "\r\n";
-        send(client->GetFd(), msg.c_str(), msg.length(), 0);
+        sendAll(client->GetFd(), msg);
     }
     if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
         std::string msg2 = "464 * :Password incorrect\r\n";
-        send(client->GetFd(), msg2.c_str(), msg2.length(), 0);
+        sendAll(client->GetFd(), msg2);
         for (size_t i = 0; i < _clients.size(); ++i) {
             if (_clients[i]->GetFd() == client->GetFd()) {
                 close(_clients[i]->GetFd());
@@ -138,7 +138,7 @@ bool Dispatch::ft_ping(Command cmd, int fd)
         token = token.substr(1);
     
     std::string reply = ":server PONG server :" + token + "\r\n";
-    send(fd, reply.c_str(), reply.length(), 0);
+    sendAll(fd, reply);
     return true;
 }
 

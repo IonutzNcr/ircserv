@@ -1,6 +1,9 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <errno.h>
 
 
 std::vector<std::string> split(const std::string& str, char delimiter)
@@ -57,6 +60,28 @@ bool ircCaseEqual(const std::string& a, const std::string& b)
     {
         if (ircToLower(a[i]) != ircToLower(b[i]))
             return false;
+    }
+    return true;
+}
+
+bool sendAll(int fd, const std::string& msg)
+{
+    const char* data = msg.c_str();
+    size_t total = msg.length();
+    size_t sent = 0;
+    
+    while (sent < total)
+    {
+        ssize_t n = send(fd, data + sent, total - sent, MSG_NOSIGNAL);
+        if (n < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                continue;  // Retry
+            return false;  // Error (EPIPE, etc.)
+        }
+        if (n == 0)
+            return false;  // Connection closed
+        sent += n;
     }
     return true;
 }

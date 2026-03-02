@@ -21,6 +21,8 @@ bool Dispatch::parseNick(std::string line)
     // build une fonction pour le parsing de nick (erreur 433)
     if (line.empty())
         return (false);
+    if (line.size() > 9)
+        return (false);
     if (!std::isalpha(static_cast<unsigned char>(line[0])) && !isSpecialChar(line[0]))
         return (false);
     for (size_t i = 0; i < line.size(); i++) {
@@ -46,18 +48,18 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
     if (nick.empty()) {     // si pas de new nick => erreur 
         std::string msg = ":server 431 " + choice + " " + nick + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
-        send(fd, msg.c_str(), msg.length(), 0);     
+        sendAll(fd, msg);     
         return true;
     }
     if (!parseNick(nick)) {
         std::string msg = ":server 432 " + choice + " " + nick + " :Erroneus nickname\r\n";     // ERR_ERRONEUSNICKNAME (432)
-        send(fd, msg.c_str(), msg.length(), 0);     
+        sendAll(fd, msg);     
         return false;
     }
     for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
             if (ircCaseEqual(_clients[i]->GetNick(), nick) && _clients[i] != client) {
                 std::string msg = ":server 433 " + choice + " " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
-                send(fd, msg.c_str(), msg.length(), 0);
+                sendAll(fd, msg);
                 return true;
             }
     }
@@ -65,7 +67,7 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     client->SetNick(nick);
     if (!oldNick.empty() && client->isRegistered()) {       // si le client est deja enregistrer et qu'il modifie le nick
         std::string ret = ":" + oldNick + " NICK :" + nick + "\r\n";
-        send(fd, ret.c_str(), ret.length(), 0);
+        sendAll(fd, ret);
         // Diffuser le changement de nick à tous les membres des channels du client
         std::set<int> notified;
         notified.insert(fd);
@@ -75,7 +77,7 @@ bool Dispatch::ft_nick(Command cmd, int fd)
                 for (size_t j = 0; j < users.size(); j++) {
                     int userFd = users[j]->GetFd();
                     if (notified.find(userFd) == notified.end()) {
-                        send(userFd, ret.c_str(), ret.length(), 0);
+                        sendAll(userFd, ret);
                         notified.insert(userFd);
                     }
                 }
@@ -132,7 +134,7 @@ bool Dispatch::ft_user(Command cmd, int fd)
 
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
         std::string txt = ":server 462 " + choice + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
-        send(fd, txt.c_str(), txt.length(), 0);
+        sendAll(fd, txt);
         return true;
     }
     std::string line = cmd.getLine();
@@ -140,7 +142,7 @@ bool Dispatch::ft_user(Command cmd, int fd)
     if (params.size() < 4 || params[0].empty() || params[1].empty() || params[2].empty() || params[3].empty())
     {
         std::string msg = ":server 461 " + choice + " :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
-        send(fd, msg.c_str(), msg.length(), 0);
+        sendAll(fd, msg);
         return true;
     }
     //std::string oldUser = client->GetUser();
@@ -159,7 +161,7 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
     if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
         std::string txt2 = ":server 462 " + choice + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
-        send(fd, txt2.c_str(), txt2.length(), 0);
+        sendAll(fd, txt2);
         return true;
     }
     std::string line = cmd.getLine();
@@ -170,12 +172,12 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
     if (pass.empty()) { 
         std::string msg = ":server 461 " + choice + " :PASS Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
-        send(fd, msg.c_str(), msg.length(), 0);
+        sendAll(fd, msg);
         return true;
     }
     if (pass != _password) {    // si le pass est differend de celui des parametre => error
         // std::string txt = ":server 464 " + choice + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
-        // send(fd, txt.c_str(), txt.length(), 0);
+        // sendAll(fd, txt);
         return false;
     }
     client->setAuthenticated(true);
@@ -207,23 +209,23 @@ void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
 
     if (!client->isRegistered()) {
         std::string err = ":server 451 " + client->GetNick() + " :You have not registered\r\n";
-        send(fd, err.c_str(), err.length(), 0);
+        sendAll(fd, err);
         return;
     }
     if (params.size() < 2) {
         std::string err = "Error: need params " + cmd.getLine() + "\r\n";       //a voir si c'est pertinant de le laisser
-        send(fd, err.c_str(), err.length(), 0);
+        sendAll(fd, err);
         return;
     }
     if (params[0].empty()) {
         std::string err = ":server 411 " + client->GetNick() + " :No recipient given\r\n";
-        send(fd, err.c_str(), err.length(), 0);
+        sendAll(fd, err);
         return;
     }
     
     if (params[1].empty()) {
         std::string txt2 = ":server 412 " + client->GetNick() + " :No text to send\r\n";
-        send(fd, txt2.c_str(), txt2.length(), 0);
+        sendAll(fd, txt2);
         return ;
     }
     int choice = ft_choice(params[0]);
@@ -245,19 +247,19 @@ void    Dispatch::ft_PRIVMSG_channel(std::vector<std::string> params, int fd)
     Channel* channel = getChannel(channelName);
     if (!channel) {
         std::string err = ":server 403 " + client->GetNick() + " :No such channel\r\n";
-        send(fd, err.c_str(), err.length(), 0);
+        sendAll(fd, err);
         return;
     }
     if (!channel->isUserInChannel(client)) { // Vérifier que le client est dans le channel
         std::string err = ":server 404 " + client->GetNick() + " :Cannot send to channel\r\n";
-        send(fd, err.c_str(), err.length(), 0);
+        sendAll(fd, err);
         return;
     }
     std::string msg = ":" + client->GetNick() + " PRIVMSG " + channelName + " :" + params[1] + "\r\n";
     const std::vector<Client*>& members = channel->getUsers();
     for (size_t i = 0; i < members.size(); i++) {
         if (members[i]->GetFd() != fd) {
-            send(members[i]->GetFd(), msg.c_str(), msg.length(), 0);
+            sendAll(members[i]->GetFd(), msg);
         }
     }
     return ;
@@ -273,9 +275,9 @@ void    Dispatch::ft_PRIVMSG_client(std::vector<std::string> params, int fd)
     int fd2 = findClient(client2);
     if (fd2 < 0) {
         std::string txt2 =  ":server 401 " + client->GetNick() + " " + client2 + " :No such nick\r\n";
-        send(fd, txt2.c_str(), txt2.length(), 0);
+        sendAll(fd, txt2);
         return ;
     }
     std::string test5 = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + params[1] + "\r\n";
-    send(fd2, test5.c_str(), test5.length(), 0); //Msg envoyer au deuxieme client
+    sendAll(fd2, test5); //Msg envoyer au deuxieme client
 }

@@ -141,7 +141,7 @@ void Dispatch::broadcastJoin(Channel *channel, Client *client)
     for (std::size_t k = 0; k < existingUsers.size(); k++)
     {
         Debugger::storeLog(2,joinMsg + " to " + existingUsers[k]->GetNick());
-        send(existingUsers[k]->GetFd(), joinMsg.c_str(), joinMsg.length(), 0);
+        sendAll(existingUsers[k]->GetFd(), joinMsg);
     }
 }
 

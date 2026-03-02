@@ -54,7 +54,7 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 			const std::vector<Client*>& channelUsers = dispatch._channels[i]->getUsers();
 			for (size_t j = 0; j < channelUsers.size(); j++) {
 				if (channelUsers[j]->GetFd() != fd)
-					send(channelUsers[j]->GetFd(), quitMsg.c_str(), quitMsg.length(), 0);
+					sendAll(channelUsers[j]->GetFd(), quitMsg);
 			}
 		}
 	}

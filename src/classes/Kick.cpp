@@ -73,7 +73,7 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             std::vector<Client *> channelUsers = channel->getUsers();
             for (std::size_t j = 0; j < channelUsers.size(); j++)
             {
-                send(channelUsers[j]->GetFd(), kickMsg.c_str(), kickMsg.length(), 0);
+                sendAll(channelUsers[j]->GetFd(), kickMsg);
             }
 
             // Remove target client from channel
