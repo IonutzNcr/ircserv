@@ -156,12 +156,12 @@ PRIORITÉ BASSE - AMÉLIORATIONS
     Fichier: Register.cpp, parseNick()
     Problème: RFC recommande max 9 caractères
     Solution: Ajouter "if (line.size() > 9) return false;"
-
-12. Mode +k - Pas de validation du format de la clé
+   
+12. Mode +k - Pa.ls de validation du format de la clé
     Fichier: Mode.cpp
     Problème: N'importe quelle chaîne est acceptée comme clé
     Solution: Valider que la clé ne contient pas d'espaces/caractères spéciaux
-
+ //Pas fait on s'en fout
 13. send() - Retours non vérifiés
     Fichiers: Tous les fichiers utilisant send()
     Problème: send() peut retourner -1 ou moins de bytes que demandé
@@ -171,7 +171,7 @@ PRIORITÉ BASSE - AMÉLIORATIONS
 14. Pas de limite de channels par utilisateur
     Problème: Un client peut rejoindre un nombre illimité de channels
     Solution: Ajouter une limite configurable
-
+    //On s'en fout je crois ...
 ================================================================================
 RÉSUMÉ DES CORRECTIONS URGENTES
 ================================================================================
