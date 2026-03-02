@@ -92,7 +92,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
                 std::string targetNick = tokens[paramIndex++];
                 Client* targetClient = nullptr;
                 for (size_t j = 0; j < _clients.size(); j++) {
-                    if (_clients[j]->GetNick() == targetNick) {
+                    if (ircCaseEqual(_clients[j]->GetNick(), targetNick)) {
                         targetClient = _clients[j];
                         break;
                     }
@@ -113,7 +113,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
                 std::string targetNick = tokens[paramIndex++];
                 Client* targetClient = nullptr;
                 for (size_t j = 0; j < _clients.size(); j++) {
-                    if (_clients[j]->GetNick() == targetNick) {
+                    if (ircCaseEqual(_clients[j]->GetNick(), targetNick)) {
                         targetClient = _clients[j];
                         break;
                     }
@@ -169,7 +169,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
         if (target[0] == '#' || target[0] == '&') {
             Channel* channel = nullptr;
             for (size_t i = 0; i < _channels.size(); i++) {
-                if (_channels[i]->getName() == target) {
+                if (ircCaseEqual(_channels[i]->getName(), target)) {
                     channel = _channels[i];
                     break;
                 }
@@ -206,7 +206,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     if (target[0] == '#' || target[0] == '&') {
         Channel* channel = nullptr;
         for (size_t i = 0; i < _channels.size(); i++) {
-            if (_channels[i]->getName() == target) {
+            if (ircCaseEqual(_channels[i]->getName(), target)) {
                 channel = _channels[i];
                 break;
             }

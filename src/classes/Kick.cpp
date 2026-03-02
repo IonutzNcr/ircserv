@@ -32,7 +32,7 @@ bool Dispatch::ft_kick(Command cmd, int fd)
         // Trouver le client cible une seule fois
         Client* targetClient = NULL;
         for (size_t k = 0; k < _clients.size(); k++) {
-            if (_clients[k]->GetNick() == targetNick) {
+            if (ircCaseEqual(_clients[k]->GetNick(), targetNick)) {
                 targetClient = _clients[k];
                 break;
             }
@@ -43,7 +43,7 @@ bool Dispatch::ft_kick(Command cmd, int fd)
             Channel* channel = NULL;
             for (size_t k = 0; k < _channels.size(); k++)
             {
-                if (_channels[k]->getName() == split_channels[i])
+                if (ircCaseEqual(_channels[k]->getName(), split_channels[i]))
                 {
                     channel = _channels[k];
                     break;

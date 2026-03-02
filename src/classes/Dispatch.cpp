@@ -111,7 +111,7 @@ bool Dispatch::isChannelExist(std::string chanName)
 {
     for (size_t i = 0; i < _channels.size(); i++)
     {
-        if (_channels[i]->getName() == chanName)
+        if (ircCaseEqual(_channels[i]->getName(), chanName))
             return true;
     }
     return false;
@@ -144,7 +144,7 @@ bool Dispatch::ft_ping(Command cmd, int fd)
 Channel*    Dispatch::getChannel(std::string target)
 {
     for (size_t i = 0; i < _channels.size(); i++) {
-        if (_channels[i]->getName() == target)
+        if (ircCaseEqual(_channels[i]->getName(), target))
             return (_channels[i]);
     }
     return (NULL);
@@ -153,7 +153,7 @@ Channel*    Dispatch::getChannel(std::string target)
 int	Dispatch::findClient(std::string nick)
 {
 	for(size_t i = 0; i < _clients.size(); i++){
-		if (_clients[i]->GetNick() == nick) {
+		if (ircCaseEqual(_clients[i]->GetNick(), nick)) {
                 return (_clients[i]->GetFd());
             }
 	}

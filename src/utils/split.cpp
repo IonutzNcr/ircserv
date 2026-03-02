@@ -35,3 +35,28 @@ std::string intToString(int value)
     oss << value;
     return oss.str();
 }
+
+// IRC case-insensitive comparison (RFC 2812 - Scandinavian charset)
+// { = [, } = ], | = \, ~ = ^
+int ircToLower(int c)
+{
+    if (c >= 'A' && c <= 'Z')
+        return c + 32;
+    if (c == '[') return '{';
+    if (c == ']') return '}';
+    if (c == '\\') return '|';
+    if (c == '^') return '~';
+    return c;
+}
+
+bool ircCaseEqual(const std::string& a, const std::string& b)
+{
+    if (a.size() != b.size())
+        return false;
+    for (size_t i = 0; i < a.size(); i++)
+    {
+        if (ircToLower(a[i]) != ircToLower(b[i]))
+            return false;
+    }
+    return true;
+}

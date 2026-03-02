@@ -27,7 +27,7 @@ bool Dispatch::ft_invite(Command cmd, int fd)
     
     Client* targetClient = nullptr;
     for (size_t i = 0; i < _clients.size(); i++) {
-        if (_clients[i]->GetNick() == targetNick) {
+        if (ircCaseEqual(_clients[i]->GetNick(), targetNick)) {
             targetClient = _clients[i];
             break;
         }
@@ -41,7 +41,7 @@ bool Dispatch::ft_invite(Command cmd, int fd)
     
     Channel* channel = nullptr;
     for (size_t i = 0; i < _channels.size(); i++) {
-        if (_channels[i]->getName() == channelName) {
+        if (ircCaseEqual(_channels[i]->getName(), channelName)) {
             channel = _channels[i];
             break;
         }

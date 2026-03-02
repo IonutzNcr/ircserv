@@ -1,5 +1,6 @@
 #include "../../includes/Server.hpp"
 #include "../../includes/Command.hpp"
+#include "../../includes/split.hpp"
 #include <errno.h>
 #include "../../includes/Debugger.hpp"
 
@@ -225,7 +226,7 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 int	Server::findClient(std::string nick)
 {
 	for(size_t i = 0; i < clients.size(); i++){
-		if (clients[i]->GetNick() == nick) {
+		if (ircCaseEqual(clients[i]->GetNick(), nick)) {
                 return (clients[i]->GetFd());
             }
 	}

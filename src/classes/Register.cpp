@@ -49,7 +49,7 @@ bool Dispatch::ft_nick(Command cmd, int fd)
         return false;
     }
     for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
-            if (_clients[i]->GetNick() == nick && _clients[i] != client) {
+            if (ircCaseEqual(_clients[i]->GetNick(), nick) && _clients[i] != client) {
                 std::string msg = ":server 433 " + choice + " " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
                 send(fd, msg.c_str(), msg.length(), 0);
                 return true;
