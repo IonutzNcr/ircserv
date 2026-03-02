@@ -30,7 +30,7 @@ bool Dispatch::ft_topic(Command cmd, int fd)
         return false;
     }
     
-    Channel* channel = nullptr;
+    Channel* channel = NULL;
     for (size_t i = 0; i < _channels.size(); i++) {
         if (ircCaseEqual(_channels[i]->getName(), channelName)) {
             channel = _channels[i];

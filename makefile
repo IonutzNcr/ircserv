@@ -7,7 +7,7 @@ DIR=	./src/classes/
 DIRO=	./obj/classes/
 
 CXX= c++ -g3
-CXXFLAGS=
+CXXFLAGS= -std=c++98 -Wall -Wextra -Werror
 
 FILES=	Client.cpp \
 		Command.cpp \

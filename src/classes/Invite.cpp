@@ -13,8 +13,8 @@ bool Dispatch::ft_invite(Command cmd, int fd)
     Client* client = getClientFd(fd);
     if (!client)
         return false;
-	if (!client->isRegistered()) // si le client n'es pas register just return false
-		return false;
+    if (!client->isRegistered())
+        return false;
     std::string line = cmd.getLine();
     std::vector<std::string> tokens = split(line, ' ');
     if (tokens.size() < 3) {
@@ -25,7 +25,7 @@ bool Dispatch::ft_invite(Command cmd, int fd)
     std::string targetNick = tokens[1];
     std::string channelName = tokens[2];
     
-    Client* targetClient = nullptr;
+    Client* targetClient = NULL;
     for (size_t i = 0; i < _clients.size(); i++) {
         if (ircCaseEqual(_clients[i]->GetNick(), targetNick)) {
             targetClient = _clients[i];
@@ -39,7 +39,7 @@ bool Dispatch::ft_invite(Command cmd, int fd)
         return false;
     }
     
-    Channel* channel = nullptr;
+    Channel* channel = NULL;
     for (size_t i = 0; i < _channels.size(); i++) {
         if (ircCaseEqual(_channels[i]->getName(), channelName)) {
             channel = _channels[i];

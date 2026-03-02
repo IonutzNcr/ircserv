@@ -32,7 +32,7 @@ void Debugger::storeLog(int type, std::string msg)
     if (!Debugger::fd || *Debugger::fd == -1)
         return;
 
-    std::time_t now = std::time(nullptr);
+    std::time_t now = std::time(NULL);
     std::tm* ltm = std::localtime(&now);
 
     char timeBuffer[64];

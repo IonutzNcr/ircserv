@@ -4,10 +4,11 @@
 #include "../../includes/split.hpp"
 #include "../../includes/Channel.hpp"
 #include <string>
+#include <cstdlib>
 #include <sys/types.h>
 #include <sys/socket.h>
 
-bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string msg, Client* client, std::vector<std::string> tokens)
+bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::string target, std::string /*msg*/, Client* client, std::vector<std::string> tokens)
 {
      if (modeChanges[0] != '+' && modeChanges[0] != '-') {
         std::string msg = ":server 501 " + client->GetNick() + " :Unknown MODE flag\r\n";
@@ -63,7 +64,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
                 }
                 try
                 {
-                    int maxUsers = std::stoi(tokens[paramIndex++]);
+                    int maxUsers = std::atoi(tokens[paramIndex++].c_str());
                     if (maxUsers <= 0) {
                         std::string errMsg = ":server 461 " + client->GetNick() + " " + target + " :Not enough parameters\r\n";
                         send(fd, errMsg.c_str(), errMsg.length(), 0);
@@ -90,7 +91,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
             }
             if (modeChanges[0] == '+') {
                 std::string targetNick = tokens[paramIndex++];
-                Client* targetClient = nullptr;
+                Client* targetClient = NULL;
                 for (size_t j = 0; j < _clients.size(); j++) {
                     if (ircCaseEqual(_clients[j]->GetNick(), targetNick)) {
                         targetClient = _clients[j];
@@ -111,7 +112,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
             }
             else {
                 std::string targetNick = tokens[paramIndex++];
-                Client* targetClient = nullptr;
+                Client* targetClient = NULL;
                 for (size_t j = 0; j < _clients.size(); j++) {
                     if (ircCaseEqual(_clients[j]->GetNick(), targetNick)) {
                         targetClient = _clients[j];
@@ -155,8 +156,8 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     Client* client = getClientFd(fd);
     if (!client)
         return false;
-	if (!client->isRegistered()) // si le client n'es pas register just return false
-		return false;
+    if (!client->isRegistered())
+        return false;
     std::string line = cmd.getLine();
     std::vector<std::string> tokens = split(line, ' ');
     if (tokens.size() < 2) {
@@ -167,7 +168,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     if (tokens.size() == 2) {
         std::string target = tokens[1];
         if (target[0] == '#' || target[0] == '&') {
-            Channel* channel = nullptr;
+            Channel* channel = NULL;
             for (size_t i = 0; i < _channels.size(); i++) {
                 if (ircCaseEqual(_channels[i]->getName(), target)) {
                     channel = _channels[i];
@@ -190,7 +191,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
                 options += "l";
             std::string msg = ":server 324 " + client->GetNick() + " " + channel->getName() + " +" + options + "\r\n";
             send(fd, msg.c_str(), msg.length(), 0);
-            std::string msg2 = ":server 329 " + client->GetNick() + " " + channel->getName() + " " + std::to_string(channel->getCreationTime()) + "\r\n";
+            std::string msg2 = ":server 329 " + client->GetNick() + " " + channel->getName() + " " + intToString(channel->getCreationTime()) + "\r\n";
             send(fd, msg2.c_str(), msg2.length(), 0);
         }
         else {
@@ -204,7 +205,7 @@ bool Dispatch::ft_mode(Command cmd, int fd)
     std::string modeChanges = tokens[2];
     
     if (target[0] == '#' || target[0] == '&') {
-        Channel* channel = nullptr;
+        Channel* channel = NULL;
         for (size_t i = 0; i < _channels.size(); i++) {
             if (ircCaseEqual(_channels[i]->getName(), target)) {
                 channel = _channels[i];

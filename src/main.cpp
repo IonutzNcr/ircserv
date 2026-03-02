@@ -2,7 +2,7 @@
 
 bool    ft_one(std::string line)
 {
-    for (int i = 0; i < line.size(); i++) {
+    for (size_t i = 0; i < line.size(); i++) {
         if (!std::isdigit(line[i]))
             return (false);
     }
@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 		std::cout << "argv[1] is not digit" << std::endl;
 		return (0);
 	}
-	int n = std::stoi(argv[1]);
+	int n = std::atoi(argv[1]);
 	if (n < 1024 || n > 65535) {		// manque la valeur la plus grande ?
 		if (n < 0)
 			std::cout << "argv[1] is negative" << std::endl;

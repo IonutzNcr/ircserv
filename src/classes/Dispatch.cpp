@@ -164,7 +164,7 @@ void Dispatch::removeChannel(Channel *channel)
 {
     if (!channel)
         return ;
-    for (int i = 0; i < _channels.size(); i++)
+    for (size_t i = 0; i < _channels.size(); i++)
     {
         if (channel == _channels[i])
             _channels.erase(_channels.begin() + i);
