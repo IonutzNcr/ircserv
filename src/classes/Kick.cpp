@@ -21,7 +21,7 @@ bool Dispatch::ft_kick(Command cmd, int fd)
         std::vector<std::string> tokens = split(line, ' ');
         
         if (tokens.size() < 2) {
-            replies.ERR_NEEDMOREPARAMS(*client, "KICK", fd);
+            replies.err_needmoreparams(*client, "KICK", fd);
             return false;
         }
         std::vector <std::string> split_channels = split(tokens[0], ',');
@@ -52,18 +52,18 @@ bool Dispatch::ft_kick(Command cmd, int fd)
 
             if (!channel)
             {
-                replies.ERR_NOSUCHCHANNEL(*client, split_channels[i], fd);
+                replies.err_nosuchchannel(*client, split_channels[i], fd);
                 continue;
             }
 
             if (!channel->isOperator(client))
             {
-                replies.ERR_CHANOPRIVSNEEDED(*client, *channel, fd);
+                replies.err_chanoprivsneeded(*client, *channel, fd);
                 continue;
             }
 
             if (!targetClient || !channel->isUserInChannel(targetClient)) {
-                replies.ERR_USERNOTINCHANNEL(*client, targetNick, *channel, fd);
+                replies.err_usernotinchannel(*client, targetNick, *channel, fd);
                 continue;
             }
             
@@ -78,20 +78,22 @@ bool Dispatch::ft_kick(Command cmd, int fd)
 
             // Remove target client from channel
             std::vector<Client *> &users = channel->getUserRefs();
+            bool channelDeleted = false;
             for (std::vector<Client *>::iterator it = users.begin(); it != users.end(); ++it)
             {
                 if (*it == targetClient) {
                     users.erase(it);
-                    //check if channel is empy
                     if (users.empty())
                     {
                         channel->removeInvitedAll();
                         removeChannel(channel);
+                        channelDeleted = true;
                     }
                     break;
                 }
             }
-            channel->removeOperator(targetClient);
+            if (!channelDeleted)
+                channel->removeOperator(targetClient);
         }
         
         return true;

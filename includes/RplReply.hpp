@@ -10,19 +10,19 @@ class Channel;
 class RplReply
 {
     public:
-        void RPL_NOTOPIC(Client &client, Channel &chan, int fd);
-        void RPL_TOPIC(Client &client, Channel &chan, int fd);
-        void RPL_NAMREPLY(Client &client, Channel &chan, int fd);
-        void RPL_ENDOFNAMES(Client &client, Channel &chan, int fd);
+        void rpl_notopic(Client &client, Channel &chan, int fd);
+        void rpl_topic(Client &client, Channel &chan, int fd);
+        void rpl_namreply(Client &client, Channel &chan, int fd);
+        void rpl_endofnames(Client &client, Channel &chan, int fd);
 
-        void ERR_NEEDMOREPARAMS(Client &client, const std::string &command, int fd);
-        void ERR_USERONCHANNEL(Client &client, const std::string &targetNick, Channel &chan, int fd);
-        void ERR_INVITEONLYCHAN(Client &client, Channel &chan, int fd);
-        void ERR_BADCHANNELKEY(Client &client, Channel &chan, int fd);
-        void ERR_NOSUCHCHANNEL(Client &client, const std::string &channelName, int fd);
-        void ERR_CHANOPRIVSNEEDED(Client &client, Channel &chan, int fd);
-        void ERR_USERNOTINCHANNEL(Client &client, const std::string &targetNick, Channel &chan, int fd);
-        void ERR_CHANNELISFULL(Client &client, Channel &chan, int fd);
+        void err_needmoreparams(Client &client, const std::string &command, int fd);
+        void err_useronchannel(Client &client, const std::string &targetNick, Channel &chan, int fd);
+        void err_inviteonlychan(Client &client, Channel &chan, int fd);
+        void err_badchannelkey(Client &client, Channel &chan, int fd);
+        void err_nosuchchannel(Client &client, const std::string &channelName, int fd);
+        void err_chanoprivsneeded(Client &client, Channel &chan, int fd);
+        void err_usernotinchannel(Client &client, const std::string &targetNick, Channel &chan, int fd);
+        void err_channelisfull(Client &client, Channel &chan, int fd);
         
 
         //rpl 461, 443, 473, 475, 331, 332, 353, 366,

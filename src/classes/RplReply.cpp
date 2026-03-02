@@ -1,7 +1,6 @@
 #include "../../includes/RplReply.hpp"
 #include "../../includes/Client.hpp"
 #include "../../includes/Channel.hpp"
-#include "../../includes/Debugger.hpp"
 #include "../../includes/split.hpp"
 
 #include <sys/types.h>
@@ -9,21 +8,19 @@
 #include <string>
 #include <vector>
 
-void RplReply::RPL_NOTOPIC(Client &client, Channel &chan, int fd)
+void RplReply::rpl_notopic(Client &client, Channel &chan, int fd)
 {
     std::string msg = ":server 331 " + client.GetNick() + " " + chan.getName() + " :No topic is set\r\n";
-    Debugger::storeLog(2, msg);
     sendAll(fd, msg);
 }
 
-void RplReply::RPL_TOPIC(Client &client, Channel &chan, int fd)
+void RplReply::rpl_topic(Client &client, Channel &chan, int fd)
 {
     std::string msg = ":server 332 " + client.GetNick() + " " + chan.getName() + " :" + chan.getTopic() + "\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::RPL_NAMREPLY(Client &client, Channel &chan, int fd)
+void RplReply::rpl_namreply(Client &client, Channel &chan, int fd)
 {
     std::string msg = ":server 353 " + client.GetNick() + " = " + chan.getName() + " :";
     std::vector<Client *> channelUsers = chan.getUsers();
@@ -37,68 +34,58 @@ void RplReply::RPL_NAMREPLY(Client &client, Channel &chan, int fd)
     }
     msg += "\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::RPL_ENDOFNAMES(Client &client, Channel &chan, int fd)
+void RplReply::rpl_endofnames(Client &client, Channel &chan, int fd)
 {
     std::string msg = ":server 366 " + client.GetNick() + " " + chan.getName() + " :End of /NAMES list\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::ERR_NEEDMOREPARAMS(Client &client, const std::string &command, int fd)
+void RplReply::err_needmoreparams(Client &client, const std::string &command, int fd)
 {
     std::string msg = ":server 461 " + client.GetNick() + " " + command + " :Not enough parameters\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::ERR_USERONCHANNEL(Client &client, const std::string &targetNick, Channel &chan, int fd)
+void RplReply::err_useronchannel(Client &client, const std::string &targetNick, Channel &chan, int fd)
 {
     std::string msg = ":server 443 " + client.GetNick() + " " + targetNick + " " + chan.getName() + " :is already on channel\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::ERR_INVITEONLYCHAN(Client &client, Channel &chan, int fd)
+void RplReply::err_inviteonlychan(Client &client, Channel &chan, int fd)
 {
     std::string msg = ":server 473 " + client.GetNick() + " " + chan.getName() + " :Cannot join channel (+i)\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::ERR_BADCHANNELKEY(Client &client, Channel &chan, int fd)
+void RplReply::err_badchannelkey(Client &client, Channel &chan, int fd)
 {
     std::string msg = ":server 475 " + client.GetNick() + " " + chan.getName() + " :Cannot join channel (+k)\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::ERR_NOSUCHCHANNEL(Client &client, const std::string &channelName, int fd)
+void RplReply::err_nosuchchannel(Client &client, const std::string &channelName, int fd)
 {
     std::string msg = ":server 403 " + client.GetNick() + " " + channelName + " :No such channel\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::ERR_CHANOPRIVSNEEDED(Client &client, Channel &chan, int fd)
+void RplReply::err_chanoprivsneeded(Client &client, Channel &chan, int fd)
 {
     std::string msg = ":server 482 " + client.GetNick() + " " + chan.getName() + " :You're not channel operator\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::ERR_USERNOTINCHANNEL(Client &client, const std::string &targetNick, Channel &chan, int fd)
+void RplReply::err_usernotinchannel(Client &client, const std::string &targetNick, Channel &chan, int fd)
 {
     std::string msg = ":server 441 " + client.GetNick() + " " + targetNick + " " + chan.getName() + " :They aren't on that channel\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }
 
-void RplReply::ERR_CHANNELISFULL(Client &client, Channel &chan, int fd)
+void RplReply::err_channelisfull(Client &client, Channel &chan, int fd)
 {
     std::string msg = ":server 471 " +  client.GetNick() + " " +  chan.getName()  + " :Cannot join channel (+l)\r\n";
     sendAll(fd, msg);
-    Debugger::storeLog(2, msg);
 }

@@ -93,17 +93,10 @@ void    Dispatch::tryRegister(Client* client)
         sendAll(client->GetFd(), msg);
     }
     if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
-        std::string msg2 = "464 * :Password incorrect\r\n";
+        std::string msg2 = ":server 464 * :Password incorrect\r\n";
         sendAll(client->GetFd(), msg2);
-        for (size_t i = 0; i < _clients.size(); ++i) {
-            if (_clients[i]->GetFd() == client->GetFd()) {
-                close(_clients[i]->GetFd());
-                _clients[i]->SetFd(-1);
-                _clients.erase(_clients.begin() + i);
-                break;
-            }
-        }
-        delete client;
+        // Marquer le fd pour suppression - Server::removeFdPoll() va le nettoyer
+        client->SetFd(-1);
     }
 }
 

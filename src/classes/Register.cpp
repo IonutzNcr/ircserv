@@ -248,12 +248,12 @@ void    Dispatch::ft_PRIVMSG_channel(std::vector<std::string> params, int fd)
     std::string channelName = params[0];
     Channel* channel = getChannel(channelName);
     if (!channel) {
-        std::string err = ":server 403 " + client->GetNick() + " :No such channel\r\n";
+        std::string err = ":server 403 " + client->GetNick() + " " + channelName + " :No such channel\r\n";
         sendAll(fd, err);
         return;
     }
     if (!channel->isUserInChannel(client)) { // Vérifier que le client est dans le channel
-        std::string err = ":server 404 " + client->GetNick() + " :Cannot send to channel\r\n";
+        std::string err = ":server 404 " + client->GetNick() + " " + channelName + " :Cannot send to channel\r\n";
         sendAll(fd, err);
         return;
     }
@@ -280,6 +280,6 @@ void    Dispatch::ft_PRIVMSG_client(std::vector<std::string> params, int fd)
         sendAll(fd, txt2);
         return ;
     }
-    std::string test5 = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + params[1] + "\r\n";
-    sendAll(fd2, test5); //Msg envoyer au deuxieme client
+    std::string privmsg = ":" + client->GetNick() + " PRIVMSG " + client2 + " :" + params[1] + "\r\n";
+    sendAll(fd2, privmsg);
 }

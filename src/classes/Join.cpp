@@ -5,7 +5,6 @@
 #include "../../includes/split.hpp"
 #include "../../includes/Channel.hpp"
 #include "../../includes/RplReply.hpp"
-#include "../../includes/Debugger.hpp"
 #include <string>
 #include <sys/types.h>
 #include "../../includes/Server.hpp"
@@ -42,8 +41,8 @@ bool Dispatch::ft_join(Command cmd, int fd)
 
     if (chanXkeys.empty())
     {
-        replies.ERR_NEEDMOREPARAMS(*client, "JOIN", fd);
-        return false;
+        replies.err_needmoreparams(*client, "JOIN", fd);
+        return true;
     }
     std::string chanNames = chanXkeys[0];
     bool isKey = false;
@@ -67,7 +66,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
         // Validation du nom de channel (RFC 2812)
         if (!isValidChannelName(chanName))
         {
-            replies.ERR_NOSUCHCHANNEL(*client, chanName, fd);
+            replies.err_nosuchchannel(*client, chanName, fd);
             continue;
         }
         //creation channel si n'existe pas et ajout user au channel
@@ -85,22 +84,22 @@ bool Dispatch::ft_join(Command cmd, int fd)
             std::string  msg;
             if (channel->isUserInChannel(client))
             {
-                replies.ERR_USERONCHANNEL(*client, client->GetNick(), *channel, fd);
+                replies.err_useronchannel(*client, client->GetNick(), *channel, fd);
                 continue; // a voir que faire si deja dans le channel et mauvais key
             }
             if (channel->getMaxUsers() > 0 && channel->getUsers().size() >= channel->getMaxUsers())
             {
-                replies.ERR_CHANNELISFULL(*client, *channel, fd);
+                replies.err_channelisfull(*client, *channel, fd);
                 continue;
             }
             if (channel->isInviteOnly() && !channel->isInvited(client))
             {
-                replies.ERR_INVITEONLYCHAN(*client, *channel, fd);
+                replies.err_inviteonlychan(*client, *channel, fd);
                 continue;
             }
             if (!channel->getKey().empty() && channel->getKey() != chanKey)
             {
-                replies.ERR_BADCHANNELKEY(*client, *channel, fd);
+                replies.err_badchannelkey(*client, *channel, fd);
                 continue;
             }
             channel->addUser(client);
@@ -128,7 +127,7 @@ void Dispatch::sendTopic(Client *client, Channel *channel)
     RplReply replies;
     if (!channel->getTopic().empty())
     {
-        replies.RPL_TOPIC(*client, *channel, client->GetFd());
+        replies.rpl_topic(*client, *channel, client->GetFd());
     }
 }
 
@@ -140,7 +139,6 @@ void Dispatch::broadcastJoin(Channel *channel, Client *client)
     std::vector<Client *> existingUsers = channel->getUsers();
     for (std::size_t k = 0; k < existingUsers.size(); k++)
     {
-        Debugger::storeLog(2,joinMsg + " to " + existingUsers[k]->GetNick());
         sendAll(existingUsers[k]->GetFd(), joinMsg);
     }
 }
@@ -148,6 +146,6 @@ void Dispatch::broadcastJoin(Channel *channel, Client *client)
 void Dispatch::sendList(Channel *channel, Client *client)
 {
     RplReply replies;
-    replies.RPL_NAMREPLY(*client, *channel, client->GetFd());
-    replies.RPL_ENDOFNAMES(*client, *channel, client->GetFd());
+    replies.rpl_namreply(*client, *channel, client->GetFd());
+    replies.rpl_endofnames(*client, *channel, client->GetFd());
 }

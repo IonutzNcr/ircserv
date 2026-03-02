@@ -23,8 +23,7 @@ FILES=	Client.cpp \
 		Mode.cpp \
 		Invite.cpp \
 		Topic.cpp \
-		Quit.cpp \
-		Debugger.cpp
+		Quit.cpp
 
 FILES_UTILS=	split.cpp
 
@@ -41,8 +40,7 @@ HEADERS = Client.hpp \
 		Dispatch.hpp \
 		RplReply.hpp \
 		Channel.hpp \
-		split.hpp\
-		Debugger.hpp
+		split.hpp
 
 
 

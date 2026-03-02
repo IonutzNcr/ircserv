@@ -2,7 +2,6 @@
 #include "../../includes/Command.hpp"
 #include "../../includes/split.hpp"
 #include <errno.h>
-#include "../../includes/Debugger.hpp"
 
 
 bool Server::Signal = false;
@@ -88,7 +87,6 @@ void Server::CloseFds(){
 
 void Server::SerSocket()
 {
-	Debugger::createLogFile();
 	struct sockaddr_in add;
 	struct pollfd NewPoll;
 	add.sin_family = AF_INET; //-> set the address family to ipv4
@@ -221,7 +219,6 @@ void Server::ReceiveNewData(int fd, Dispatch &dispatch)
 		std::string received(buff, bytes);
 		Command cmd;
 		parse.fill(received, fd);
-		Debugger::storeLog(3, received);
 		std::string line = parse.getCmdtwo(fd);
 		cmd = parse.get(fd);
 		cmd.setLine(line);
