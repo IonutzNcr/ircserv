@@ -99,6 +99,7 @@ void    Dispatch::tryRegister(Client* client)
         for (size_t i = 0; i < _clients.size(); ++i) {
             if (_clients[i]->GetFd() == client->GetFd()) {
                 close(_clients[i]->GetFd());
+                _clients[i]->SetFd(-1);
                 _clients.erase(_clients.begin() + i);
                 break;
             }

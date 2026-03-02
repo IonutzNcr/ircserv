@@ -6,16 +6,22 @@
 #include "../../includes/Channel.hpp"
 #include <string>
 #include <cctype>
+#include <set>
 #include <sys/types.h>
 #include <sys/socket.h>
 
+static bool isSpecialChar(char c)
+{
+    return c == '[' || c == ']' || c == '\\' || c == '`'
+        || c == '_' || c == '^' || c == '{' || c == '|' || c == '}';
+}
 
 bool Dispatch::parseNick(std::string line)
 {
     // build une fonction pour le parsing de nick (erreur 433)
     if (line.empty())
         return (false);
-    if (!std::isalpha(static_cast<unsigned char>(line[0])))
+    if (!std::isalpha(static_cast<unsigned char>(line[0])) && !isSpecialChar(line[0]))
         return (false);
     for (size_t i = 0; i < line.size(); i++) {
         if (line[i] == ' ' || line[i] == ',' || line[i] == '*'
@@ -60,6 +66,21 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     if (!oldNick.empty() && client->isRegistered()) {       // si le client est deja enregistrer et qu'il modifie le nick
         std::string ret = ":" + oldNick + " NICK :" + nick + "\r\n";
         send(fd, ret.c_str(), ret.length(), 0);
+        // Diffuser le changement de nick à tous les membres des channels du client
+        std::set<int> notified;
+        notified.insert(fd);
+        for (size_t i = 0; i < _channels.size(); i++) {
+            if (_channels[i]->isUserInChannel(client)) {
+                std::vector<Client *> users = _channels[i]->getUsers();
+                for (size_t j = 0; j < users.size(); j++) {
+                    int userFd = users[j]->GetFd();
+                    if (notified.find(userFd) == notified.end()) {
+                        send(userFd, ret.c_str(), ret.length(), 0);
+                        notified.insert(userFd);
+                    }
+                }
+            }
+        }
     }    
     tryRegister(client);
     
@@ -194,13 +215,13 @@ void    Dispatch::ft_PRIVMSG(Command cmd, int fd)
         send(fd, err.c_str(), err.length(), 0);
         return;
     }
-    if (params[1].empty()) {
+    if (params[0].empty()) {
         std::string err = ":server 411 " + client->GetNick() + " :No recipient given\r\n";
         send(fd, err.c_str(), err.length(), 0);
         return;
     }
     
-    if (params.size() >= 3 && params[2].empty()) {
+    if (params[1].empty()) {
         std::string txt2 = ":server 412 " + client->GetNick() + " :No text to send\r\n";
         send(fd, txt2.c_str(), txt2.length(), 0);
         return ;

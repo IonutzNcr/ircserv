@@ -57,6 +57,9 @@ public:
  
 	void CloseFds(); //-> close file descriptors
 	void ClearClients(int fd, Dispatch &dispatch); //-> clear clients
+	private:
+		void removeFdPoll();
+		
 };
 
 

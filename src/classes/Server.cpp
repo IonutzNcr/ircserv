@@ -14,6 +14,18 @@ void Server::SignalHandler(int signum)
 	Server::Signal = true;
 }
 
+void Server::removeFdPoll()
+{
+	for (size_t i = 0; i < fds.size(); i++)
+	{
+		if(fds[i].fd == -1)
+		{
+			fds.erase(fds.begin() + i);
+			i--;
+		}
+	}
+}
+
 void Server::ClearClients(int fd, Dispatch &dispatch)
 {
     Client* clientToRemove = NULL;
@@ -54,6 +66,7 @@ void Server::ClearClients(int fd, Dispatch &dispatch)
 		{
 			dispatch._channels[i]->removeInvitedAll();
 			dispatch.removeChannel(dispatch._channels[i]);
+			i--;
 		}
 	}
     parse.clearData(fd); // Clean up parser buffer for this fd
@@ -135,6 +148,7 @@ void Server::ServerInit()
 					AcceptNewClient();
 				else
 					ReceiveNewData(fds[i].fd, dispatch);
+				removeFdPoll();
 			}
 		}
 	}
