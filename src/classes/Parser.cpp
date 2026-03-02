@@ -15,7 +15,6 @@ Command Parser::getCommand(std::string cmdline)
 	{
 		std::size_t end;
 
-		// ✅ Vérifie si ':' est AU DÉBUT de la ligne (vrai préfixe IRC)
 		if (!cmdline.empty() && cmdline[0] == ':')
 		{
 			end = cmdline.find(" ");
@@ -25,29 +24,27 @@ Command Parser::getCommand(std::string cmdline)
 				throw std::runtime_error("No command found after prefix");
 			}
 			cmd.setPrefix(cmdline.substr(1, end));
-			cmdline = cmdline.substr(end + 1); // ✅ Skip l'espace
+			cmdline = cmdline.substr(end + 1);
 		}
 		else
 		{
 			cmd.setPrefix("");
 		}
 
-		// ✅ Extraction correcte de la commande
 		end = cmdline.find(" ");
 		if (end == std::string::npos)
 		{
-			cmd.setCmd(cmdline); // ✅ Commande sans arguments (ex: QUIT)
+			cmd.setCmd(cmdline);
 			cmd.setArgs("");
 			cmd.setTrailing("");
 			return (cmd);
 		}
 		else
 		{
-			cmd.setCmd(cmdline.substr(0, end)); // ✅ substr(0, longueur)
-			cmdline = cmdline.substr(end + 1);	// ✅ Skip l'espace
+			cmd.setCmd(cmdline.substr(0, end)); 
+			cmdline = cmdline.substr(end + 1);
 		}
 
-		// ✅ Extraction args et trailing correcte
 		end = cmdline.find(":");
 		if (end == std::string::npos)
 		{
@@ -63,7 +60,7 @@ Command Parser::getCommand(std::string cmdline)
 				cmd.setArgs("");
 			cmd.setTrailing(cmdline.substr(end + 1));
 		}
-		// set args vector
+
 		std::vector<std::string> argsVector = split(cmd.getArgs(), ' ');
 		cmd.setArgsVector(argsVector);
 	}
@@ -86,7 +83,7 @@ Data &Parser::getData(int fd)
 		if (dt->fd == fd)
 			return (*dt);
 	}
-	// si je trouve pas c que ya pas eu de data creer pour l'instant...
+	
 	Data data(fd, "", 0);
 	rawsData.push_back(data);
 	dt = rawsData.begin();
@@ -112,7 +109,6 @@ std::string Parser::extractcmd(int fd)
 		return std::string("");
 	std::string cmdline = data.data.substr(0, index);
 
-	// RFC 2812: limite de 512 octets par message (510 + \r\n)
 	if (cmdline.size() > 510)
 		cmdline = cmdline.substr(0, 510);
 
@@ -129,7 +125,7 @@ std::string Parser::getCmdtwo(int fd)
 	if (index == std::string::npos)
 		return std::string("");
 	std::string cmdline = data.data.substr(0, index);
-	// RFC 2812: limite de 512 octets par message (510 + \r\n)
+	
 	if (cmdline.size() > 510)
 		cmdline = cmdline.substr(0, 510);
 	return (cmdline);

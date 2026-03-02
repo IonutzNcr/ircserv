@@ -31,7 +31,7 @@ bool Dispatch::ft_join(Command cmd, int fd)
     RplReply replies;
     if (!client)
         return false;
-     if (!client->isRegistered()) // si le client n'es pas register just return false
+     if (!client->isRegistered())
     {
         return (false);
     }
@@ -67,14 +67,13 @@ bool Dispatch::ft_join(Command cmd, int fd)
             chanKey = keysSplit[i];
         else
             chanKey = "";
-        // Validation du nom de channel (RFC 2812)
         if (!isValidChannelName(chanName))
         {
             replies.err_nosuchchannel(*client, chanName, fd);
             continue;
         }
-        //creation channel si n'existe pas et ajout user au channel
-        if (!isChannelExist(chanName)) // TODO:: big problem why ?
+      
+        if (!isChannelExist(chanName))
         {
             Channel *newChan = createChannel("", chanName, chanKey, client);
             broadcastJoin(newChan, client);
@@ -83,13 +82,12 @@ bool Dispatch::ft_join(Command cmd, int fd)
         }
         else
         {
-            //get channel
             Channel *channel = getChannel(chanName);
             std::string  msg;
             if (channel->isUserInChannel(client))
             {
                 replies.err_useronchannel(*client, client->GetNick(), *channel, fd);
-                continue; // a voir que faire si deja dans le channel et mauvais key
+                continue;
             }
             if (channel->getMaxUsers() > 0 && channel->getUsers().size() >= channel->getMaxUsers())
             {

@@ -29,7 +29,6 @@ bool Dispatch::ft_kick(Command cmd, int fd)
 
         std::string reason = (cmd.getTrailing().empty() ? "No reason" : cmd.getTrailing());
         
-        // Trouver le client cible une seule fois
         Client* targetClient = NULL;
         for (size_t k = 0; k < _clients.size(); k++) {
             if (ircCaseEqual(_clients[k]->GetNick(), targetNick)) {

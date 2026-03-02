@@ -40,10 +40,7 @@ class Channel
         time_t getCreationTime() const;
        
     private:
-        bool _inviteOnly;   // +i
-        // bool _topicRestricted; // +t
-        // bool _hasKey; // +k
-        // std::size_t _userLimit; // +l
+        bool _inviteOnly;
         std::vector<Client*> invited;
         
         std::string _topic;

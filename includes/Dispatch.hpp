@@ -13,7 +13,6 @@ class Dispatch
         std::string _password;
         std::vector<Client *> &_clients;
         std::vector<Channel *> _channels;
-       /*  Dispatch(); */
         Dispatch(std::string password, std::vector<Client *> &clients);
         ~Dispatch();
         bool dispatch(Command cmd, int fd);

@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <string>
@@ -23,8 +21,4 @@ class RplReply
         void err_chanoprivsneeded(Client &client, Channel &chan, int fd);
         void err_usernotinchannel(Client &client, const std::string &targetNick, Channel &chan, int fd);
         void err_channelisfull(Client &client, Channel &chan, int fd);
-        
-
-        //rpl 461, 443, 473, 475, 331, 332, 353, 366,
-        //rpl 403, 482, 441
 };

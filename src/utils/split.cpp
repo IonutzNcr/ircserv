@@ -40,8 +40,6 @@ std::string intToString(int value)
     return oss.str();
 }
 
-// IRC case-insensitive comparison (RFC 2812 - Scandinavian charset)
-// { = [, } = ], | = \, ~ = ^
 int ircToLower(int c)
 {
     if (c >= 'A' && c <= 'Z')
@@ -78,18 +76,17 @@ bool sendAll(int fd, const std::string& msg)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
-                // Wait for socket to be ready (max 5 sec)
                 struct pollfd pfd;
                 pfd.fd = fd;
                 pfd.events = POLLOUT;
                 if (poll(&pfd, 1, 5000) <= 0)
-                    return false;  // Timeout or error
+                    return false;
                 continue;
             }
-            return false;  // Error (EPIPE, etc.)
+            return false;
         }
         if (n == 0)
-            return false;  // Connection closed
+            return false;
         sent += n;
     }
     return true;

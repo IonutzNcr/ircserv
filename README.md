@@ -82,4 +82,15 @@ make re (for make fclean and make)
 ```
 ## Resources
 
-- https://man7.org/linux/man-pages/man5/elf.5.html
+- https://datatracker.ietf.org/doc/html/rfc2812#section-3.1.7
+- https://modern.ircdocs.horse/
+- https://irssi.org/documentation/help/
+- https://fr.wikipedia.org/wiki/Internet_Relay_Chat
+
+## AI Usage
+
+AI tools were used to:
+
+-  Spot bugs in the code
+-  Create testing scripts
+-  Explain complex conceptsW

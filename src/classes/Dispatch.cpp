@@ -61,7 +61,6 @@ bool Dispatch::dispatch(Command cmd, int fd)
 bool Dispatch::ft_cap(Command cmd, int fd)
 {
     std::string line = cmd.getLine();
-    // respond minimally so clients finish capability negotiation
     if (line.find("LS") != std::string::npos) {
         std::string msg = "CAP * LS :\r\n";
         sendAll(fd, msg);
@@ -71,7 +70,7 @@ bool Dispatch::ft_cap(Command cmd, int fd)
         sendAll(fd, msg);
     }
     else if (line.find("END") != std::string::npos) {
-        // nothing needed, client ends negotiation
+       ;
     }
     return true;
 }
@@ -97,7 +96,7 @@ void    Dispatch::tryRegister(Client* client)
     if (!client->isAuthenticated() && !client->GetNick().empty() && !client->GetUser().empty()) {
         std::string msg2 = ":server 464 * :Password incorrect\r\n";
         sendAll(client->GetFd(), msg2);
-        // Marquer le fd pour suppression - Server::removeFdPoll() va le nettoyer
+        // marquer le fd pour suppression  Server::removeFdPoll() va le nettoyer
         client->SetFd(-1);
     }
 }
@@ -117,7 +116,7 @@ bool Dispatch::ft_ping(Command cmd, int fd)
     std::string line = cmd.getLine();
     std::string token;
     if (line.size() > 5)
-        token = line.substr(5);  // après "PING "
+        token = line.substr(5);
     else
         token = "server";
     

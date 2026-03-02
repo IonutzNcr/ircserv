@@ -15,7 +15,7 @@ bool Dispatch::setMode(Channel* channel, std::string modeChanges, int fd, std::s
         sendAll(fd, msg);
         return true;
     }
-    size_t paramIndex = 3; // Index for mode parameters (starts after MODE #chan +modes)
+    size_t paramIndex = 3;
     bool adding = (modeChanges[0] == '+');
     for (size_t i = 1; i < modeChanges.size(); i++) 
     {
@@ -218,9 +218,6 @@ bool Dispatch::ft_mode(Command cmd, int fd)
             return true;
         }
         setMode(channel, modeChanges, fd, target, line, client, tokens);
-    }
-    else {
-        // Mode sur un user - non supporté, on ignore silencieusement
     }
     return true;
 }

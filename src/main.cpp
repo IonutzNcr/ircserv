@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 		return (1);
 	}
 	int n = std::atoi(argv[1]);
-	if (n < 1024 || n > 65535) {		// manque la valeur la plus grande ?
+	if (n < 1024 || n > 65535) {
 		if (n < 0)
 			std::cout << "argv[1] is negative" << std::endl;
 		else
@@ -31,9 +31,9 @@ int main(int argc, char **argv)
 	std::cout << "---- SERVER ----" << std::endl;
 	
 	try{
-		signal(SIGINT, Server::SignalHandler); //-> catch the signal (ctrl + c)
-		signal(SIGQUIT, Server::SignalHandler); //-> catch the signal (ctrl + \)
-		ser.ServerInit(); //-> initialize the server
+		signal(SIGINT, Server::SignalHandler); 
+		signal(SIGQUIT, Server::SignalHandler);
+		ser.ServerInit();
 	}
 	catch(const std::exception& e){
 		std::cerr << e.what() << std::endl;

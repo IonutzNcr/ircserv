@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <iostream>
 #include <vector>
@@ -19,25 +21,6 @@ class Parser
         Command get(int fd);
         std::string getCmdtwo(int fd);
         void clearData(int fd);
-
-        int findRN(std::string rawInput)
-        {
-            int i = 0;
-            int r = 0;
-            int n = 0;
-            while (rawInput[i])
-            {
-                if (rawInput[i] == '\r')
-                    r++;
-                if (rawInput[i] == '\n')
-                    n++;
-                if (r == 1 && n == 1)
-                    return (i);
-                i++;
-            }
-            std::cout << "r n " << r << " " << n << " \n"; 
-            return (i);
-        };
 
     private:
         std::vector<Data> rawsData;

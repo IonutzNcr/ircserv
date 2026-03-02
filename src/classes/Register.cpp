@@ -18,7 +18,6 @@ static bool isSpecialChar(char c)
 
 bool Dispatch::parseNick(std::string line)
 {
-    // build une fonction pour le parsing de nick (erreur 433)
     if (line.empty())
         return (false);
     if (line.size() > 9)
@@ -33,7 +32,8 @@ bool Dispatch::parseNick(std::string line)
     }
     return (true);
 }
-// a demander quand il ya un changement de nick, est ce que ca le prend en compte dans un channel
+
+
 bool Dispatch::ft_nick(Command cmd, int fd)
 {
     Client* client = getClientFd(fd);
@@ -43,33 +43,32 @@ bool Dispatch::ft_nick(Command cmd, int fd)
     std::string nick = cmd.getArgs();
     if (nick.empty() && !cmd.getTrailing().empty())
         nick = cmd.getTrailing();
-    nick.erase(0, nick.find_first_not_of(" \t")); // supprime les espaces ou tabulation jusqua un autre char autre que ca
-    if (!nick.empty() && nick[0] == ':') // a voir pour traiter un seul ou plusieur ':'
+    nick.erase(0, nick.find_first_not_of(" \t"));
+    if (!nick.empty() && nick[0] == ':')
         nick.erase(0, 1);
-    nick.erase(nick.find_last_not_of(" \t\r\n") + 1); // meme chose sauf que c'est a la fin mtn
-    if (nick.empty()) {     // si pas de new nick => erreur 
-        std::string msg = ":server 431 " + choice + " :No nickname given\r\n";     // ERR_NONICKNAMEGIVEN (431)
+    nick.erase(nick.find_last_not_of(" \t\r\n") + 1); 
+    if (nick.empty()) {
+        std::string msg = ":server 431 " + choice + " :No nickname given\r\n"; 
         sendAll(fd, msg);     
         return true;
     }
     if (!parseNick(nick)) {
-        std::string msg = ":server 432 " + choice + " " + nick + " :Erroneus nickname\r\n";     // ERR_ERRONEUSNICKNAME (432)
+        std::string msg = ":server 432 " + choice + " " + nick + " :Erroneus nickname\r\n";
         sendAll(fd, msg);     
         return true;
     }
-    for (size_t i = 0; i < _clients.size(); ++i) {  // cherhcer si le new nick est deja utiliser ou pas
+    for (size_t i = 0; i < _clients.size(); ++i) {
             if (ircCaseEqual(_clients[i]->GetNick(), nick) && _clients[i] != client) {
-                std::string msg = ":server 433 " + choice + " " + nick + " :Nickname is already in use\r\n"; // ERR_NICKNAMEINUSE (433)
+                std::string msg = ":server 433 " + choice + " " + nick + " :Nickname is already in use\r\n";
                 sendAll(fd, msg);
                 return true;
             }
     }
     std::string oldNick = client->GetNick();
     client->SetNick(nick);
-    if (!oldNick.empty() && client->isRegistered()) {       // si le client est deja enregistrer et qu'il modifie le nick
+    if (!oldNick.empty() && client->isRegistered()) {
         std::string ret = ":" + oldNick + " NICK :" + nick + "\r\n";
         sendAll(fd, ret);
-        // Diffuser le changement de nick à tous les membres des channels du client
         std::set<int> notified;
         notified.insert(fd);
         for (size_t i = 0; i < _channels.size(); i++) {
@@ -95,23 +94,23 @@ std::vector<std::string> Dispatch::splitParams(std::string line) const
     std::vector<std::string> params;
     size_t pos = 0;
 
-    pos = line.find(' ');   // enlever le 1er mot(USER)
+    pos = line.find(' ');
     if (pos == std::string::npos)
         return params;
     line = line.substr(pos + 1);
-    while (!line.empty())   // parser les paramètres
+    while (!line.empty())
     {
-        size_t start = line.find_first_not_of(" \t");   // supprimer espaces initiaux
+        size_t start = line.find_first_not_of(" \t");
         if (start == std::string::npos)
             break;
         line.erase(0, start);
-        if (line[0] == ':') // si ':' trouver pushback le reste
+        if (line[0] == ':')
         {
             params.push_back(line.substr(1));
             break;
         }
 
-        // paramètre normal
+        
         size_t space = line.find(' ');
         if (space == std::string::npos)
         {
@@ -133,8 +132,8 @@ bool Dispatch::ft_user(Command cmd, int fd)
         return false;
     std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
 
-    if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt = ":server 462 " + choice + " :You may not reregister\r\n"; // ERR_ALREADYREGISTERED (462)
+    if (client->isRegistered()) {
+        std::string txt = ":server 462 " + choice + " :You may not reregister\r\n";
         sendAll(fd, txt);
         return true;
     }
@@ -142,11 +141,11 @@ bool Dispatch::ft_user(Command cmd, int fd)
     std::vector<std::string> params = splitParams(line);
     if (params.size() < 4 || params[0].empty() || params[1].empty() || params[2].empty() || params[3].empty())
     {
-        std::string msg = ":server 461 " + choice + " :Not enough parameters\r\n"; // ERR_NEEDMOREPARAMS (461)
+        std::string msg = ":server 461 " + choice + " :Not enough parameters\r\n";
         sendAll(fd, msg);
         return true;
     }
-    //std::string oldUser = client->GetUser();
+   
     client->SetUser(params[0]);
     client->SetRealName(params[3]);
     tryRegister(client);
@@ -160,8 +159,8 @@ bool Dispatch::ft_pass(Command cmd, int fd)
     if (!client)
         return false;
     std::string choice = client->GetNick().empty() ? "*" : client->GetNick();
-    if (client->isRegistered()) {   // savoir si le client est enregistrer, si oui message puis on sort de la focntion
-        std::string txt2 = ":server 462 " + choice + " :You may not reregister\r\n";    //ERR_ALREADYREGISTERED (462)
+    if (client->isRegistered()) {
+        std::string txt2 = ":server 462 " + choice + " :You may not reregister\r\n";
         sendAll(fd, txt2);
         return true;
     }
@@ -173,12 +172,12 @@ bool Dispatch::ft_pass(Command cmd, int fd)
         pass.erase(0, 1);
     pass.erase(pass.find_last_not_of(" \t\r\n") + 1);
     if (pass.empty()) { 
-        std::string msg = ":server 461 " + choice + " :PASS Not enough parameters\r\n";    // ERR_NEEDMOREPARAMS (461)
+        std::string msg = ":server 461 " + choice + " :PASS Not enough parameters\r\n";
         sendAll(fd, msg);
         return true;
     }
-    if (pass != _password) {    // si le pass est differend de celui des parametre => error
-        std::string txt = ":server 464 " + choice + " :Password incorrect\r\n";      // ERR_PASSWDMISMATCH (464)
+    if (pass != _password) {
+        std::string txt = ":server 464 " + choice + " :Password incorrect\r\n";
         sendAll(fd, txt);
         return false;
     }
@@ -193,16 +192,14 @@ int Dispatch::ft_choice(const std::string& target)
     if (target.empty())
         return 0;
     size_t i = 0;    
-    while (i < target.size() && (target[i] == '@' || target[i] == '%' || target[i] == '+')) // Ignorer les préfixes de statut @, %, +
+    while (i < target.size() && (target[i] == '@' || target[i] == '%' || target[i] == '+'))
         i++;    
-    if (i < target.size() && (target[i] == '#' || target[i] == '&'))    // Vérifier si c'est un channel si oui renvoie 2
+    if (i < target.size() && (target[i] == '#' || target[i] == '&')) 
         return (2);
     return (1);
 }
 
-//":server 433 " + choice + " " + nick + " :Nickname is already in use\r\n"
 
-// revoir les message d'erreur
 void    Dispatch::ft_privmsg(Command cmd, int fd)
 {
     
@@ -254,7 +251,7 @@ void    Dispatch::ft_privmsg_channel(std::vector<std::string> params, int fd)
         sendAll(fd, err);
         return;
     }
-    if (!channel->isUserInChannel(client)) { // Vérifier que le client est dans le channel
+    if (!channel->isUserInChannel(client)) {
         std::string err = ":server 404 " + client->GetNick() + " " + channelName + " :Cannot send to channel\r\n";
         sendAll(fd, err);
         return;

@@ -35,5 +35,4 @@ class Command
         std::string _trailing;
         std::string _line;
         std::vector<std::string> _argsVector;
-        //maybe there are others stuff to be concerned i dont know yet
 };

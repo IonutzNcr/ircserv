@@ -16,8 +16,7 @@ bool Dispatch::ft_part(Command cmd, int fd)
     if (!client->isRegistered())
         return true;
 
-    // PART #chan1,#chan2 :reason
-    // Extraire les channels et la raison
+   
     std::string args = cmd.getArgs();
     std::string reason = cmd.getTrailing();
     
@@ -28,18 +27,15 @@ bool Dispatch::ft_part(Command cmd, int fd)
         return true;
     }
 
-    // Si pas de trailing, raison par défaut
     if (reason.empty())
         reason = client->GetNick();
 
-    // Splitter les channels par virgule
     std::vector<std::string> channels = split(args, ',');
 
     for (size_t i = 0; i < channels.size(); i++)
     {
         std::string channelName = channels[i];
         
-        // Trouver le channel
         Channel* channel = getChannel(channelName);
         if (!channel)
         {
@@ -48,7 +44,6 @@ bool Dispatch::ft_part(Command cmd, int fd)
             continue;
         }
 
-        // Vérifier que le client est dans le channel
         if (!channel->isUserInChannel(client))
         {
             std::string errMsg = ":server 442 " + client->GetNick() + " " + channelName + " :You're not on that channel\r\n";
@@ -56,24 +51,20 @@ bool Dispatch::ft_part(Command cmd, int fd)
             continue;
         }
 
-        // Construire le message PART
         std::string user = client->GetUser().empty() ? "user" : client->GetUser();
         std::string host = client->GetIpAdd().empty() ? "localhost" : client->GetIpAdd();
         std::string partMsg = ":" + client->GetNick() + "!" + user + "@" + host + " PART " + channel->getName() + " :" + reason + "\r\n";
 
-        // Envoyer le message PART à tous les membres du channel (y compris le client qui part)
         std::vector<Client*> users = channel->getUsers();
         for (size_t j = 0; j < users.size(); j++)
         {
             sendAll(users[j]->GetFd(), partMsg);
         }
 
-        // Retirer le client du channel
         channel->removeUser(client);
         channel->removeOperator(client);
         channel->removeInvited(client);
 
-        // Si le channel est vide, le supprimer
         if (channel->getUserRefs().empty())
         {
             channel->removeInvitedAll();
